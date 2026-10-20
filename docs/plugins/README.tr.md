@@ -104,11 +104,41 @@ Mevcut katalog DEV ortamında depoya ait paket dosyalarını ve metaveriyi sunar
 
 ## Örnek paketler
 
+### Panel özelleştirme (0.2.0)
+
+Ortak mobil/web çizici, plugin kimliğine özel ekran seçmeden manifesti kullanır.
+Plugin kontrol sırasını, `row`/`column`/`section`/`tabs` gruplarını, EN/TR
+etiketleri, ikonları, ana tema rengini ve kontrolün `tone` değerini (`default`,
+`primary`, `danger`, `muted`) belirler. Mevcut schema-v1 alanları ortak çizicide
+uygulanır: ana buton tema rengini kullanır, tehlikeli buton dolu kırmızıdır;
+satırdaki ikonlu butonlar erişilebilir etiketli dairesel kontrollere dönüşür.
+`sun` ve `play` ikonları mevcut turuncu/yeşil renklerini kullanır. Satırdaki ikonlu
+anahtar kompakt olur, diğer anahtarlar etiketli switch olarak kalır. Slider
+sürüklenirken taslak yüzdeyi gösterir, yalnız bırakıldığında işlem gönderir.
+Keyfi CSS/HTML/script kabul edilmez; manifesti/builder'ı düzenleyip paketi üretin.
+
+Panel açıldığında girdisiz `.read` işlemleri tek istekli taşıma katmanına uygun
+olarak sırayla okunur. Yenileme panel altında kompakt bir eylemdir ve yazma
+işlemi çağırmaz. Yeni Ses/Ekran/Sistem düzenlerinde gereksiz yenileme butonları
+yoktur. Kapatma bekleyiciyi ve kalan okumaları iptal eder. Yazarken son gözlem
+korunur; başarılı kısmi çıktı birleştirilir, hatada gözlemler temizlenir.
+Önizleme yalnız örnek veriyi kullanır, cihaza komut göndermez.
+
+Resmi Media 0.2.0 artık **Medya ve Ekran**: ses/sessiz, DDC/CI parlaklık ve oynatma
+aynı manifestte bu ortak bileşenlerle tanımlanır. Kurulumda audio.read/write,
+display.read/write ve media.write açıkça istenir; eski izinler birleştirilmez.
+DDC/CI desteklenmiyorsa parlaklık pasiftir. Birleşik paket varken DEV kataloğu
+ayrı Ses/Ekran paketlerini keşif listesinden çıkarır; kaynakları ve eski
+kurulumları korunur. On iki kaynak paket de 0.2.0 düzen/ikon bilgisi alır; yeni
+düzen için eski sürümü kaldırıp yeniden kurun. Kayıtlı manifestler değiştirilmez.
+Güç sağlayıcısı kilit/uyku/kapat/yeniden başlat işlemlerini korur; gecikmeli
+kapatma ve kapatmayı iptal etme henüz bu sağlayıcıda uygulanmamıştır.
+
 Public kaynaklar, SDK ve bu rehber
 [CetTek/rchub-plugins](https://github.com/CetTek/rchub-plugins) deposundadır.
-Resmi 0.1.1 paketleri sabit `v0.1.1` kaynak etiketine bağlanır. Kaynak adresi
-değişikliği yeni paket hash'leri üretir. Kurulu 0.1.0 paketleri/izinleri taşınmaz;
-public kaynak bağlantısını kullanmak için eski kurulumu kaldırıp 0.1.1 kurulumunu
+Resmi 0.2.0 paketleri sabit `v0.2.0` kaynak etiketine bağlanır. Kaynak adresi
+değişikliği yeni paket hash'leri üretir. Kurulu eski paketler/izinler taşınmaz;
+yeni düzen ve izinler için eski kurulumu kaldırıp 0.2.0 kurulumunu
 açıkça onaylayın.
 
 `plugins/official/` altında depoya ait on iki MIT paket bulunur: Audio, System,

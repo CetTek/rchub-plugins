@@ -1,8 +1,9 @@
 """Rebuild repository-owned MIT reference packages with the portable SDK."""
 from pathlib import Path
+from copy import deepcopy
 import rchub_plugin as sdk
 
-RELEASE_VERSION = '0.1.1'
+RELEASE_VERSION = '0.2.0'
 SOURCE_ROOT = f'https://github.com/CetTek/rchub-plugins/tree/v{RELEASE_VERSION}/plugins/official'
 
 
@@ -120,6 +121,73 @@ def packages():
     result['effects'] = manifest('effects', 'Ses Efekti', 'smile', 'pink', ['effects.write'],
         [action('beep', 0, 'effects.write', {'effect': string(4) | {'enum': ['beep']}}, state)], state, [
             {'id': 'beep', 'type': 'button', 'label': label('Play system beep', 'Sistem sesi çal'), 'action': 'beep', 'argument': 'effect', 'value': 'beep'}])
+    # A combined package owns its layout and requests the exact union at install.
+    # Existing single-purpose packages stay reproducible for compatibility.
+    combined = deepcopy(result['media'])
+    combined.update(
+        name=label('Media & Display', 'Medya ve Ekran'),
+        description=label('Volume, brightness and playback in one panel.',
+                          'Ses, parlaklık ve oynatma tek panelde.'),
+        permissions=sorted(set(result['audio']['permissions'] + result['display']['permissions'] + result['media']['permissions'])),
+        actions=[], state={},
+        ui={'version': 1, 'icon': 'volume', 'color': 'blue', 'controls': []})
+    groups = {}
+    for part in ('audio', 'display', 'media'):
+        original = deepcopy(result[part])
+        combined['state'].update(original['state'])
+        names = {}
+        for a in original['actions']:
+            names[a['id']] = f'{part}_{a["id"]}'
+            a.update(id=names[a['id']], entry=len(combined['actions']))
+            combined['actions'].append(a)
+        def rewrite(nodes):
+            output = []
+            for c in nodes:
+                if c.get('action') == 'read':
+                    continue  # Host initializes read actions; compact refresh stays in panel chrome.
+                if c.get('action') in names:
+                    c['action'] = names[c['action']]
+                if 'children' in c:
+                    c['children'] = rewrite(c['children'])
+                output.append(c)
+            return output
+        groups[part] = rewrite(original['ui']['controls'])
+    audio = groups['audio'][0]['children']
+    for c in audio:
+        c['icon'] = 'volume'
+    playback = groups['media']
+    for c in playback:
+        c['icon'] = 'play'
+        if c.get('value') == 'play_pause':
+            c['tone'] = 'primary'
+    brightness = next(c for c in groups['display'] if c['type'] == 'slider')
+    brightness.update(label=label('Brightness', 'Parlaklık'), icon='sun')
+    combined['ui']['controls'] = [
+        {'id': 'audio_row', 'type': 'row', 'children': audio},
+        brightness,
+        {'id': 'playback_section', 'type': 'section', 'icon': 'play',
+         'label': label('Playback Controls', 'Oynatma Kontrolleri'), 'children': [
+             {'id': 'playback_row', 'type': 'row', 'children': playback}]}]
+    result['media'] = combined
+    result['power']['ui']['controls'].sort(key=lambda c: ['shutdown', 'restart', 'lock', 'sleep'].index(c['id']))
+    for c in result['power']['ui']['controls']:
+        c['icon'] = 'power'
+        if c['id'] == 'restart':
+            c['tone'] = 'primary'
+    def decorate(nodes, icon):
+        for c in nodes:
+            if c['type'] in ('button', 'section', 'slider'):
+                c.setdefault('icon', icon)
+            if 'children' in c:
+                decorate(c['children'], icon)
+    for m in result.values():
+        decorate(m['ui']['controls'], m['ui']['icon'])
+    def without_refresh(nodes, actions):
+        return [dict(c, children=without_refresh(c['children'], actions)) if 'children' in c else c
+                for c in nodes if not (c['type'] == 'button' and
+                any(a['id'] == c.get('action') and a['capability'] in ('audio.read', 'display.read', 'system.read') for a in actions))]
+    for m in result.values():
+        m['ui']['controls'] = without_refresh(m['ui']['controls'], m['actions'])
     return result
 
 

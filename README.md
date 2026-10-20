@@ -23,9 +23,11 @@ The builder reproduces all twelve packages from the definitions in `build_offici
 
 ## Releases and installation
 
-Release `v0.1.1` publishes twelve packages whose source links point to the matching tag. Download a `.rchub-plugin.json` release asset and import it into a compatible development host. Review the source, requested permissions and installation disclosure first. Installing requires explicit approval; later operations still enforce installed grants and current authorization.
+Release `v0.2.0` publishes twelve source packages whose source links point to the matching tag. Media is now **Media & Display**, combining volume/mute, DDC/CI brightness and playback. Standalone Audio/Display remain available for compatibility; the current DEV catalog recommends the combined package in their place. All plugins define their own control layout, icons and button tones through the shared UI schema. See the guides' Panel customization section.
 
-Version 0.1.1 changes the source metadata from the private application repository to this public repository. Package hashes therefore change. Existing 0.1.0 installations and grants are not rewritten: remove the old installation and approve the new version separately.
+Download a `.rchub-plugin.json` release asset and import it into a compatible development host. Review the source, requested permissions and installation disclosure first. Installing requires explicit approval; later operations still enforce installed grants and current authorization. Existing installed manifests are not rewritten. Reinstall to obtain a changed layout; Media 0.2.0 explicitly requests audio/read-write, display/read-write and media/write permissions together. Older separate grants are never combined automatically.
+
+Version 0.1.1 introduced public source links; version 0.2.0 adds the shared-control layouts and combined Media package. Package hashes change with each manifest/release. Remove an old installation and approve the new version separately.
 
 ## Contributing
 

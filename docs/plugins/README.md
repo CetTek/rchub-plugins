@@ -106,12 +106,45 @@ The current catalog serves repository-owned package artifacts and metadata in DE
 
 ## Reference packages
 
+### Panel customization (0.2.0)
+
+The shared mobile/web renderer consumes the manifest, without special screens
+selected by plugin ID. Plugins choose control order, `row`/`column`/`section`/`tabs`
+groups, localized labels, icons, root theme color and each control's `tone`
+(`default`, `primary`, `danger`, `muted`). These existing schema-v1 fields are now
+rendered consistently: primary buttons use the theme accent, danger buttons have
+a filled destructive treatment, and icon buttons inside rows become compact
+circular controls with accessible labels. `sun` and `play` icons use the existing
+orange/green semantic tokens. An inline icon toggle becomes a compact toggle;
+other toggles retain their labeled switch. Sliders show the draft percentage
+while dragging and commit only when released. No arbitrary CSS, HTML or script
+is accepted. Edit the manifest/builder and rebuild to customize a package.
+
+Panels read no-input `.read` actions sequentially on opening, matching the
+single-request transport. Refresh is a compact panel-footer action; it never
+invokes a write action. New Audio/Display/System layouts omit redundant refresh
+buttons. Closing cancels the waiter and invalidates remaining reads. Writes
+retain the last observation while busy, merge successful partial output and
+clear observations on failure; no unconfirmed write is displayed as success.
+The preview route uses fixture state only and never sends device commands.
+
+Official Media 0.2.0 is **Media & Display**: volume/mute, DDC/CI brightness and
+playback share one manifest, using these same controls. It explicitly requests
+audio.read/write, display.read/write and media.write at installation. Previous
+separate grants are never unioned. Unsupported DDC/CI disables brightness.
+When the combined package is present, the DEV catalog omits standalone Audio
+and Display from discovery; their sources and existing installations remain.
+All twelve source packages receive 0.2.0 layouts/icon metadata. These layouts
+require removing/reinstalling older versions; stored manifests are not rewritten.
+Power retains its implemented lock/sleep/shutdown/restart actions; delay and
+cancel-shutdown are not implemented by this native provider.
+
 Public sources, SDK and this guide are maintained at
 [CetTek/rchub-plugins](https://github.com/CetTek/rchub-plugins).
-Official package version 0.1.1 links to the immutable `v0.1.1` source tag.
+Official package version 0.2.0 links to the immutable `v0.2.0` source tag.
 The source metadata change produces new package hashes. Existing installed
-0.1.0 packages/grants are not migrated; remove the old installation and explicitly
-approve installation of 0.1.1 to use the public View source code link.
+older packages/grants are not migrated; remove the old installation and explicitly
+approve installation of 0.2.0 to use the current layout and permissions.
 
 `plugins/official/` contains twelve repository-owned MIT packages: Audio, System,
 Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech and
