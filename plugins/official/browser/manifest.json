@@ -48,7 +48,7 @@
     "name": "RCHub"
   },
   "schemaVersion": 1,
-  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/browser",
+  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.3.0/plugins/official/browser",
   "state": {
     "opened": {
       "type": "boolean"
@@ -64,6 +64,7 @@
         "action": "open",
         "argument": "url",
         "id": "url",
+        "inputMode": "url",
         "label": {
           "en": "Open website on PC",
           "tr": "PC’de web sitesi aç"
@@ -73,6 +74,52 @@
           "tr": "https://example.com"
         },
         "type": "input"
+      },
+      {
+        "children": [
+          {
+            "action": "open",
+            "argument": "url",
+            "icon": "globe",
+            "id": "google",
+            "label": {
+              "en": "Google",
+              "tr": "Google"
+            },
+            "type": "button",
+            "value": "https://www.google.com"
+          },
+          {
+            "action": "open",
+            "argument": "url",
+            "icon": "globe",
+            "id": "youtube",
+            "label": {
+              "en": "YouTube",
+              "tr": "YouTube"
+            },
+            "type": "button",
+            "value": "https://www.youtube.com"
+          },
+          {
+            "action": "open",
+            "argument": "url",
+            "icon": "globe",
+            "id": "github",
+            "label": {
+              "en": "GitHub",
+              "tr": "GitHub"
+            },
+            "type": "button",
+            "value": "https://github.com"
+          }
+        ],
+        "id": "quick_sites",
+        "label": {
+          "en": "Quick sites",
+          "tr": "Hızlı siteler"
+        },
+        "type": "section"
       },
       {
         "bind": "opened",
@@ -87,5 +134,5 @@
     "icon": "globe",
     "version": 1
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

@@ -51,7 +51,7 @@
     "name": "RCHub"
   },
   "schemaVersion": 1,
-  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/effects",
+  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.3.0/plugins/official/effects",
   "state": {
     "accepted": {
       "type": "boolean"
@@ -79,5 +79,5 @@
     "icon": "smile",
     "version": 1
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

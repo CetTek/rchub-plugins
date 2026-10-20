@@ -116,7 +116,7 @@
     "name": "RCHub"
   },
   "schemaVersion": 1,
-  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/audio",
+  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.3.0/plugins/official/audio",
   "state": {
     "muted": {
       "type": "boolean"
@@ -174,5 +174,5 @@
     "icon": "volume",
     "version": 1
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

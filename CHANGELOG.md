@@ -2,7 +2,15 @@
 
 ## Unreleased
 
-- Add an LLM-friendly `llms.txt` index for the EN/TR guides, package contract, SDK and official examples; link it and the interactive preview from developer documentation.
+## 0.3.0
+
+- Extend reusable controls with ring progress, multiline inputs, typed draft forms/bindings, localized action confirmation and searchable selected-row actions.
+- Update System, Keyboard, Browser, Apps, Power and Clipboard source examples; retain install-time grants and explicit reinstall semantics.
+- Synchronize strict JSON Schema/Python SDK and EN/TR guides/LLM index. New generated guests safely bound escaped output and 64 KiB input; old 2-page guests remain compatible.
+- Native provider behavior and UI live verification belong to the compatible host; package tests do not invoke destructive operations.
+
+- Add a manifest-driven System memory usage progress chart backed by the bounded `ram_usage_percent` value from `system.read`; no new UI control or permission is required.
+- Add and publish an LLM-friendly `llms.txt` index for the EN/TR guides, package contract, SDK and official examples; link it and the interactive preview from developer documentation. Published in `28a69af`, raw file returned HTTP 200.
 - Format all twelve source `manifest.json` files with stable two-space indentation and make both manifest generators preserve it. Keep downloadable `.rchub-plugin.json` bundles canonical and compact for package identity. Rebuilt twelve package hashes match the RcHub checkout; all manifests are multiline and whitespace checks pass.
 
 ## 0.2.0

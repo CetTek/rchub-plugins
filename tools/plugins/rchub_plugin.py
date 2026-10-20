@@ -92,14 +92,21 @@ def const(value: int) -> bytes:
 def proxy_wasm(manifest: dict) -> bytes:
     """Compile a strict manifest action -> capability proxy, without a toolchain."""
     actions = manifest['actions']
+    large_output = any(
+        field.get('maxLength', 0) > 32768
+        for action in actions
+        for field in action['output']['properties'].values()
+    )
+    pages = 16 if large_output else 5
+    output_capacity = 900000 if large_output else 262144
     segments = []
     body = bytearray(b'\x00')  # zero local declarations
-    cursor = 8192
+    cursor = 65536
     for action in actions:
         cap = action['capability'].encode()
         body += b'\x20\x00' + const(action['entry']) + b'\x46\x04\x7f'
         body += const(cursor) + const(len(cap)) + const(0) + b'\x20\x01'
-        body += const(32768) + const(32768) + b'\x10\x00\x05'
+        body += const(32768) + const(output_capacity) + b'\x10\x00\x05'
         segments.append(b'\x00' + const(cursor) + b'\x0b' + uint(len(cap)) + cap)
         cursor += len(cap)
     body += const(-1) + b'\x0b' * len(actions) + b'\x0b'
@@ -107,25 +114,32 @@ def proxy_wasm(manifest: dict) -> bytes:
     imports = b'\x01' + string('rchub') + string('invoke') + b'\x00\x00'
     exports = b'\x02' + string('memory') + b'\x02\x00' + string('run') + b'\x00\x01'
     return (b'\x00asm\x01\x00\x00\x00' + section(1, types) + section(2, imports)
-            + section(3, b'\x01\x01') + section(5, b'\x01\x01\x02\x02')
+            + section(3, b'\x01\x01') + section(5, b'\x01\x01' + bytes([pages, pages]))
             + section(7, exports) + section(10, b'\x01' + uint(len(body)) + body)
             + section(11, uint(len(segments)) + b''.join(segments)))
 
 
 def proxy_wat(manifest: dict) -> str:
+    large_output = any(
+        field.get('maxLength', 0) > 32768
+        for action in manifest['actions']
+        for field in action['output']['properties'].values()
+    )
+    pages = 16 if large_output else 5
+    output_capacity = 900000 if large_output else 262144
     lines = [';; Generated reference proxy: actions remain permission checked by the host.',
              '(module', '  (import "rchub" "invoke" (func $invoke (param i32 i32 i32 i32 i32 i32) (result i32)))',
-             '  (memory (export "memory") 2 2)',
+             f'  (memory (export "memory") {pages} {pages})',
              '  (func (export "run") (param $entry i32) (param $len i32) (result i32)']
-    cursor = 8192
+    cursor = 65536
     for action in manifest['actions']:
         cap = action['capability']
         lines += [f'    local.get $entry i32.const {action["entry"]} i32.eq if (result i32)',
                   f'      i32.const {cursor} i32.const {len(cap.encode())} i32.const 0 local.get $len',
-                  '      i32.const 32768 i32.const 32768 call $invoke', '    else']
+                  f'      i32.const 32768 i32.const {output_capacity} call $invoke', '    else']
         cursor += len(cap.encode())
     lines += ['      i32.const -1', '    ' + ' '.join(['end'] * len(manifest['actions'])), '  )']
-    cursor = 8192
+    cursor = 65536
     for action in manifest['actions']:
         cap = action['capability']
         lines.append(f'  (data (i32.const {cursor}) "{cap}")')
@@ -169,7 +183,7 @@ def field_schema(value: dict, depth: int = 1) -> None:
             raise ValueError('Numeric bounds required')
     elif 'minimum' in value or 'maximum' in value:
         raise ValueError('Bounds on nonnumeric field')
-    if kind == 'string' and (type(value.get('maxLength')) is not int or not 1 <= value['maxLength'] <= 32768):
+    if kind == 'string' and (type(value.get('maxLength')) is not int or not 1 <= value['maxLength'] <= 800000):
         raise ValueError('Bounded string required')
     if kind != 'string' and 'maxLength' in value:
         raise ValueError('Length on nonstring field')
@@ -255,7 +269,7 @@ def validate_manifest(m: dict) -> None:
             raise ValueError('Invalid UI nesting')
         for c in items:
             count += 1
-            exact(c, {'id', 'type'}, {'label', 'icon', 'tone', 'children', 'action', 'bind', 'argument', 'value', 'min', 'max', 'step', 'options', 'placeholder', 'itemLabel', 'itemValue'})
+            exact(c, {'id', 'type'}, {'label', 'icon', 'tone', 'children', 'action', 'bind', 'argument', 'value', 'min', 'max', 'step', 'options', 'placeholder', 'itemLabel', 'itemValue', 'appearance', 'multiline', 'inputMode', 'defaultValue', 'submit', 'inputBindings', 'confirm', 'searchable', 'itemActions'})
             kind = c['type']
             if count > 128 or not identifier(c['id']) or c['id'] in ids or kind not in CONTROLS:
                 raise ValueError('Invalid/duplicate UI control')
@@ -282,7 +296,7 @@ def validate_manifest(m: dict) -> None:
             argument = action['input']['properties'].get(c.get('argument')) if action else None
             if 'action' in c and not action or 'bind' in c and not bound or 'argument' in c and not argument:
                 raise ValueError('Undeclared UI binding')
-            if action and any(k != c.get('argument') for k in action['input']['required']):
+            if c.get('submit') is not False and action and any(k != c.get('argument') and k not in c.get('inputBindings', {}) for k in action['input']['required']):
                 raise ValueError('Control cannot supply required action input')
             if kind in ('button', 'slider', 'toggle', 'select', 'input') and not action:
                 raise ValueError('Interactive action required')
@@ -308,7 +322,7 @@ def validate_manifest(m: dict) -> None:
                     raise ValueError('Invalid slider argument range')
             if kind == 'toggle' and (not bound or bound['type'] != 'boolean' or not argument or argument['type'] != 'boolean'):
                 raise ValueError('Toggle requires boolean state and argument')
-            if kind == 'input' and (not argument or argument['type'] != 'string'):
+            if kind == 'input' and (not argument or argument['type'] not in ('string', 'integer', 'boolean') or argument['type'] != 'string' and c.get('submit') is not False):
                 raise ValueError('Input requires string argument')
             if kind == 'select':
                 options = c.get('options')
@@ -338,6 +352,92 @@ def validate_manifest(m: dict) -> None:
             elif 'itemLabel' in c or 'itemValue' in c:
                 raise ValueError('List metadata on nonlist')
     controls(m['ui']['controls'], 1)
+    flattened = {}
+    def flatten(nodes):
+        for node in nodes:
+            flattened[node['id']] = node
+            flatten(node.get('children', []))
+    flatten(m['ui']['controls'])
+    for c in flattened.values():
+        kind = c['type']
+        a = actions.get(c.get('action'))
+        arg = a['input']['properties'].get(c.get('argument')) if a else None
+        if 'appearance' in c and (kind != 'progress' or c['appearance'] not in ('linear', 'ring')):
+            raise ValueError('Invalid progress appearance')
+        for key in ('multiline', 'submit'):
+            if key in c and (kind != 'input' or type(c[key]) is not bool):
+                raise ValueError('Invalid input metadata')
+        if 'multiline' in c and arg['type'] != 'string':
+            raise ValueError('Multiline requires text')
+        if 'inputMode' in c and (kind != 'input' or c['inputMode'] not in ('text', 'numeric', 'url')):
+            raise ValueError('Invalid input mode')
+        if 'inputMode' in c and (c['inputMode'] == 'numeric' and arg['type'] != 'integer' or c['inputMode'] in ('text', 'url') and arg['type'] != 'string'):
+            raise ValueError('Input mode must match argument type')
+        if 'defaultValue' in c and (kind != 'input' or not accepts(arg, c['defaultValue'])):
+            raise ValueError('Invalid default input')
+        if 'searchable' in c and (kind != 'list' or type(c['searchable']) is not bool):
+            raise ValueError('Invalid searchable list')
+        if 'confirm' in c:
+            exact(c['confirm'], {'title', 'message'})
+            localized(c['confirm']['title'], 160)
+            localized(c['confirm']['message'], 160)
+            if not a:
+                raise ValueError('Confirmation requires action')
+        bindings = c.get('inputBindings', {})
+        if not isinstance(bindings, dict) or len(bindings) > 32 or bindings and not a:
+            raise ValueError('Invalid input bindings')
+        for target, source in bindings.items():
+            if not identifier(source):
+                raise ValueError('Invalid input source')
+            draft = flattened.get(source)
+            draft_action = actions.get(draft.get('action')) if draft else None
+            field = draft_action['input']['properties'].get(draft.get('argument')) if draft_action else None
+            if target == c.get('argument') or not identifier(target) or not draft or draft['type'] != 'input' or not field or a['input']['properties'].get(target) != field:
+                raise ValueError('Incompatible form input binding')
+        if 'itemActions' in c:
+            bound = m['state'].get(c.get('bind'))
+            if kind != 'list' or not bound or bound.get('items', {}).get('type') != 'object' or not isinstance(c['itemActions'], list) or not 1 <= len(c['itemActions']) <= 8:
+                raise ValueError('Invalid list actions')
+            fields = bound['items']['properties']
+            for item_action in c['itemActions']:
+                exact(item_action, {'label', 'action'}, {'argument', 'value', 'itemArguments', 'args', 'tone', 'icon', 'confirm'})
+                localized(item_action['label'], 160)
+                target = actions.get(item_action['action'])
+                if not target:
+                    raise ValueError('Undeclared item action')
+                if 'value' in item_action and 'argument' not in item_action:
+                    raise ValueError('Static item value requires argument')
+                static = item_action.get('args', {})
+                if not isinstance(static, dict) or len(static) > 32 or any(not identifier(k) or not isinstance(v, (str, int, bool)) for k, v in static.items()):
+                    raise ValueError('Invalid item static arguments')
+                supplied = dict(static)
+                if 'argument' in item_action:
+                    key = item_action['argument']
+                    if 'value' in item_action:
+                        supplied[key] = item_action['value']
+                    else:
+                        source = c.get('itemValue')
+                        if source not in fields or target['input']['properties'].get(key) != fields[source]:
+                            raise ValueError('Incompatible item value')
+                for key, value in supplied.items():
+                    if key not in target['input']['properties'] or not accepts(target['input']['properties'][key], value):
+                        raise ValueError('Invalid item static argument')
+                row_args = item_action.get('itemArguments', {})
+                if not isinstance(row_args, dict) or len(row_args) > 32:
+                    raise ValueError('Invalid item arguments')
+                for key, source in row_args.items():
+                    if not identifier(source) or source not in fields or fields[source] != target['input']['properties'].get(key) or key in supplied or key == item_action.get('argument'):
+                        raise ValueError('Incompatible item argument')
+                supplied_keys = set(supplied) | set(row_args) | ({item_action['argument']} if 'argument' in item_action else set())
+                if any(key not in supplied_keys for key in target['input']['required']):
+                    raise ValueError('Missing item argument')
+                if 'tone' in item_action and item_action['tone'] not in ('default', 'primary', 'danger', 'muted') or 'icon' in item_action and item_action['icon'] not in ICONS:
+                    raise ValueError('Invalid item token')
+                if 'confirm' in item_action:
+                    exact(item_action['confirm'], {'title', 'message'})
+                    localized(item_action['confirm']['title'], 160)
+                    localized(item_action['confirm']['message'], 160)
+
 
 
 def validate_bundle(bundle: dict) -> None:

@@ -170,6 +170,37 @@ class PackageContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 sdk.validate_bundle(b | {'wasm': wasm})
 
+    def test_declarative_forms_and_item_actions_are_strict_and_typed(self):
+        import build_official
+        packages = build_official.packages()
+        power = packages['power']
+        sdk.validate_manifest(power)
+        for value in [-1, 86401, True, '30']:
+            bad = copy.deepcopy(power)
+            bad['ui']['controls'][0]['children'][0]['defaultValue'] = value
+            with self.subTest(default=value), self.assertRaises(ValueError):
+                sdk.validate_manifest(bad)
+        bad = copy.deepcopy(power)
+        bad['ui']['controls'][1]['children'][0]['inputBindings']['force'] = 'delay_seconds'
+        with self.assertRaises(ValueError):
+            sdk.validate_manifest(bad)
+        for patch in [{'args': {'action': 'invented'}}, {'itemArguments': {'started_at': 'name'}}, {'confirm': {'title': {'en':'x','tr':'x'}}}, {'value': 1, 'argument': None}]:
+            bad = copy.deepcopy(packages['apps'])
+            bad['ui']['controls'][1]['itemActions'][0].update(patch)
+            with self.subTest(patch=patch), self.assertRaises((ValueError, TypeError)):
+                sdk.validate_manifest(bad)
+        bad = copy.deepcopy(packages['keyboard'])
+        bad['ui']['controls'][0]['children'][0]['children'][0]['inputMode'] = 'numeric'
+        with self.assertRaises(ValueError):
+            sdk.validate_manifest(bad)
+
+    def test_generated_small_output_capacity_handles_json_escaping(self):
+        import build_official
+        manifest = build_official.packages()['clipboard']
+        self.assertGreater(len(json.dumps({'text':'\u0000'*8192}).encode()), 32768)
+        self.assertIn('i32.const 262144 call $invoke', sdk.proxy_wat(manifest))
+        self.assertIn('(memory (export "memory") 5 5)', sdk.proxy_wat(manifest))
+
 
 if __name__ == '__main__':
     unittest.main()

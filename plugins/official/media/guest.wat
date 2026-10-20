@@ -1,39 +1,39 @@
 ;; Generated reference proxy: actions remain permission checked by the host.
 (module
   (import "rchub" "invoke" (func $invoke (param i32 i32 i32 i32 i32 i32) (result i32)))
-  (memory (export "memory") 2 2)
+  (memory (export "memory") 5 5)
   (func (export "run") (param $entry i32) (param $len i32) (result i32)
     local.get $entry i32.const 0 i32.eq if (result i32)
-      i32.const 8192 i32.const 10 i32.const 0 local.get $len
-      i32.const 32768 i32.const 32768 call $invoke
+      i32.const 65536 i32.const 10 i32.const 0 local.get $len
+      i32.const 32768 i32.const 262144 call $invoke
     else
     local.get $entry i32.const 1 i32.eq if (result i32)
-      i32.const 8202 i32.const 11 i32.const 0 local.get $len
-      i32.const 32768 i32.const 32768 call $invoke
+      i32.const 65546 i32.const 11 i32.const 0 local.get $len
+      i32.const 32768 i32.const 262144 call $invoke
     else
     local.get $entry i32.const 2 i32.eq if (result i32)
-      i32.const 8213 i32.const 11 i32.const 0 local.get $len
-      i32.const 32768 i32.const 32768 call $invoke
+      i32.const 65557 i32.const 11 i32.const 0 local.get $len
+      i32.const 32768 i32.const 262144 call $invoke
     else
     local.get $entry i32.const 3 i32.eq if (result i32)
-      i32.const 8224 i32.const 12 i32.const 0 local.get $len
-      i32.const 32768 i32.const 32768 call $invoke
+      i32.const 65568 i32.const 12 i32.const 0 local.get $len
+      i32.const 32768 i32.const 262144 call $invoke
     else
     local.get $entry i32.const 4 i32.eq if (result i32)
-      i32.const 8236 i32.const 13 i32.const 0 local.get $len
-      i32.const 32768 i32.const 32768 call $invoke
+      i32.const 65580 i32.const 13 i32.const 0 local.get $len
+      i32.const 32768 i32.const 262144 call $invoke
     else
     local.get $entry i32.const 5 i32.eq if (result i32)
-      i32.const 8249 i32.const 11 i32.const 0 local.get $len
-      i32.const 32768 i32.const 32768 call $invoke
+      i32.const 65593 i32.const 11 i32.const 0 local.get $len
+      i32.const 32768 i32.const 262144 call $invoke
     else
       i32.const -1
     end end end end end end
   )
-  (data (i32.const 8192) "audio.read")
-  (data (i32.const 8202) "audio.write")
-  (data (i32.const 8213) "audio.write")
-  (data (i32.const 8224) "display.read")
-  (data (i32.const 8236) "display.write")
-  (data (i32.const 8249) "media.write")
+  (data (i32.const 65536) "audio.read")
+  (data (i32.const 65546) "audio.write")
+  (data (i32.const 65557) "audio.write")
+  (data (i32.const 65568) "display.read")
+  (data (i32.const 65580) "display.write")
+  (data (i32.const 65593) "media.write")
 )

@@ -36,7 +36,7 @@ Dağıtılabilir paket UTF-8 JSON zarfıdır:
 
 Nesneler katıdır; bilinmeyen anahtarlar reddedilir. Bildirimler şema ve host API sürüm 1'i, İngilizce ve Türkçe metni, küçük harfli ters alan adlı kimlikleri, sayısal `major.minor.patch` sürümünü, Windows/Linux hedeflerini, izin listesini, eylemleri, türlenmiş durumu ve UI denetimlerini kullanır. Sayısal alanların tamsayı sınırları, metin alanlarının azami uzunluğu olmalıdır. Diziler ve iç içe nesneler sınırlıdır. Girdi, çıktı ve durum tanımsız alanları reddeder. Çalışma zamanları arasında kanonik yazımı tutarlı tutmak için sayısal sınır ve kaydırıcı adımlarında tamsayı kullanın.
 
-Çalışma zamanı yalnızca `memory` (iki sayfa) ve `run(i32 entry, i32 inputLen) -> i32 outputLen` dışa aktarımına sahip sınırlı Core Wasm kabul eder. Host girdi JSON'unu 0. konuma (en fazla 8.192 bayt), konuk çıktı JSON'unu 32.768. konuma (en fazla 32.768 bayt) yazar. İzin verilen tek içe aktarım `rchub.invoke` olup, paket, işlem ve kurulu izin kontrollerinden sonra türlenmiş JSON yükünü yerel yeteneğe iletir. WASI, başlangıç işlevi, başka içe aktarım, keyfi şablon, ifade değerlendirme, dosya yolu, kanca, arşiv veya bağımlılık çalıştırma yoktur. Her işlem mevcut yakıt, bellek ve worker sınırları altında yeni bir konuk deposu oluşturur.
+Çalışma zamanı yalnızca `memory` (yeni vekillerde 5 sayfa, büyük çıktıda 16; eski konuklarda 2) ve `run(i32 entry, i32 inputLen) -> i32 outputLen` dışa aktarımına sahip sınırlı Core Wasm kabul eder. Host girdi JSON'unu 0. konuma (yeni 5/16 sayfalı konukta en fazla 65.536 bayt; eski 2 sayfalı konukta 8.192 bayt), konuk çıktı JSON'unu 32.768. konuma (en fazla 900.000 bayt) yazar. İzin verilen tek içe aktarım `rchub.invoke` olup, paket, işlem ve kurulu izin kontrollerinden sonra türlenmiş JSON yükünü yerel yeteneğe iletir. WASI, başlangıç işlevi, başka içe aktarım, keyfi şablon, ifade değerlendirme, dosya yolu, kanca, arşiv veya bağımlılık çalıştırma yoktur. Her işlem mevcut yakıt, bellek ve worker sınırları altında yeni bir konuk deposu oluşturur.
 
 ## İzinler ve kurulum
 
@@ -54,15 +54,15 @@ Bir adın bildirim şemasında kabul edilmesi, sağlayıcısının uygulandığ�
 | `audio.write` | Windows'ta hazır | Sınırlı ses düzeyini ve/veya sessiz durumunu ayarlar; gözlemlenen durumu döndürür. |
 | `system.read` | Hazır | İşletim sistemi, bilgisayar adı, CPU, bellek ve çalışma süresini okur. |
 | `browser.open` | Windows'ta hazır | HTTP(S) adresini varsayılan tarayıcıda açar. |
-| `power.write` | Windows'ta hazır | Kilitleme, uyku, kapatma veya yeniden başlatma. Kapatma/yeniden başlatma önemli sonuç doğurur. |
+| `power.write` | Windows'ta hazır | Kilitleme/uyku, açık zorla kapat seçeneğiyle sınırlı gecikmeli kapatma/yeniden başlatma veya planlanan kapatmayı iptal etme. |
 | `keyboard.write` | Windows'ta hazır | Sınırlı metni yazar veya kısıtlı kısayol gönderir. |
 | `media.write` | Windows'ta hazır | Oynat/duraklat, sonraki veya önceki parçayı kontrol eder. |
 | `clipboard.read` | Windows'ta hazır | Panodaki sınırlı metni okur. |
 | `clipboard.write` | Windows'ta hazır | Panodaki sınırlı metni değiştirir ve gözlemlenen metni döndürür. |
-| `apps.read` | Windows'ta hazır | Sınırlı sayıda süreç adını ve PID'yi listeler. |
-| `apps.write` | Windows'ta hazır | PID ile bir süreci sonlandırır. Hedefi ve riski inceleyin. |
+| `apps.read` | Windows'ta hazır | En fazla 64 görünür uygulamayı veya tüm işlemleri pencere/işlem kimlikleriyle listeler. |
+| `apps.write` | Windows'ta hazır | Gözlenen kimliği doğrulayarak öne getir/küçült/büyüt/geri yükle/pencere kapat/işlem sonlandır. |
 | `display.read`, `display.write` | Windows'ta uygulandı | Birincil fiziksel monitörde yalnız DDC/CI parlaklık. Destek yoksa okuma `available:false` döner, yazma reddedilir. |
-| `screenshot.read` | Windows'ta uygulandı | Birincil ekranın en fazla 320×180 PNG önizlemesi; 30.000 karakterlik data URL sınırı için gerekirse küçültülür. |
+| `screenshot.read` | Windows'ta uygulandı | En fazla 1920× 1080, kalite 80 JPEG; 800.000 karakterlik data URL sınırına sığması için gerekirse küçültülür. İstemcide görüntüye dokunarak tam ekran açın. |
 | `speech.write` | Windows'ta uygulandı | SAPI ile en fazla 2.000 karakter düz metin, en fazla 10 saniye; süre/yetki bitiminde iptal edilir. |
 | `effects.write` | Windows'ta uygulandı | Yalnız `{effect:"beep"}`; Windows sistem sesini çalar. |
 
@@ -81,7 +81,7 @@ doğrulayamaz; SDK doğrulamasını çalıştırın. Tam Wasm doğrulamasını P
 | button | Tanımlı `action`; zorunlu argümanı `argument` ve sabit `value` ile verin. |
 | slider | Sayısal `bind`, uyumlu eylem `argument`, açık `min`, `max` ve pozitif `step`. |
 | toggle, select | Uyumlu durum/eylem argümanı; select için sınırlı, yerelleştirilmiş `options`. |
-| input | Metin türünde eylem argümanı; yazma yereldir, açık gönderme eylemi çalıştırır. |
+| input | Çok satırlı metin argümanı veya action/argument şemasına bağlı `submit:false` sayısal/boolean taslak; `defaultValue` şemaya uyar. |
 | value, status, text | Tanımlı `bind` durumunu veya yerelleştirilmiş metni gösterir. |
 | progress | Sayısal durum bağı ve açık `min`/`max`. |
 | list | Dizi durumu; nesne satırları için `itemLabel` ve `itemValue`; eyleme türlenmiş satır değeri gider. |
@@ -93,6 +93,10 @@ değeri `set_volume` eylemine iletir; `muted` boolean anahtarıdır. Adlar, etik
 aralıklar ve eylem bağları Audio'ya özel mobil modal yerine bildirimden gelir.
 [Apps bildirimi](../../plugins/official/apps/manifest.json), nesne satırlarını ve
 seçilen PID'nin türlenmiş eyleme aktarılmasını gösterir.
+
+[System bildirimi](../../plugins/official/system/manifest.json), mevcut `progress`
+denetimiyle çizilen bellek kullanım grafiğini de gösterir. `system.read`, sınırlı
+`ram_usage_percent` gözlemini üretir; uygulama görünümü manifestte tanımlanır.
 
 Bildirim, UI sürüm 1'i, yerleşik simgeyi, tema rengi belirtecini ve sınırlı denetim ağacını tanımlar. Kimlikler benzersiz küçük harfli tanımlayıcılardır. Yerleşim düğümleri (`section`, `row`, `column`, `tabs`) çocuk içerebilir. Bağlar doğrudan tanımlı durum veya eylem girdisi alanlarını gösterir. Yaprak denetimler eylem ve girdi argümanı, sabit skaler değer, sayısal aralık, yerelleştirilmiş seçenek veya türlenmiş liste satırı alanı belirtebilir. Onay, izinler, hakkında ve kaldırma arayüzü hosta aittir.
 
@@ -108,7 +112,7 @@ Mevcut katalog DEV ortamında depoya ait paket dosyalarını ve metaveriyi sunar
 
 ## Örnek paketler
 
-### Panel özelleştirme (0.2.0)
+### 0.2.0 ile gelen ortak düzenler (0.3.0 sürümünde korunur)
 
 Ortak mobil/web çizici, plugin kimliğine özel ekran seçmeden manifesti kullanır.
 Plugin kontrol sırasını, `row`/`column`/`section`/`tabs` gruplarını, EN/TR
@@ -133,16 +137,15 @@ aynı manifestte bu ortak bileşenlerle tanımlanır. Kurulumda audio.read/write
 display.read/write ve media.write açıkça istenir; eski izinler birleştirilmez.
 DDC/CI desteklenmiyorsa parlaklık pasiftir. Birleşik paket varken DEV kataloğu
 ayrı Ses/Ekran paketlerini keşif listesinden çıkarır; kaynakları ve eski
-kurulumları korunur. On iki kaynak paket de 0.2.0 düzen/ikon bilgisi alır; yeni
+kurulumları korunur. On iki kaynak paket de ortak düzen/ikon bilgisini korur; yeni
 düzen için eski sürümü kaldırıp yeniden kurun. Kayıtlı manifestler değiştirilmez.
-Güç sağlayıcısı kilit/uyku/kapat/yeniden başlat işlemlerini korur; gecikmeli
-kapatma ve kapatmayı iptal etme henüz bu sağlayıcıda uygulanmamıştır.
+Güç 0.3.0 sınırlı gecikme, açık zorla kapat seçeneği ve planlanan kapatmayı iptal etme sunar.
 
 Public kaynaklar, SDK ve bu rehber
 [CetTek/rchub-plugins](https://github.com/CetTek/rchub-plugins) deposundadır.
-Resmi 0.2.0 paketleri sabit `v0.2.0` kaynak etiketine bağlanır. Kaynak adresi
+Resmi 0.3.0 paketleri `v0.3.0` kaynak etiketine bağlanır. Kaynak adresi
 değişikliği yeni paket hash'leri üretir. Kurulu eski paketler/izinler taşınmaz;
-yeni düzen ve izinler için eski kurulumu kaldırıp 0.2.0 kurulumunu
+yeni düzen ve izinler için eski kurulumu kaldırıp 0.3.0 kurulumunu
 açıkça onaylayın.
 
 `plugins/official/` altında depoya ait on iki MIT paket bulunur: Audio, System,
@@ -151,9 +154,18 @@ Effects. “Official” depo etiketidir; kriptografik imza değildir. Bildirimle
 `guest.wat` kaynak olarak incelenebilir. Paketleri yeniden üretmek için
 `python tools/plugins/build_official.py` kullanın.
 
-Bu DEV dilimi eski menülerin her seçeneğini taşımaz: Apps işlemleri listeler ve
-sonlandırır, uygulama başlatmaz; Screenshot tam çözünürlük yerine küçük önizleme
+Bu DEV dilimi eski menülerin her seçeneğini taşımaz: Apps işlemleri/pencereleri yönetir, uygulama başlatmaz; Screenshot en fazla 1920× 1080 sınırlı optimize görüntü
 verir; Effects sahte BSOD veya ekran sallama yerine sistem sesi sunar. Windows
 sağlayıcılarının derleme ve sahte sağlayıcı kapsamı vardır; donanım, yerel yazma
 işlemleri ve fiziksel telefondaki davranış canlı doğrulama bekler. Uygulanmış olmak,
 bu PC'de canlı çalıştırıldığının kanıtı değildir.
+
+### Yeniden kullanılabilir kontroller ve resmi örnekler (0.3.0)
+
+Eklenti paneli tamamen ortak manifest kontrolleriyle tanımlanır; çizici eklenti kimliğine göre özel ekran seçmez. `progress`, `appearance:"ring"` ile halka gösterebilir. Metin girdileri `multiline` ve text/url `inputMode`; sayısal taslaklar numeric modunu destekler. Yalnız taslak tutan girdiler action/argument şemasını, `submit:false` ve şemaya uygun `defaultValue` değerini belirtir; boolean taslak onay kutusudur. Butonun `inputBindings` alanı taslakları tek doğrulanmış çağrıda birleştirir. `confirm`, tehlikeli işlem için EN/TR başlık ve mesaj içerir; kurulum izninden ayrıdır.
+
+Listelerde yerel `searchable` araması ve seçili satırın `itemActions` menüsü bulunur: yerelleştirilmiş label/action, ana argument/value, sabit `args`, satır alanını taşıyan `itemArguments`, isteğe bağlı icon/tone/confirm. Satır seçmek işlem başlatmaz. Tüm zorunlu alanlar ve şema uyumu doğrulanır; [sözleşme](../../contracts/plugins/README.md) ve resmi manifest örneklerine bakın.
+
+System kompakt CPU/RAM halkalarını ve bellek değerlerini gruplar. Keyboard çok satırlı yazı ve hızlı kısayollar içeren sekmelere sahiptir. Browser adres girdisi ve hızlı siteler sunar. Apps varsayılan olarak görünür başlıklı uygulama pencerelerini listeler; tüm işlemlere geçebilir, gözlenen satırlarda arama yapar ve işlem başlangıç kimliğini doğrulayarak pencere/sonlandırma menüsü sunar. Kapat/sonlandır işlem onayı ister. Power gecikme (0..86400 saniye, arayüz varsayılanı 30) ve zorla kapat taslaklarını yalnız kapat/yeniden başlat çağrısına birlikte ekler; planlanan kapatmayı iptal etme ayrıdır. Windows gecikme seçilince force=false değerini korur. Pano boş/metin dışıysa boş metin döner; geçici kilitlenmede sınırlı yeniden deneme yapılır.
+
+Resmi 0.3.0 kaynak adresleri `v0.3.0` etiketini kullanır. Önce ana uygulamayı güncelleyin: schema/UI/hostApi 1 olarak kalır; eski katı doğrulayıcılar yeni isteğe bağlı alanları reddeder. Değişen paketi kaldırıp kurulumunu açıkça yeniden onaylayın; kayıtlı izinler değiştirilmez. Yeni üretilen vekiller 5 sayfa bellek, 262144 bayt çıktı ve 64 KiB JSON girdi; büyük ekran görüntüsü 16 sayfa/900000 bayt çıktı kullanır. Eski 2 sayfalı vekillerde 8 KiB girdi sınırı korunur. Alanların UTF-16 sınırları da geçerlidir (pano 8192, klavye 4096). Örnek önizleme ve testler yerel yazma işlemi göndermez.

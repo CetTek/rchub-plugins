@@ -5,7 +5,16 @@
       "entry": 0,
       "id": "read",
       "input": {
-        "properties": {},
+        "properties": {
+          "filter": {
+            "enum": [
+              "all",
+              "foreground"
+            ],
+            "maxLength": 10,
+            "type": "string"
+          }
+        },
         "required": [],
         "type": "object"
       },
@@ -14,6 +23,9 @@
           "apps": {
             "items": {
               "properties": {
+                "foreground": {
+                  "type": "boolean"
+                },
                 "name": {
                   "maxLength": 120,
                   "type": "string"
@@ -22,11 +34,28 @@
                   "maximum": 2147483647,
                   "minimum": 1,
                   "type": "integer"
+                },
+                "started_at": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "title": {
+                  "maxLength": 240,
+                  "type": "string"
+                },
+                "window_id": {
+                  "maxLength": 32,
+                  "type": "string"
                 }
               },
               "required": [
                 "pid",
-                "name"
+                "name",
+                "title",
+                "window_id",
+                "started_at",
+                "foreground"
               ],
               "type": "object"
             },
@@ -52,14 +81,37 @@
       "id": "stop",
       "input": {
         "properties": {
+          "action": {
+            "enum": [
+              "stop",
+              "close",
+              "bring_to_front",
+              "minimize",
+              "maximize",
+              "restore"
+            ],
+            "maxLength": 14,
+            "type": "string"
+          },
           "pid": {
             "maximum": 2147483647,
             "minimum": 1,
             "type": "integer"
+          },
+          "started_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "window_id": {
+            "maxLength": 32,
+            "type": "string"
           }
         },
         "required": [
-          "pid"
+          "pid",
+          "action",
+          "started_at"
         ],
         "type": "object"
       },
@@ -96,7 +148,7 @@
     "name": "RCHub"
   },
   "schemaVersion": 1,
-  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/apps",
+  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.3.0/plugins/official/apps",
   "state": {
     "accepted": {
       "type": "boolean"
@@ -104,6 +156,9 @@
     "apps": {
       "items": {
         "properties": {
+          "foreground": {
+            "type": "boolean"
+          },
           "name": {
             "maxLength": 120,
             "type": "string"
@@ -112,11 +167,28 @@
             "maximum": 2147483647,
             "minimum": 1,
             "type": "integer"
+          },
+          "started_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": {
+            "maxLength": 240,
+            "type": "string"
+          },
+          "window_id": {
+            "maxLength": 32,
+            "type": "string"
           }
         },
         "required": [
           "pid",
-          "name"
+          "name",
+          "title",
+          "window_id",
+          "started_at",
+          "foreground"
         ],
         "type": "object"
       },
@@ -137,13 +209,155 @@
     "controls": [
       {
         "action": "read",
-        "icon": "apps",
-        "id": "read",
+        "argument": "filter",
+        "id": "filter",
         "label": {
-          "en": "Refresh processes",
-          "tr": "İşlemleri yenile"
+          "en": "Process view",
+          "tr": "İşlem görünümü"
         },
-        "type": "button"
+        "options": [
+          {
+            "label": {
+              "en": "Applications",
+              "tr": "Uygulamalar"
+            },
+            "value": "foreground"
+          },
+          {
+            "label": {
+              "en": "All processes",
+              "tr": "Tüm işlemler"
+            },
+            "value": "all"
+          }
+        ],
+        "type": "select"
+      },
+      {
+        "bind": "apps",
+        "id": "processes",
+        "itemActions": [
+          {
+            "action": "stop",
+            "args": {
+              "action": "bring_to_front"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Bring to front",
+              "tr": "Öne getir"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "minimize"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Minimize",
+              "tr": "Küçült"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "maximize"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Maximize",
+              "tr": "Büyüt"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "restore"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Restore",
+              "tr": "Geri yükle"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "close"
+            },
+            "argument": "pid",
+            "confirm": {
+              "message": {
+                "en": "Unsaved work may be lost. Continue?",
+                "tr": "Kaydedilmemiş çalışmalar kaybolabilir. Devam edilsin mi?"
+              },
+              "title": {
+                "en": "Close window",
+                "tr": "Pencereyi kapat"
+              }
+            },
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Close window",
+              "tr": "Pencereyi kapat"
+            },
+            "tone": "danger"
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "stop"
+            },
+            "argument": "pid",
+            "confirm": {
+              "message": {
+                "en": "Unsaved work may be lost. Continue?",
+                "tr": "Kaydedilmemiş çalışmalar kaybolabilir. Devam edilsin mi?"
+              },
+              "title": {
+                "en": "Stop process",
+                "tr": "İşlemi sonlandır"
+              }
+            },
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Stop process",
+              "tr": "İşlemi sonlandır"
+            },
+            "tone": "danger"
+          }
+        ],
+        "itemLabel": "name",
+        "itemValue": "pid",
+        "label": {
+          "en": "Select an application",
+          "tr": "Bir uygulama seçin"
+        },
+        "searchable": true,
+        "type": "list"
       },
       {
         "bind": "count",
@@ -153,33 +367,10 @@
           "tr": "Listelenen işlemler (en fazla 64)"
         },
         "type": "value"
-      },
-      {
-        "action": "stop",
-        "argument": "pid",
-        "bind": "apps",
-        "id": "processes",
-        "itemLabel": "name",
-        "itemValue": "pid",
-        "label": {
-          "en": "Stop a process",
-          "tr": "Bir işlemi sonlandır"
-        },
-        "tone": "danger",
-        "type": "list"
-      },
-      {
-        "bind": "accepted",
-        "id": "accepted",
-        "label": {
-          "en": "Stop requested",
-          "tr": "Sonlandırma istendi"
-        },
-        "type": "status"
       }
     ],
     "icon": "apps",
     "version": 1
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

@@ -108,7 +108,7 @@
             "maxLength": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 32768
+              "maximum": 800000
             },
             "enum": {
               "type": "array",
@@ -382,6 +382,167 @@
         },
         "itemValue": {
           "$ref": "#/$defs/id"
+        },
+        "appearance": {
+          "enum": [
+            "linear",
+            "ring"
+          ]
+        },
+        "multiline": {
+          "type": "boolean"
+        },
+        "inputMode": {
+          "enum": [
+            "text",
+            "numeric",
+            "url"
+          ]
+        },
+        "defaultValue": {
+          "type": [
+            "string",
+            "integer",
+            "boolean"
+          ],
+          "maxLength": 32768,
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "submit": {
+          "type": "boolean"
+        },
+        "inputBindings": {
+          "type": "object",
+          "maxProperties": 32,
+          "propertyNames": {
+            "$ref": "#/$defs/id"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "confirm": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": {
+              "$ref": "#/$defs/localizedControl"
+            },
+            "message": {
+              "$ref": "#/$defs/localizedControl"
+            }
+          },
+          "required": [
+            "title",
+            "message"
+          ]
+        },
+        "searchable": {
+          "type": "boolean"
+        },
+        "itemActions": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "$ref": "#/$defs/localizedControl"
+              },
+              "action": {
+                "$ref": "#/$defs/id"
+              },
+              "argument": {
+                "$ref": "#/$defs/id"
+              },
+              "value": {
+                "type": [
+                  "string",
+                  "integer",
+                  "boolean"
+                ],
+                "maxLength": 32768,
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "args": {
+                "type": "object",
+                "maxProperties": 32,
+                "propertyNames": {
+                  "$ref": "#/$defs/id"
+                },
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "integer",
+                    "boolean"
+                  ],
+                  "maxLength": 32768,
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "itemArguments": {
+                "type": "object",
+                "maxProperties": 32,
+                "propertyNames": {
+                  "$ref": "#/$defs/id"
+                },
+                "additionalProperties": {
+                  "$ref": "#/$defs/id"
+                }
+              },
+              "tone": {
+                "enum": [
+                  "default",
+                  "primary",
+                  "danger",
+                  "muted"
+                ]
+              },
+              "icon": {
+                "enum": [
+                  "volume",
+                  "power",
+                  "cpu",
+                  "apps",
+                  "camera",
+                  "keyboard",
+                  "clipboard",
+                  "globe",
+                  "message",
+                  "smile",
+                  "puzzle",
+                  "sun",
+                  "play",
+                  "info"
+                ]
+              },
+              "confirm": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "$ref": "#/$defs/localizedControl"
+                  },
+                  "message": {
+                    "$ref": "#/$defs/localizedControl"
+                  }
+                },
+                "required": [
+                  "title",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "action"
+            ]
+          }
         }
       },
       "required": [
@@ -418,8 +579,7 @@
             "properties": {
               "type": {
                 "enum": [
-                  "toggle",
-                  "select"
+                  "toggle"
                 ]
               }
             },
@@ -755,6 +915,137 @@
                 "enum": [
                   "slider",
                   "progress"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "select"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "action",
+              "argument",
+              "options"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "appearance"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "progress"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "multiline"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "input"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "inputMode"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "input"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "defaultValue"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "input"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "submit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "input"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "searchable"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "list"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "itemActions"
+            ]
+          },
+          "then": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "list"
                 ]
               }
             }

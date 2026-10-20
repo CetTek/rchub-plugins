@@ -26,9 +26,14 @@
 
 - Layouts: sections, rows, columns and tabs.
 - Controls: buttons, sliders, toggles, selects, inputs, progress indicators, images, typed lists, text, values and status.
-- [System example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/system/manifest.json): bounded host metrics and declarative values.
+- [System example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/system/manifest.json): bounded host metrics, CPU/RAM ring progress charts and compact memory values.
 - [Media & Display example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/media/manifest.json): grouped volume/mute, brightness and playback controls.
-- [Apps example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/apps/manifest.json): structured process rows.
+- [Apps example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/apps/manifest.json): searchable typed process/window rows, selected-row action menus and action confirmation.
+
+- [Keyboard example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/keyboard/manifest.json): multiline input, tabs and quick hotkeys.
+- [Browser example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/browser/manifest.json): URL input and quick sites.
+- [Power example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/power/manifest.json): typed draft-only inputs and inputBindings merge delay/force into shutdown/restart; cancellation is separate.
+- Optional shared fields: progress appearance, multiline/inputMode/submit/defaultValue, inputBindings, localized confirm, searchable/itemActions. See the contract for exact field types, required arguments and bounds. No plugin-ID-specific renderer screen.
 
 ## Security and compatibility
 
@@ -37,3 +42,5 @@
 - Installation requires explicit review and consent. Later actions still validate identity, current device ownership, capability, grant and typed payload.
 - Marketplace and remote execution are development-only. Official packages are MIT reference implementations; native capability availability depends on the host/runtime and platform.
 - Read the developer guide and contract for current limits; repository labels and manifest publisher/source text are not cryptographic provenance.
+
+Official 0.3.0 keeps schema/UI/hostApi 1 but needs an upgraded host: older strict validators reject new optional fields. Explicitly remove/reinstall changed packages; stored grants are preserved. New proxy guests use 5/16 pages and 64 KiB JSON input; legacy 2-page guests retain 8 KiB. Per-field UTF-16 limits still apply. Source tag: v0.3.0.

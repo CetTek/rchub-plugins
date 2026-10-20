@@ -10,7 +10,7 @@ For AI coding tools, see [`llms.txt`](llms.txt), a concise index of the guides, 
 
 Audio, System, Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech and Effects live in [plugins/official](plugins/official). Each directory includes a manifest, readable Wasm proxy source and a portable `.rchub-plugin.json` package.
 
-These are development reference packages for a compatible RCHub host. Native capabilities currently target Windows; provider availability depends on the host/runtime and hardware. Apps lists/stops processes, Screenshot returns a thumbnail, and Effects plays a beep. They do not reproduce every legacy control. Source availability does not certify safety or production readiness.
+These are development reference packages for a compatible RCHub host. Native capabilities currently target Windows; provider availability depends on the host/runtime and hardware. Apps controls observed processes/windows, Screenshot returns a bounded optimized image, and Effects plays a beep. They do not reproduce every legacy control. Source availability does not certify safety or production readiness.
 
 ## Build
 
@@ -25,11 +25,11 @@ The builder reproduces all twelve packages from the definitions in `build_offici
 
 ## Releases and installation
 
-Release `v0.2.0` publishes twelve source packages whose source links point to the matching tag. Media is now **Media & Display**, combining volume/mute, DDC/CI brightness and playback. Standalone Audio/Display remain available for compatibility; the current DEV catalog recommends the combined package in their place. All plugins define their own control layout, icons and button tones through the shared UI schema. See the guides' Panel customization section.
+Release `v0.3.0` contains twelve source packages whose source links point to the matching tag. Media is now **Media & Display**, combining volume/mute, DDC/CI brightness and playback. Standalone Audio/Display remain available for compatibility; the current DEV catalog recommends the combined package in their place. All plugins define their own control layout, icons and button tones through the shared UI schema. See the guides' Panel customization section.
 
 Download a `.rchub-plugin.json` release asset and import it into a compatible development host. Review the source, requested permissions and installation disclosure first. Installing requires explicit approval; later operations still enforce installed grants and current authorization. Existing installed manifests are not rewritten. Reinstall to obtain a changed layout; Media 0.2.0 explicitly requests audio/read-write, display/read-write and media/write permissions together. Older separate grants are never combined automatically.
 
-Version 0.1.1 introduced public source links; version 0.2.0 adds the shared-control layouts and combined Media package. Package hashes change with each manifest/release. Remove an old installation and approve the new version separately.
+Version 0.1.1 introduced public source links; version 0.2.0 added shared layouts and combined Media. Version 0.3.0 adds ring gauges, multiline/typed form drafts, selected-row menus/search, bounded Power scheduling and escaping-safe guest buffers. Upgrade the compatible host first; old strict hosts reject the new optional schema fields. Package hashes change with each manifest/release. Remove an old installation and approve the new version separately.
 
 ## Contributing
 

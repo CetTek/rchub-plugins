@@ -76,7 +76,7 @@
     "name": "RCHub"
   },
   "schemaVersion": 1,
-  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/keyboard",
+  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.3.0/plugins/official/keyboard",
   "state": {
     "sent": {
       "type": "boolean"
@@ -89,24 +89,149 @@
     "color": "purple",
     "controls": [
       {
-        "action": "type_text",
-        "argument": "text",
-        "id": "text",
-        "label": {
-          "en": "Type on PC",
-          "tr": "PC’de yaz"
-        },
-        "type": "input"
-      },
-      {
-        "action": "shortcut",
-        "argument": "keys",
-        "id": "shortcut",
-        "label": {
-          "en": "Shortcut (e.g. ctrl+a)",
-          "tr": "Kısayol (ör. ctrl+a)"
-        },
-        "type": "input"
+        "children": [
+          {
+            "children": [
+              {
+                "action": "type_text",
+                "argument": "text",
+                "id": "text",
+                "label": {
+                  "en": "Type on PC",
+                  "tr": "PC’de yaz"
+                },
+                "multiline": true,
+                "placeholder": {
+                  "en": "Write a message or paste multiple lines",
+                  "tr": "Bir ileti yazın veya çok satırlı metin yapıştırın"
+                },
+                "type": "input"
+              }
+            ],
+            "id": "typing",
+            "label": {
+              "en": "Text",
+              "tr": "Metin"
+            },
+            "type": "section"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "copy",
+                    "label": {
+                      "en": "Copy",
+                      "tr": "Kopyala"
+                    },
+                    "type": "button",
+                    "value": "ctrl+c"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "paste",
+                    "label": {
+                      "en": "Paste",
+                      "tr": "Yapıştır"
+                    },
+                    "type": "button",
+                    "value": "ctrl+v"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "select_all",
+                    "label": {
+                      "en": "Select all",
+                      "tr": "Tümünü seç"
+                    },
+                    "type": "button",
+                    "value": "ctrl+a"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "undo",
+                    "label": {
+                      "en": "Undo",
+                      "tr": "Geri al"
+                    },
+                    "type": "button",
+                    "value": "ctrl+z"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "enter",
+                    "label": {
+                      "en": "Enter",
+                      "tr": "Enter"
+                    },
+                    "type": "button",
+                    "value": "enter"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "escape",
+                    "label": {
+                      "en": "Escape",
+                      "tr": "Escape"
+                    },
+                    "type": "button",
+                    "value": "esc"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "switch",
+                    "label": {
+                      "en": "Switch app",
+                      "tr": "Uygulama değiştir"
+                    },
+                    "type": "button",
+                    "value": "alt+tab"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "desktop",
+                    "label": {
+                      "en": "Show desktop",
+                      "tr": "Masaüstünü göster"
+                    },
+                    "type": "button",
+                    "value": "win+d"
+                  }
+                ],
+                "id": "quick_keys",
+                "type": "row"
+              },
+              {
+                "action": "shortcut",
+                "argument": "keys",
+                "id": "shortcut",
+                "label": {
+                  "en": "Shortcut (e.g. ctrl+a)",
+                  "tr": "Kısayol (ör. ctrl+a)"
+                },
+                "type": "input"
+              }
+            ],
+            "id": "shortcuts",
+            "label": {
+              "en": "Shortcuts",
+              "tr": "Kısayollar"
+            },
+            "type": "section"
+          }
+        ],
+        "id": "keyboard_tabs",
+        "type": "tabs"
       },
       {
         "bind": "sent",
@@ -121,5 +246,5 @@
     "icon": "keyboard",
     "version": 1
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

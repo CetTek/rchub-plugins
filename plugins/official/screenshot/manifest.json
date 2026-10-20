@@ -17,7 +17,7 @@
             "type": "integer"
           },
           "image": {
-            "maxLength": 30000,
+            "maxLength": 800000,
             "type": "string"
           },
           "width": {
@@ -36,8 +36,8 @@
     }
   ],
   "description": {
-    "en": "Capture a small primary-screen preview.",
-    "tr": "Birincil ekranın küçük önizlemesini alın."
+    "en": "Capture an optimized primary-screen image.",
+    "tr": "Birincil ekranın iyileştirilmiş görüntüsünü alın."
   },
   "hostApi": 1,
   "id": "com.rchub.screenshot",
@@ -54,7 +54,7 @@
     "name": "RCHub"
   },
   "schemaVersion": 1,
-  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/screenshot",
+  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.3.0/plugins/official/screenshot",
   "state": {
     "height": {
       "maximum": 4096,
@@ -62,7 +62,7 @@
       "type": "integer"
     },
     "image": {
-      "maxLength": 30000,
+      "maxLength": 800000,
       "type": "string"
     },
     "width": {
@@ -82,8 +82,8 @@
         "icon": "camera",
         "id": "capture",
         "label": {
-          "en": "Capture primary screen thumbnail",
-          "tr": "Birincil ekranın küçük önizlemesini al"
+          "en": "Capture primary screen",
+          "tr": "Birincil ekranı yakala"
         },
         "type": "button"
       },
@@ -91,8 +91,8 @@
         "bind": "image",
         "id": "image",
         "label": {
-          "en": "Thumbnail (not full resolution)",
-          "tr": "Küçük önizleme (tam çözünürlük değil)"
+          "en": "Optimized image · tap to view",
+          "tr": "Optimize edilmiş görüntü · görüntülemek için dokun"
         },
         "type": "image"
       }
@@ -100,5 +100,5 @@
     "icon": "camera",
     "version": 1
   },
-  "version": "0.2.0"
+  "version": "0.3.0"
 }

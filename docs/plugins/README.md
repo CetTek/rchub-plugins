@@ -36,7 +36,7 @@ The `wasm` value is an array of byte integers. The full canonical package is lim
 
 Objects are strict: unknown keys are rejected. Manifests use schema and host API version 1, localized English and Turkish text, reverse-domain lowercase IDs, numeric `major.minor.patch` versions, Windows/Linux targets, a declared permission list, actions, typed state and UI controls. Numeric fields need integer bounds; strings need a maximum length. Arrays and nested objects have explicit limits. Inputs, outputs and state reject undeclared fields. Keep numeric bounds and UI slider steps as integers for consistent cross-runtime canonicalization.
 
-The runtime accepts only bounded Core Wasm with `memory` (two pages) and `run(i32 entry, i32 inputLen) -> i32 outputLen`. The host writes input JSON at offset 0 (at most 8,192 bytes); the guest writes output JSON at offset 32,768 (at most 32,768 bytes). The only allowed import is `rchub.invoke`, which forwards a typed JSON payload to a native capability after package, operation and installed-grant checks. There is no WASI, start function, other import, arbitrary template, expression evaluation, filesystem path, hook, archive or dependency execution. Each operation creates a fresh guest store under existing fuel, memory and worker limits.
+The runtime accepts only bounded Core Wasm with `memory` (5 pages in new proxies; 16 for large declared output; 2 for legacy guests) and `run(i32 entry, i32 inputLen) -> i32 outputLen`. The host writes input JSON at offset 0 (at most 65,536 bytes in new 5/16-page guests, 8,192 in legacy 2-page guests); the guest writes output JSON at offset 32,768 (at most 900,000 bytes). The only allowed import is `rchub.invoke`, which forwards a typed JSON payload to a native capability after package, operation and installed-grant checks. There is no WASI, start function, other import, arbitrary template, expression evaluation, filesystem path, hook, archive or dependency execution. Each operation creates a fresh guest store under existing fuel, memory and worker limits.
 
 ## Permissions and installation
 
@@ -54,15 +54,15 @@ A name being accepted by the manifest schema does not mean a provider is impleme
 | `audio.write` | Ready on Windows | Set bounded volume and/or mute; return observed state. |
 | `system.read` | Ready | Read OS, hostname, CPU, memory and uptime. |
 | `browser.open` | Ready on Windows | Open an HTTP(S) URL in the default browser. |
-| `power.write` | Ready on Windows | Lock, sleep, shutdown or restart. Treat shutdown/restart as consequential actions. |
+| `power.write` | Ready on Windows | Lock/sleep, bounded delayed shutdown/restart with explicit force, or cancel a scheduled shutdown. |
 | `keyboard.write` | Ready on Windows | Type bounded text or send a constrained hotkey. |
 | `media.write` | Ready on Windows | Play/pause, next or previous media track. |
 | `clipboard.read` | Ready on Windows | Read bounded clipboard text. |
 | `clipboard.write` | Ready on Windows | Set bounded clipboard text and return the observed text. |
-| `apps.read` | Ready on Windows | List a bounded set of process names and PIDs. |
-| `apps.write` | Ready on Windows | Terminate a process by PID. Review the exact target and risk. |
+| `apps.read` | Ready on Windows | List up to 64 visible applications or all processes, with typed window/process identities. |
+| `apps.write` | Ready on Windows | Bring forward, minimize/maximize/restore, close a window or stop a process; validate observed identity. |
 | `display.read`, `display.write` | Implemented on Windows | Primary physical monitor DDC/CI brightness only. Read reports `available:false` without support; writes then fail. |
-| `screenshot.read` | Implemented on Windows | Primary-screen PNG thumbnail, at most 320×180, adaptively reduced to a 30,000-character data URL. |
+| `screenshot.read` | Implemented on Windows | Optimized primary-screen JPEG, up to 1920× 1080 at quality 80, reduced as needed to an 800,000-character data URL cap. Tap the image in the client to open it full-screen. |
 | `speech.write` | Implemented on Windows | Literal SAPI text, at most 2,000 characters and 10 seconds; expiry cancels speech. |
 | `effects.write` | Implemented on Windows | Only `{effect:"beep"}`; plays the Windows system sound. |
 
@@ -81,11 +81,11 @@ run the SDK validator and let the PC perform full Wasm validation.
 | section, row, column, tabs | `children` contain bounded control trees; tabs select a child group. |
 | button | Declared `action`; supply its required argument via `argument` and static `value`. |
 | slider | Numeric `bind` and compatible action `argument`, explicit `min`, `max`, positive `step`. |
-| toggle, select | Compatible bound state/action argument; select has bounded localized `options`. |
-| input | String action `argument`; typing is local, explicit submit invokes the action. |
+| toggle, select | Toggle requires boolean bound state/action argument; select requires a declared argument and bounded localized `options`. |
+| input | String action `argument` with optional multiline; typed integer/boolean draft-only fields use `submit:false`, `defaultValue` and action-bound schemas. |
 | value, status, text | Display declared `bind` state or localized text. |
 | progress | Numeric bound state and explicit `min`/`max`. |
-| list | Array state; object rows use `itemLabel` and `itemValue`; an action receives the typed row value. |
+| list | Array state with `itemLabel`/`itemValue`; optional search and selected-row `itemActions` map typed fields/static arguments. |
 | image | Bound embedded PNG/JPEG data URL for portable PC/mobile rendering; no remote URL. |
 
 For a complete working layout, copy the
@@ -95,6 +95,10 @@ For a complete working layout, copy the
 come from the manifest, not an Audio-specific mobile modal. The
 [Apps manifest](../../plugins/official/apps/manifest.json) demonstrates object rows
 and passing the selected PID to a typed action.
+
+The [System manifest](../../plugins/official/system/manifest.json) also shows a
+manifest-defined memory usage chart: `system.read` returns a bounded
+`ram_usage_percent` observation, rendered with the existing `progress` control.
 
 The manifest declares UI version 1, a built-in icon and theme color token, and a bounded tree of controls. IDs are unique lowercase identifiers. Layout nodes (`section`, `row`, `column`, `tabs`) can contain children. Bindings refer directly to declared state or action-input fields. Leaf controls can name an action and input argument, a static scalar value, numeric range, localized options or typed list row fields. The host validates control/action/schema compatibility and owns the confirmation, permissions, about and removal UI.
 
@@ -110,7 +114,7 @@ The current catalog serves repository-owned package artifacts and metadata in DE
 
 ## Reference packages
 
-### Panel customization (0.2.0)
+### Shared layouts introduced in 0.2.0 (retained in 0.3.0)
 
 The shared mobile/web renderer consumes the manifest, without special screens
 selected by plugin ID. Plugins choose control order, `row`/`column`/`section`/`tabs`
@@ -138,17 +142,16 @@ audio.read/write, display.read/write and media.write at installation. Previous
 separate grants are never unioned. Unsupported DDC/CI disables brightness.
 When the combined package is present, the DEV catalog omits standalone Audio
 and Display from discovery; their sources and existing installations remain.
-All twelve source packages receive 0.2.0 layouts/icon metadata. These layouts
+All twelve source packages retain the shared layouts/icon metadata. These layouts
 require removing/reinstalling older versions; stored manifests are not rewritten.
-Power retains its implemented lock/sleep/shutdown/restart actions; delay and
-cancel-shutdown are not implemented by this native provider.
+Power 0.3.0 adds bounded delay, explicit force and cancel-scheduled-shutdown; see below.
 
 Public sources, SDK and this guide are maintained at
 [CetTek/rchub-plugins](https://github.com/CetTek/rchub-plugins).
-Official package version 0.2.0 links to the immutable `v0.2.0` source tag.
+Official package version 0.3.0 links to the matching `v0.3.0` source tag.
 The source metadata change produces new package hashes. Existing installed
 older packages/grants are not migrated; remove the old installation and explicitly
-approve installation of 0.2.0 to use the current layout and permissions.
+approve installation of 0.3.0 to use the current layout and permissions.
 
 `plugins/official/` contains twelve repository-owned MIT packages: Audio, System,
 Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech and
@@ -156,9 +159,19 @@ Effects. “Official” is a repository label, not a cryptographic signature. Ma
 and `guest.wat` are reviewable source; reproduce packages using
 `python tools/plugins/build_official.py`.
 
-This DEV implementation does not reproduce every legacy option: Apps lists/stops
-processes, it does not launch applications; Screenshot is a thumbnail, not the old
-full-resolution capture; Effects provides a beep, not fake BSOD or screen shaking.
+This DEV implementation does not reproduce every legacy option: Apps lists and controls windows/processes, it does not launch applications; Screenshot provides a bounded,
+optimized image up to 1920× 1080 rather than an unbounded raw capture; Effects
+provides a beep, not fake BSOD or screen shaking.
 The Windows providers have compile and fake-provider coverage; hardware, native
 writes and physical-phone behavior still need live verification. Do not interpret
 an implemented provider as proof that it was exercised on this PC.
+
+### Reusable controls and official examples (0.3.0)
+
+Plugins define their complete panel through shared controls; the renderer never selects a custom screen by plugin ID. `progress` now accepts `appearance:"ring"`. String inputs support `multiline` and text/url `inputMode`; integer draft inputs use numeric mode. Draft-only inputs declare their action/argument schema plus `submit:false` and a typed `defaultValue`; boolean drafts render as checkboxes. A button's `inputBindings` combines these drafts into one validated invocation. `confirm` contains localized title/message for destructive actions; installation consent remains separate.
+
+Lists support local `searchable` filtering and selected-row `itemActions`: localized label/action, primary argument/value, static `args`, row-field `itemArguments`, optional icon/tone/confirm. Selecting a row opens its action menu and does not perform a destructive operation. Every argument and required field is schema checked; see the [contract](../../contracts/plugins/README.md) and official source manifests.
+
+System groups compact CPU/RAM rings and memory figures. Keyboard has multiline typing and shortcut tabs with quick hotkeys. Browser has a URL field and quick sites. Apps defaults to visible titled application windows, can read all processes, searches observed rows and exposes window controls/stop with process-creation identity checks; close/stop ask for action confirmation. Power delay (0..86400 seconds, UI default 30) and force drafts apply together only to shutdown/restart, with a separate cancel-scheduled-shutdown action. Windows scheduling preserves force=false even with a delay. Clipboard empty/non-text reads return an empty string; bounded retry handles temporary clipboard contention.
+
+Official 0.3.0 source links use tag `v0.3.0`. Upgrade the host first: schema/UI/hostApi remain 1 but older strict validators reject the new optional fields. Remove and explicitly reinstall changed packages; stored grants are never rewritten. New generated proxies use 5-page memory, 262144-byte output and 64 KiB serialized input; large screenshot output uses 16 pages/900000 bytes. Old 2-page guests retain 8 KiB input. Field UTF-16 limits still apply (clipboard 8192, keyboard 4096). Mock previews and tests do not send native writes.
