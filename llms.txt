@@ -1,0 +1,39 @@
+# RCHub Plugins
+
+> RCHub is a development plugin platform for PC controls. Plugins are WebAssembly packages with a strict manifest-defined UI and typed, permission-gated capabilities.
+
+## Start here
+
+- [English developer guide](https://github.com/CetTek/rchub-plugins/blob/main/docs/plugins/README.md): quick start, package format, permissions, UI controls, examples and compatibility.
+- [Türkçe geliştirici rehberi](https://github.com/CetTek/rchub-plugins/blob/main/docs/plugins/README.tr.md)
+- [Package and protocol contract](https://github.com/CetTek/rchub-plugins/blob/main/contracts/plugins/README.md)
+- [JSON Schema](https://github.com/CetTek/rchub-plugins/blob/main/contracts/plugins/plugin.schema.json)
+- [Python SDK](https://github.com/CetTek/rchub-plugins/blob/main/tools/plugins/rchub_plugin.py)
+- [Official plugin builder](https://github.com/CetTek/rchub-plugins/blob/main/tools/plugins/build_official.py)
+
+## Build a plugin
+
+1. Create a starter manifest and readable Wasm source:
+   `python tools/plugins/rchub_plugin.py create examples/my-plugin --id com.example.myplugin --name "My Plugin"`
+2. Edit `manifest.json`: declare exact permissions, typed action inputs/outputs and state, and choose controls from the bounded UI schema.
+3. Build and validate the package:
+   `python tools/plugins/rchub_plugin.py build examples/my-plugin --proxy --out examples/my-plugin/my-plugin.rchub-plugin.json`
+   `python tools/plugins/rchub_plugin.py validate examples/my-plugin/my-plugin.rchub-plugin.json`
+4. Preview declarative controls in the RCHub development app at `/plugin-preview`. The preview uses local mock state and never sends device commands.
+5. Review the source and requested permissions before installing. The host enforces current authorization and the exact saved grant for every operation.
+
+## UI and examples
+
+- Layouts: sections, rows, columns and tabs.
+- Controls: buttons, sliders, toggles, selects, inputs, progress indicators, images, typed lists, text, values and status.
+- [System example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/system/manifest.json): bounded host metrics and declarative values.
+- [Media & Display example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/media/manifest.json): grouped volume/mute, brightness and playback controls.
+- [Apps example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/apps/manifest.json): structured process rows.
+
+## Security and compatibility
+
+- Packages use a strict schema, canonical SHA-256 identity and bounded Core WebAssembly.
+- Plugin code has no WASI, arbitrary JavaScript/HTML, filesystem access or package hooks.
+- Installation requires explicit review and consent. Later actions still validate identity, current device ownership, capability, grant and typed payload.
+- Marketplace and remote execution are development-only. Official packages are MIT reference implementations; native capability availability depends on the host/runtime and platform.
+- Read the developer guide and contract for current limits; repository labels and manifest publisher/source text are not cryptographic provenance.

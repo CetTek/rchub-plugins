@@ -1,6 +1,7 @@
 """Rebuild repository-owned MIT reference packages with the portable SDK."""
 from pathlib import Path
 from copy import deepcopy
+import json
 import rchub_plugin as sdk
 
 RELEASE_VERSION = '0.2.0'
@@ -197,7 +198,9 @@ def build():
         root = sdk.ROOT / 'plugins/official' / name
         root.mkdir(parents=True, exist_ok=True)
         sdk.validate_manifest(m)
-        (root / 'manifest.json').write_bytes(sdk.canonical(m))
+        (root / 'manifest.json').write_text(
+            json.dumps(m, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+            encoding='utf-8', newline='\n')
         (root / 'guest.wat').write_text(sdk.proxy_wat(m), encoding='utf-8', newline='\n')
         bundle = {'formatVersion': 1, 'manifest': m, 'wasm': list(sdk.proxy_wasm(m))}
         sdk.validate_bundle(bundle)

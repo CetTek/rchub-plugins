@@ -1,1 +1,125 @@
-{"actions":[{"capability":"keyboard.write","entry":0,"id":"type_text","input":{"properties":{"text":{"maxLength":4096,"type":"string"}},"required":["text"],"type":"object"},"output":{"properties":{"sent":{"type":"boolean"}},"required":["sent"],"type":"object"}},{"capability":"keyboard.write","entry":1,"id":"shortcut","input":{"properties":{"keys":{"maxLength":80,"type":"string"}},"required":["keys"],"type":"object"},"output":{"properties":{"sent":{"type":"boolean"}},"required":["sent"],"type":"object"}}],"description":{"en":"Type text and send keyboard shortcuts.","tr":"Metin yazın ve klavye kısayolları gönderin."},"hostApi":1,"id":"com.rchub.keyboard","license":"MIT","name":{"en":"Keyboard","tr":"Klavye"},"permissions":["keyboard.write"],"publisher":{"kind":"official","name":"RCHub"},"schemaVersion":1,"source":"https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/keyboard","state":{"sent":{"type":"boolean"}},"targets":["windows"],"ui":{"color":"purple","controls":[{"action":"type_text","argument":"text","id":"text","label":{"en":"Type on PC","tr":"PC’de yaz"},"type":"input"},{"action":"shortcut","argument":"keys","id":"shortcut","label":{"en":"Shortcut (e.g. ctrl+a)","tr":"Kısayol (ör. ctrl+a)"},"type":"input"},{"bind":"sent","id":"sent","label":{"en":"Sent","tr":"Gönderildi"},"type":"status"}],"icon":"keyboard","version":1},"version":"0.2.0"}
+{
+  "actions": [
+    {
+      "capability": "keyboard.write",
+      "entry": 0,
+      "id": "type_text",
+      "input": {
+        "properties": {
+          "text": {
+            "maxLength": 4096,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "sent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sent"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "capability": "keyboard.write",
+      "entry": 1,
+      "id": "shortcut",
+      "input": {
+        "properties": {
+          "keys": {
+            "maxLength": 80,
+            "type": "string"
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "sent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sent"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "description": {
+    "en": "Type text and send keyboard shortcuts.",
+    "tr": "Metin yazın ve klavye kısayolları gönderin."
+  },
+  "hostApi": 1,
+  "id": "com.rchub.keyboard",
+  "license": "MIT",
+  "name": {
+    "en": "Keyboard",
+    "tr": "Klavye"
+  },
+  "permissions": [
+    "keyboard.write"
+  ],
+  "publisher": {
+    "kind": "official",
+    "name": "RCHub"
+  },
+  "schemaVersion": 1,
+  "source": "https://github.com/CetTek/rchub-plugins/tree/v0.2.0/plugins/official/keyboard",
+  "state": {
+    "sent": {
+      "type": "boolean"
+    }
+  },
+  "targets": [
+    "windows"
+  ],
+  "ui": {
+    "color": "purple",
+    "controls": [
+      {
+        "action": "type_text",
+        "argument": "text",
+        "id": "text",
+        "label": {
+          "en": "Type on PC",
+          "tr": "PC’de yaz"
+        },
+        "type": "input"
+      },
+      {
+        "action": "shortcut",
+        "argument": "keys",
+        "id": "shortcut",
+        "label": {
+          "en": "Shortcut (e.g. ctrl+a)",
+          "tr": "Kısayol (ör. ctrl+a)"
+        },
+        "type": "input"
+      },
+      {
+        "bind": "sent",
+        "id": "sent",
+        "label": {
+          "en": "Sent",
+          "tr": "Gönderildi"
+        },
+        "type": "status"
+      }
+    ],
+    "icon": "keyboard",
+    "version": 1
+  },
+  "version": "0.2.0"
+}

@@ -4,6 +4,8 @@ Open-source reference plugins and a dependency-free Python SDK for RCHub, mainta
 
 [Developer guide (English)](docs/plugins/README.md) · [Geliştirici rehberi (Türkçe)](docs/plugins/README.tr.md) · [Package contract](contracts/plugins/README.md) · [JSON Schema](contracts/plugins/plugin.schema.json)
 
+For AI coding tools, see [`llms.txt`](llms.txt), a concise index of the guides, SDK, contracts and official examples.
+
 ## Included plugins
 
 Audio, System, Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech and Effects live in [plugins/official](plugins/official). Each directory includes a manifest, readable Wasm proxy source and a portable `.rchub-plugin.json` package.
@@ -19,7 +21,7 @@ python tools/plugins/build_official.py
 python tools/plugins/rchub_plugin.py validate plugins/official/audio/audio.rchub-plugin.json
 ```
 
-The builder reproduces all twelve packages from the definitions in `build_official.py`. The SDK also supports community manifests and custom compiled Wasm. See the guides for schemas, UI controls, permissions and installation.
+The builder reproduces all twelve packages from the definitions in `build_official.py`. Source `manifest.json` files use readable two-space JSON indentation. Built `.rchub-plugin.json` files stay compact and canonical because their SHA-256 identity is calculated from canonical bytes; use `inspect` for a readable package view. The SDK also supports community manifests and custom compiled Wasm. See the guides for schemas, UI controls, permissions and installation.
 
 ## Releases and installation
 

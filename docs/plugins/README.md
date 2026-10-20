@@ -4,6 +4,8 @@ RCHub plugins are declarative native-control panels backed by a small WebAssembl
 
 This guide describes the current development implementation. Marketplace registration and remote execution are DEV-only. Do not treat a catalog entry, `publisher.kind`, source URL or license string as proof of publisher identity, code origin, review or safety. Review the package and requested capabilities before installation.
 
+For an AI-oriented documentation index, see the public plugin repository's [llms.txt](https://github.com/CetTek/rchub-plugins/blob/main/llms.txt). The RCHub DEV app also provides an interactive, mock-only preview at `/plugin-preview`.
+
 ## Quick start
 
 The SDK is a dependency-free Python script. Run commands from the repository root:
@@ -17,6 +19,8 @@ python tools/plugins/rchub_plugin.py preview examples/volume/volume.rchub-plugin
 ```
 
 `create` writes `manifest.json` and readable `guest.wat` for the Audio starter. Replace the starter publisher and source metadata before distributing it. `build --proxy` generates a real Core Wasm guest that maps each declared action entry to its declared capability. It is a convenience guest for one-action/one-capability forwarding; it does not implement custom logic. Without `--proxy`, `build` reads `guest.wasm` from the project directory. Use a Wasm toolchain to compile custom guest logic.
+
+Source `manifest.json` files use readable two-space JSON indentation. Built `.rchub-plugin.json` packages stay compact and canonical because their SHA-256 identity is calculated from canonical bytes; use `inspect` to print a readable package and manifest view.
 
 `validate`, `inspect` and `preview` accept a `.rchub-plugin.json` package. `preview` prints the local preview URL; start the mobile development server, open `/plugin-preview`, then paste the package JSON into the fixture preview. The standalone preview uses local fixture state and does not send device operations. SDK commands do not fetch dependencies, run package hooks, or contact an account or server.
 

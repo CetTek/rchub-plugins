@@ -393,7 +393,9 @@ def main() -> None:
         manifest = template(args.id, args.name)
         validate_manifest(manifest)
         args.directory.mkdir(parents=True, exist_ok=False)
-        (args.directory / 'manifest.json').write_bytes(canonical(manifest))
+        (args.directory / 'manifest.json').write_text(
+            json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + '\n',
+            encoding='utf-8', newline='\n')
         (args.directory / 'guest.wat').write_text(proxy_wat(manifest), encoding='utf-8', newline='\n')
         print('Created local Audio-capability starter. Replace publisher/source before distribution.')
     elif args.command == 'build':

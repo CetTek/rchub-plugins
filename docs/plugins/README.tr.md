@@ -4,6 +4,8 @@ RCHub eklentileri, küçük bir WebAssembly konuğuyla çalışan bildirimsel ye
 
 Bu rehber mevcut geliştirme uygulamasını anlatır. Marketplace kaydı ve uzaktan çalıştırma yalnızca DEV içindir. Katalog kaydını, `publisher.kind` değerini, kaynak URL'sini veya lisans metnini yayıncı kimliği, kod kaynağı, inceleme ya da güvenlik kanıtı olarak görmeyin. Kurmadan önce paketi ve istediği yetenekleri inceleyin.
 
+LLM araçları için [llms.txt](https://github.com/CetTek/rchub-plugins/blob/main/llms.txt) dosyasında kısa bir belge ve örnek dizini bulunur. RCHub DEV uygulamasında `/plugin-preview` yolu, yalnızca örnek durum kullanan etkileşimli önizlemeyi açar.
+
 ## Hızlı başlangıç
 
 SDK bağımlılık gerektirmeyen bir Python betiğidir. Komutları depo kökünden çalıştırın:
@@ -17,6 +19,8 @@ python tools/plugins/rchub_plugin.py preview examples/volume/volume.rchub-plugin
 ```
 
 `create`, Audio başlangıcı için `manifest.json` ve okunabilir `guest.wat` oluşturur. Dağıtımdan önce örnek yayıncı ve kaynak bilgilerini değiştirin. `build --proxy`, tanımlı her eylem girişini tanımlı yeteneğine ileten gerçek bir Core Wasm konuğu üretir. Bu kolaylık konuğu, eylem başına tek yeteneği iletir; özel mantık uygulamaz. `--proxy` olmadan `build`, proje klasöründeki `guest.wasm` dosyasını kullanır. Özel konuk mantığını derlemek için Wasm araç zinciri kullanın.
+
+Kaynak `manifest.json` dosyaları okunabilir, iki boşluk girintili JSON kullanır. Derlenen `.rchub-plugin.json` paketleri kompakt ve kanonik kalır; SHA-256 kimlikleri kanonik baytlardan hesaplanır. Paketin ve bildirimin okunabilir görünümü için `inspect` komutunu kullanın.
 
 `validate`, `inspect` ve `preview` `.rchub-plugin.json` paketini alır. `preview` yerel önizleme adresini yazar; mobil geliştirme sunucusunu başlatın, `/plugin-preview` yolunu açın ve paket JSON'unu örnek önizlemeye yapıştırın. Bağımsız önizleme yerel örnek durumu kullanır ve cihaza işlem göndermez. SDK komutları bağımlılık indirmez, paket kancaları çalıştırmaz ve hesap ya da sunucuya bağlanmaz.
 

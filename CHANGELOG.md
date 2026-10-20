@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add an LLM-friendly `llms.txt` index for the EN/TR guides, package contract, SDK and official examples; link it and the interactive preview from developer documentation.
+- Format all twelve source `manifest.json` files with stable two-space indentation and make both manifest generators preserve it. Keep downloadable `.rchub-plugin.json` bundles canonical and compact for package identity. Rebuilt twelve package hashes match the RcHub checkout; all manifests are multiline and whitespace checks pass.
+
 ## 0.2.0
 
 - Combine Media, Audio and Display into the Media & Display reference package with explicit installation-time approval of its five capabilities.
