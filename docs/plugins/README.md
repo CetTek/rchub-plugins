@@ -42,7 +42,9 @@ The runtime accepts only bounded Core Wasm with `memory` (5 pages in new proxies
 
 Permissions are the sorted, unique capability IDs in `manifest.permissions`. Every action must use a declared capability. Installation presents the source/risk disclosure and exact requested permissions and requires explicit approval from the phone or PC. The grant persists across reconnect and app restart; use within that grant does not prompt again per action. Each operation still authenticates the current device owner, verifies the installed package and grant, checks capability and platform availability, and validates typed input and output. A missing, invalid or unsupported grant fails closed.
 
-The first installer does not replace an installed release. Remove the installed package, review the new release and install it again. Grants are not migrated or inherited across package identities/releases. Opening a panel may perform a declared, argument-free read action to observe state; the host does not automatically replay a write action.
+Install does not replace an installed release. Compatible hosts support explicitly approved, atomic updates to strictly newer versions of the same ID with identical permissions. Changed permissions require separate removal and installation; no new permission is silently inherited. Opening a panel may perform a declared, argument-free read action to observe state; the host does not automatically replay a write action.
+
+The Rust desktop advertises atomic-update support only after authenticating its device socket and epoch. The server accepts that advertisement only from the current canonical PC socket and matching epoch, and clears it on reconnect or rebind. Mobile shows update availability for eligible same-permission releases; an older desktop or one that has not advertised support returns `unsupported` without dispatching or replaying the update. Restart the updated desktop and explicitly retry. The advertisement indicates operation support only; it grants no permissions or requester authority. If a request ends with `unknown`, refresh installed inventory before deciding whether to retry because the operation outcome was not observed.
 
 ## Capability availability
 
@@ -143,15 +145,14 @@ separate grants are never unioned. Unsupported DDC/CI disables brightness.
 When the combined package is present, the DEV catalog omits standalone Audio
 and Display from discovery; their sources and existing installations remain.
 All twelve source packages retain the shared layouts/icon metadata. These layouts
-require removing/reinstalling older versions; stored manifests are not rewritten.
+require an explicitly reviewed update of older versions; stored manifests are not silently rewritten.
 Power 0.3.0 adds bounded delay, explicit force and cancel-scheduled-shutdown; see below.
 
 Public sources, SDK and this guide are maintained at
 [CetTek/rchub-plugins](https://github.com/CetTek/rchub-plugins).
 Official package version 0.3.0 links to the matching `v0.3.0` source tag.
 The source metadata change produces new package hashes. Existing installed
-older packages/grants are not migrated; remove the old installation and explicitly
-approve installation of 0.3.0 to use the current layout and permissions.
+older packages/grants are not silently migrated; review and explicitly approve a same-permission update on a compatible host. Permission changes require separate removal and installation.
 
 `plugins/official/` contains twelve repository-owned MIT packages: Audio, System,
 Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech and
@@ -174,4 +175,22 @@ Lists support local `searchable` filtering and selected-row `itemActions`: local
 
 System groups compact CPU/RAM rings and memory figures. Keyboard has multiline typing and shortcut tabs with quick hotkeys. Browser has a URL field and quick sites. Apps defaults to visible titled application windows, can read all processes, searches observed rows and exposes window controls/stop with process-creation identity checks; close/stop ask for action confirmation. Power delay (0..86400 seconds, UI default 30) and force drafts apply together only to shutdown/restart, with a separate cancel-scheduled-shutdown action. Windows scheduling preserves force=false even with a delay. Clipboard empty/non-text reads return an empty string; bounded retry handles temporary clipboard contention.
 
-Official 0.3.0 source links use tag `v0.3.0`. Upgrade the host first: schema/UI/hostApi remain 1 but older strict validators reject the new optional fields. Remove and explicitly reinstall changed packages; stored grants are never rewritten. New generated proxies use 5-page memory, 262144-byte output and 64 KiB serialized input; large screenshot output uses 16 pages/900000 bytes. Old 2-page guests retain 8 KiB input. Field UTF-16 limits still apply (clipboard 8192, keyboard 4096). Mock previews and tests do not send native writes.
+Official 0.3.0 source links use tag `v0.3.0`. Upgrade the host first: schema/UI/hostApi remain 1 but older strict validators reject the new optional fields. Use the reviewed Update action for a newer package with identical permissions; changes to permissions require separate removal and installation. New generated proxies use 5-page memory, 262144-byte output and 64 KiB serialized input; large screenshot output uses 16 pages/900000 bytes. Old 2-page guests retain 8 KiB input. Field UTF-16 limits still apply (clipboard 8192, keyboard 4096). Mock previews and tests do not send native writes.
+
+
+### Explicit in-place updates
+
+Marketplace and installed management compare numeric major.minor.patch versions.
+Update downloads and reviews the new source, license and permissions before explicit
+approval. The v2 update request includes expectedPackage (the exact installed
+id/version/sha256), target package/bundle, permissions and the installation consent.
+Only strictly newer versions with an identical permission set are accepted; no
+prerelease/build versions, downgrades, same-version replacements or permission changes.
+The host checks the old identity and current owner binding, then atomically replaces
+the record. Failed replacement preserves the installed package and grants; a stale
+identity is rejected and requires refreshed inventory. Installation still conflicts
+when that ID is already installed. No automatic update or inherited new permission.
+
+### System 0.3.1 source checkpoint
+
+System 0.3.1 shortens the RAM label and places computer/OS observations together. Memory is still used/total MB and uptime is seconds; green RAM and used/free GB are not implemented by this manifest. The shared host renderer owns responsive ring/modal sizing. The 0.3.1 source and package are included in this snapshot; installation or update must be explicitly approved and observed separately. Other official packages remain 0.3.0.

@@ -6,6 +6,7 @@ import rchub_plugin as sdk
 
 RELEASE_VERSION = '0.3.0'
 SOURCE_ROOT = f'https://github.com/CetTek/rchub-plugins/tree/v{RELEASE_VERSION}/plugins/official'
+PACKAGE_VERSIONS = {'system': '0.3.1'}
 
 
 def label(en, tr):
@@ -201,13 +202,14 @@ def packages():
     system_controls = result['system']['ui']['controls']
     for c in system_controls:
         if c['id'] == 'ram_usage':
-            c['appearance'] = 'ring'
+            c.update(appearance='ring', label=label('RAM', 'RAM'))
     cpu = next(c for c in system_controls if c['id'] == 'cpu_usage')
     cpu.update(type='progress', appearance='ring', min=0, max=100, label=label('CPU', 'CPU'))
     result['system']['ui']['controls'] = [
         {'id': 'gauges', 'type': 'row', 'children': [cpu, next(c for c in system_controls if c['id'] == 'ram_usage')]},
         {'id': 'memory', 'type': 'row', 'children': [c for c in system_controls if c['id'] in ('ram_used_mb','ram_total_mb')]},
-        *[c for c in system_controls if c['id'] in ('os','hostname','uptime_seconds')]]
+        {'id': 'computer', 'type': 'row', 'children': [c for c in system_controls if c['id'] in ('os','hostname')]},
+        next(c for c in system_controls if c['id'] == 'uptime_seconds')]
     keyboard = result['keyboard']['ui']['controls']
     keyboard[0].update(multiline=True, placeholder=label('Write a message or paste multiple lines', 'Bir ileti yazın veya çok satırlı metin yapıştırın'))
     hotkeys = [('copy','Copy','Kopyala','ctrl+c'), ('paste','Paste','Yapıştır','ctrl+v'), ('select_all','Select all','Tümünü seç','ctrl+a'), ('undo','Undo','Geri al','ctrl+z'), ('enter','Enter','Enter','enter'), ('escape','Escape','Escape','esc'), ('switch','Switch app','Uygulama değiştir','alt+tab'), ('desktop','Show desktop','Masaüstünü göster','win+d')]
@@ -255,7 +257,8 @@ def packages():
 
 def build():
     for name, m in packages().items():
-        m.update(version=RELEASE_VERSION, source=f'{SOURCE_ROOT}/{name}')
+        version = PACKAGE_VERSIONS.get(name, RELEASE_VERSION)
+        m.update(version=version, source=f'https://github.com/CetTek/rchub-plugins/tree/v{version}/plugins/official/{name}')
         root = sdk.ROOT / 'plugins/official' / name
         root.mkdir(parents=True, exist_ok=True)
         sdk.validate_manifest(m)

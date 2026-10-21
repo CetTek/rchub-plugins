@@ -143,10 +143,10 @@ bounded messages for v2; existing v1 limits remain unchanged.
 v2 DeviceResult correlation `{v:2,operationId,epoch,action,status,...}`;
 requester terminal substitutes requestId/deviceId. Status enum same as v1.
 Successful inventory: `entries:InstalledEntry[]`.
-Install/remove success: `entries:InstalledEntry[]` observed AFTER operation.
+Install/update/remove success: `entries:InstalledEntry[]` observed AFTER operation.
 Invoke success: `packageId,output:<validated JSON object>`.
 Failed: `error:invalid_package|grant_invalid|unsupported|runtime_failed|conflict`,
-optional entries only install/remove. Unknown/denied/busy/invalid: no observed
+optional entries only install/update/remove. Unknown/denied/busy/invalid: no observed
 output/entries/error. Non-invoke carries no output; invoke no entries.
 InstalledEntry `{package:{id,version,sha256},manifest,availability:"ready"|
 "runtime_unavailable"|"unsupported",status:"installed"}`. Corrupt/foreign records
@@ -155,9 +155,17 @@ counts if needed (not raw paths). Observe current installed grant before invoke;
 server verifies output against authenticated pending manifest/action schema.
 
 New store namespace `plugins-v1`, one record per ID includes full immutable
-bundle+release identity+exact permissions+consent+binding. No overwrite/update in
-first installer: report conflict; remove + fresh install for new release. This
-ensures permission expansion cannot inherit old approval. No old-grant migration.
+bundle+release identity+exact permissions+consent+binding. Install still reports conflict for an existing ID. Explicit `update` carries
+`expectedPackage:{id,version,sha256}`, target `package`, `bundle`, `permissions`
+and `consent:{disclosureVersion:1,accepted:true}`. The target must have the same ID,
+a strictly newer numeric `major.minor.patch` version and exactly the same permission
+set. Numeric components compare without floating-point truncation; leading zeros
+are numeric equivalents and prerelease/build strings are unsupported. The current
+record must exactly match expectedPackage (compare-and-swap). Validate bundle,
+owner binding and disclosure again; atomically replace only after all checks.
+Failure preserves the previous package/grants. Permission additions/removals,
+same-version changes and downgrades are rejected. Removal and fresh installation
+remain separate explicit actions. No old-grant migration.
 
 ## Catalog and UI
 
@@ -187,7 +195,7 @@ legacy generic command channel as granted plugin execution.
 
 Schema/UI/hostApi remain version 1. These optional fields extend the strict contract;
 older hosts reject unknown fields and must be upgraded before installing these packages.
-Existing installations keep their exact manifests/grants; remove and explicitly reinstall.
+Existing installations keep their manifests/grants until explicitly approved update or removal. Same-permission updates can replace older packages atomically after review.
 
 - `progress.appearance`: `linear` (default) or `ring`, using the same required state/min/max.
 - `input.multiline`: boolean for string arguments; `inputMode`: text/url for strings or numeric for integers.
@@ -207,3 +215,7 @@ and force parameters, so a delay never silently implies force. Cancel uses
 `AbortSystemShutdownW`; lock/sleep/cancel reject scheduling options. Native writes
 are not exercised by automated contract tests. Apps stops require the observed
 process creation timestamp; window actions also validate the observed handle's PID.
+
+### Atomic update host compatibility
+
+The DEV desktop advertises `plugin-dev:capabilities` with `{v:1, deviceId, epoch, atomicUpdate:true}` after authenticated context. Only the current canonical PC socket and matching epoch are accepted; reconnect/rebind clears support. Authorized updates against an older or not-yet-advertised host return `failed` / `unsupported` immediately without dispatch or replay. Restart the updated desktop and explicitly retry. The advertisement grants no permissions or requester authority. Mobile shows eligible same-permission update availability. An `unknown` outcome carries no observed inventory; refresh installed inventory before deciding whether to retry an install, update or removal.

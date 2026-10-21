@@ -42,7 +42,9 @@ Nesneler katıdır; bilinmeyen anahtarlar reddedilir. Bildirimler şema ve host 
 
 İzinler `manifest.permissions` içindeki sıralı ve tekrarsız yetenek kimlikleridir. Her eylem bildirilmiş bir yeteneği kullanmalıdır. Kurulumda kaynak/risk açıklaması ve istenen izinler gösterilir; telefondan veya PC'den açık onay gerekir. İzin yeniden bağlantı ve uygulama başlatma boyunca saklanır; bu izin dahilindeki kullanım her eylemde tekrar sorulmaz. Her işlem yine de mevcut cihaz sahibini doğrular, kurulu paketi ve izni denetler, yetenek ve platform uygunluğunu kontrol eder, türlenmiş girdi ve çıktıyı doğrular. Eksik, geçersiz veya desteklenmeyen izin güvenli biçimde reddedilir.
 
-İlk kurulum mevcut sürümün üzerine yazmaz. Yeni sürüm için kurulu paketi kaldırın, yeni paketi inceleyin ve tekrar kurun. İzinler paket kimlikleri/sürümleri arasında taşınmaz veya devralınmaz. Panel açılışı, bildirilen ve bağımsız olarak argümansız bir okuma eylemiyle durumu gözlemleyebilir; host yazma eylemini otomatik tekrar oynatmaz.
+Kurulum mevcut sürümün üzerine yazmaz. Uyumlu host, aynı kimliğin kesinlikle daha yeni ve izinleri birebir aynı sürümüne açık onaylı atomik güncelleme sunar. İzin değişikliği ayrı kaldırma ve kurulum gerektirir; yeni izin sessizce devralınmaz. Panel açılışı, bildirilen ve bağımsız olarak argümansız bir okuma eylemiyle durumu gözlemleyebilir; host yazma eylemini otomatik tekrar oynatmaz.
+
+Rust masaüstü istemcisi atomik güncelleme desteğini yalnızca cihaz soketi ve dönemi doğrulandıktan sonra duyurur. Sunucu duyuruyu sadece geçerli kanonik PC soketinden ve eşleşen dönemden kabul eder; yeniden bağlantı veya bağlama değişiminde desteği temizler. Mobil uygulama aynı izinlere sahip uygun sürüm için güncelleme göstergesi sunar. Eski masaüstü ya da desteği henüz duyurmamış host `unsupported` döndürür; güncelleme gönderilmez veya tekrar oynatılmaz. Güncel masaüstünü yeniden başlatıp güncellemeyi açıkça yeniden deneyin. Duyuru yalnız işlem desteğini bildirir; izin veya istek sahibi yetkisi vermez. İstek `unknown` ile biterse, sonucu gözlemleyemediğimiz için yeniden denemeden önce kurulu eklenti envanterini yenileyin.
 
 ## Yeteneklerin durumu
 
@@ -138,15 +140,13 @@ display.read/write ve media.write açıkça istenir; eski izinler birleştirilme
 DDC/CI desteklenmiyorsa parlaklık pasiftir. Birleşik paket varken DEV kataloğu
 ayrı Ses/Ekran paketlerini keşif listesinden çıkarır; kaynakları ve eski
 kurulumları korunur. On iki kaynak paket de ortak düzen/ikon bilgisini korur; yeni
-düzen için eski sürümü kaldırıp yeniden kurun. Kayıtlı manifestler değiştirilmez.
+düzen için eski sürümü açık inceleme ve onayla güncelleyin. Kayıtlı manifestler kendiliğinden değiştirilmez.
 Güç 0.3.0 sınırlı gecikme, açık zorla kapat seçeneği ve planlanan kapatmayı iptal etme sunar.
 
 Public kaynaklar, SDK ve bu rehber
 [CetTek/rchub-plugins](https://github.com/CetTek/rchub-plugins) deposundadır.
 Resmi 0.3.0 paketleri `v0.3.0` kaynak etiketine bağlanır. Kaynak adresi
-değişikliği yeni paket hash'leri üretir. Kurulu eski paketler/izinler taşınmaz;
-yeni düzen ve izinler için eski kurulumu kaldırıp 0.3.0 kurulumunu
-açıkça onaylayın.
+değişikliği yeni paket hash'leri üretir. Kurulu eski paketler/izinler sessizce taşınmaz; uyumlu hostta aynı izinli güncellemeyi inceleyip açıkça onaylayın. İzin değişikliği ayrı kaldırma ve kurulum gerektirir.
 
 `plugins/official/` altında depoya ait on iki MIT paket bulunur: Audio, System,
 Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech ve
@@ -168,4 +168,22 @@ Listelerde yerel `searchable` araması ve seçili satırın `itemActions` menüs
 
 System kompakt CPU/RAM halkalarını ve bellek değerlerini gruplar. Keyboard çok satırlı yazı ve hızlı kısayollar içeren sekmelere sahiptir. Browser adres girdisi ve hızlı siteler sunar. Apps varsayılan olarak görünür başlıklı uygulama pencerelerini listeler; tüm işlemlere geçebilir, gözlenen satırlarda arama yapar ve işlem başlangıç kimliğini doğrulayarak pencere/sonlandırma menüsü sunar. Kapat/sonlandır işlem onayı ister. Power gecikme (0..86400 saniye, arayüz varsayılanı 30) ve zorla kapat taslaklarını yalnız kapat/yeniden başlat çağrısına birlikte ekler; planlanan kapatmayı iptal etme ayrıdır. Windows gecikme seçilince force=false değerini korur. Pano boş/metin dışıysa boş metin döner; geçici kilitlenmede sınırlı yeniden deneme yapılır.
 
-Resmi 0.3.0 kaynak adresleri `v0.3.0` etiketini kullanır. Önce ana uygulamayı güncelleyin: schema/UI/hostApi 1 olarak kalır; eski katı doğrulayıcılar yeni isteğe bağlı alanları reddeder. Değişen paketi kaldırıp kurulumunu açıkça yeniden onaylayın; kayıtlı izinler değiştirilmez. Yeni üretilen vekiller 5 sayfa bellek, 262144 bayt çıktı ve 64 KiB JSON girdi; büyük ekran görüntüsü 16 sayfa/900000 bayt çıktı kullanır. Eski 2 sayfalı vekillerde 8 KiB girdi sınırı korunur. Alanların UTF-16 sınırları da geçerlidir (pano 8192, klavye 4096). Örnek önizleme ve testler yerel yazma işlemi göndermez.
+Resmi 0.3.0 kaynak adresleri `v0.3.0` etiketini kullanır. Önce ana uygulamayı güncelleyin: schema/UI/hostApi 1 olarak kalır; eski katı doğrulayıcılar yeni isteğe bağlı alanları reddeder. İzinleri aynı olan yeni sürüm için incelemeli Güncelle işlemini kullanın; izin değişikliği ayrı kaldırma ve kurulum gerektirir. Yeni üretilen vekiller 5 sayfa bellek, 262144 bayt çıktı ve 64 KiB JSON girdi; büyük ekran görüntüsü 16 sayfa/900000 bayt çıktı kullanır. Eski 2 sayfalı vekillerde 8 KiB girdi sınırı korunur. Alanların UTF-16 sınırları da geçerlidir (pano 8192, klavye 4096). Örnek önizleme ve testler yerel yazma işlemi göndermez.
+
+
+### Açık onaylı yerinde güncelleme
+
+Marketplace ve kurulu eklenti yönetimi sayısal major.minor.patch sürümlerini
+karşılaştırır. Güncelleme yeni kaynak, lisans ve izinleri indirdikten sonra açık
+onay ister. V2 update isteği tam kurulu kimliğini expectedPackage (id/version/sha256),
+hedef package/bundle, permissions ve kurulum consent alanlarıyla gönderir.
+Yalnız kesinlikle daha yeni ve aynı izin kümesine sahip sürümler kabul edilir.
+Ön sürüm/build eki, sürüm düşürme, aynı sürümü değiştirme ve izin değişikliği reddedilir.
+Ana uygulama eski kimliği ve güncel sahip bağını denetler, kaydı atomik değiştirir.
+Başarısızlıkta kurulu paket ve izinler korunur; eski kimlik uyuşmazsa envanter
+yenilenmelidir. Aynı ID mevcutken install çakışma döndürmeye devam eder.
+Otomatik güncelleme veya yeni izni sessizce devralma yoktur.
+
+### System 0.3.1 kaynak kontrol noktası
+
+System 0.3.1 RAM etiketini kısaltır; bilgisayar/işletim sistemi gözlemlerini aynı satıra alır. Bellek kullanılan/toplam MB, çalışma süresi saniyedir; bu bildirim yeşil RAM veya kullanılan/boş GB sunmaz. Duyarlı halka/modal boyutunu ortak host çizicisi belirler. 0.3.1 kaynak ve paketi bu snapshot'a dahildir; kurulum veya güncelleme ayrıca açıkça onaylanıp gözlemlenmelidir. Diğer resmi paketler 0.3.0 kalır.
