@@ -1,5 +1,112 @@
 # RCHub Plugin Developer Guide
 
+## Choose V1 or native ABI2 (2026-10-24)
+
+There are two distinct DEV paths. **V1 Wasm remains supported; migration is not
+mandatory.** Existing official packages/IDs/hashes/grants are unchanged. The V1
+sections below describe portable packages, not the native application's limits.
+
+| Your requirement | Model / decision |
+| --- | --- |
+| Existing permission-gated host operations, bounded per-call guest logic | V1 Wasm, existing `rchub_plugin.py` and official packages. |
+| New native PC behavior without host provider edits; long-lived state/events | Native application, experimental Integration ABI2. Write your own target-native logic. |
+| Shared phone/web/PC controls | Both declare bounded UI. ABI2 has its own smaller control vocabulary; do not copy all V1 optional fields. |
+| Extension-owned native PC window or custom/temp filesystem data | ABI2 normal-user unsandboxed code; never present its window as host auth/consent. |
+| Production native execution or Linux acceptance | Not delivered/verified by this snapshot; do not infer from tests or target names. |
+
+Native code can access OS/files/network available to the normal user, outside
+the broker. **UNSANDBOXED** is a trust difference, not just a package version.
+`native.unsandboxed`, hashes, source text, pipe boundaries and install consent do
+not make arbitrary native code safe or a publisher verified. V1 stays bounded;
+no arbitraryFS/WASI added and no grant transfer to native. A new app ID is safer
+than pretending a Wasm update authorizes this new trust class.
+
+### Native ABI2 workflow
+
+The self-contained [ABI2 contract](../../contracts/plugins/v2/README.md) links all
+three schemas, separate importable Python SDK and shared positive/negative
+fixtures. The [EN/TR buildable example](../../plugins/examples/application-v2/README.md)
+uses new ID `com.example.switchboard`, not chat or an official-ID host branch.
+Installed Python 3.9+ and Windows x64 Rust/linker are sufficient; no private host
+sources, Cargo crates or pip dependencies needed to build/validate that example.
+
+```powershell
+New-Item -ItemType Directory -Force plugins/examples/application-v2/build | Out-Null
+rustc --edition=2021 plugins/examples/application-v2/native.rs -o plugins/examples/application-v2/build/switchboard.exe
+python -B plugins/examples/application-v2/prepare.py --artifact plugins/examples/application-v2/build/switchboard.exe --out plugins/examples/application-v2/build/import
+python -B -m unittest discover -s tools/plugins -p "test_rchub*.py" -v
+python -B -m unittest discover -s plugins/examples/application-v2 -p "test_example.py" -v
+```
+
+Use a fresh `--out` on repeats. `prepare.py` is example tooling, not an install
+CLI: writes canonical descriptor, identity and base64 bytes, never connects or
+executes. Review generated source placeholder and replace it before distribution.
+One raw x64 native executable, <=16 MiB, exact hash/relative entry; no script/
+interpreter/shell/URL fetch/archive/hooks/dependency installer. The `.py` protocol
+peer is a test peer, not an installable native artifact.
+
+Separately provided compatible authenticated DEV host required for installation.
+Paste **native descriptor + artifact base64** into its native application import
+workspace (PC or mobile/web), not the V1 JSON bundle field. Review source/risk,
+license, exact target/hash, native permission and data behavior; explicitly approve
+on phone or PC. No physical PC approval needed. UI sends staged begin/chunks/commit
+with exact offsets, then installation must appear in inventory. **Activate
+separately**, then open Controls; sample changes only in-memory state and rejects
+the native-window action deliberately. No host executable or public installer
+ships here. UI steps are implementation-backed, not visible/live acceptance proof.
+
+Descriptor `schemaVersion:2`; authenticated transport `v:3,version:2` on **every**
+envelope; IPC `rchub-app-v2-experimental` negotiates hello/welcome `version:2`.
+No fallback to ABI1. Use `ProtocolSession(...,version=2)` and
+`validate_transport(message,expected_version=2)`; schema alone cannot validate
+names, controls, identities, payloads, negotiation or authority. Historical
+MockSession/version1 fixtures remain compatibility tests only.
+
+### Consent, lifetime, windows and storage
+
+Install/each new native target update requires explicit disclosure v2 consent,
+exact native permission/identity, numeric newer version and expected installed
+identity for update. V1 consent never transfers. Granted use has no per-operation,
+session/reconnect/restart popup. Every operation and observation still checks
+current authentication/owner/link, exact grant/hash, canonical socket/epoch,
+authorityRevision and active context; phone JWT/session rules unchanged. PC-local
+viewer is separate self-only, server-validated, never a fabricated owner session.
+
+Long-lived instance belongs to authorized owner context, not one viewer's JWT
+lifetime. Viewer close/logout/expiry cleans only its own pending work/watches.
+Other authorized viewers/shared native instance may continue. Owner/link/device/
+grant revocation and canonical disconnect stop the affected runtime/stages. Exact
+server-resolved open-watch close prevents closing somebody else's surface.
+Explicit Deactivate is different from closing a panel. Unknown outcomes require
+inventory reconciliation, not automatic replay/rollback claims.
+
+Declarative PC/mobile/web UI accepts ordered typed controls/state only, no HTML,
+JavaScript or arbitrary renderer. Native windows are extension-owned, not host
+consent/auth UI; developer owns window lifetime/data. Custom/temp files are
+developer-selected/disclosed and outside host cleanup guarantees. `storage.choices`
+is disclosure, not OS isolation; `none` cannot prevent native writes. Optional
+`host-scoped` + `scoped-store-v1` exposes quota-bounded CAS key/value objects scoped
+by host to origin/device/current owner/plugin ID. Removal retains scoped data;
+same-scope approved reinstall/update may regain it, never new-owner rebinding.
+No deletion/global retention/message product policy added.
+
+### Evidence and publication boundary
+
+ABI2 assets here are **local experimental DEV changes, not a production release**;
+local commit explicitly authorized; push/tag/release/publication remain pending
+separate authorization and were not performed. V1 packages
+remain as cloned; separate V1 select/Speech source/SDK parity work is not silently
+included in this ABI2 sync. Coordinator's 61 independent Windows-isolated installed
+checks used a real native child/RustLocal/headless frames but **synthetic DB facts
+and injected transport**, not visible UI, live DB/JWT or full Socket.IO path:
+`bRustLocalVerified:true`, `headlessRendererVerified:true`,
+`socketIoLoopbackVerified:false`, `pcConnectionLocalUiVerified:false`,
+`liveDbAuthVerified:false`, `uiVerified:false`, `productComplete:false`.
+Those host checks were not rerun in this public checkout. Linux acceptance is
+deferred; no production safety/readiness claim. See [asset provenance](../../plugins/examples/application-v2/PROVENANCE.md).
+
+## V1 Wasm developer guide
+
 RCHub plugins are declarative native-control panels backed by a small WebAssembly guest. The host owns the panel, installation, stored grant and capability checks. A plugin can request only capabilities named in its manifest; it cannot add arbitrary UI code or run JavaScript/HTML.
 
 This guide describes the current development implementation. Marketplace registration and remote execution are DEV-only. Do not treat a catalog entry, `publisher.kind`, source URL or license string as proof of publisher identity, code origin, review or safety. Review the package and requested capabilities before installation.

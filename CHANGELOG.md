@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Local-only developer sync completed (2026-10-24): distinguish supported V1 Wasm (no mandatory migration) from experimental unsandboxed native Integration ABI2 in README, EN/TR guides and llms index. Document exact schemaVersion2 / wire-v3 version2 / IPC-version2, staged installation/explicit activation, owner/watch lifetime, install consent, extension windows and non-destructive storage retention.
+- Add only reviewed public-safe ABI2 schemas, separate stdlib SDK/tests/corpora and harmless peers, with explicit provenance. New Windows x64 `com.example.switchboard` source builds using installed rustc; example helper writes validated descriptor/identity/base64, never installs/connects. Existing 53 protected V1 files (all 12 bundles, sources, SDK/test/builder/schema) byte-match HEAD; no V1 identities/grants changed.
+- Validation: 35 ABI2 + 17 existing V1 SDK/package tests and 2 new native-example tests passed (54 total); actual documented rustc/helper commands and second namespace passed, 10 source copies byte-matched, 49 local guide/index links resolved, Python syntax/JSON and whitespace checks passed. No dependencies installed. Harmless compiled subprocess tests are not live host/UI/auth acceptance.
+- Local commit explicitly authorized (2026-10-24) for this public developer-kit checkout only; complete 23-file review and fresh 52 SDK/package + 2 native-example tests passed before the local commit. Push, tag, release and publication remain pending separate approval; none was performed. ABI2 remains experimental DEV. Coordinator's separate Windows installed61 uses synthetic DB/injected transport/headless rendering, not live UI/auth/full socket or product completion. Linux acceptance deferred. Unrelated V1 select/Speech parity/release work remains excluded.
+
 ## 0.3.0
 
 - Extend reusable controls with ring progress, multiline inputs, typed draft forms/bindings, localized action confirmation and searchable selected-row actions.

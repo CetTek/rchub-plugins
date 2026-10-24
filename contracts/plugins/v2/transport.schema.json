@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Authenticated Socket.IO application wire v3, distinct from V1 portable wire v2. Semantic operation validation is mandatory.",
+  "type": "object", "additionalProperties": false,
+  "required": ["v", "kind"],
+  "properties": {
+    "v": {"const": 3},
+    "kind": {"enum": ["request", "dispatch", "result", "event", "capabilities", "owner-context"]},
+    "requestId": {"$ref": "#/$defs/token"}, "operationId": {"$ref": "#/$defs/token"},
+    "deviceId": {"$ref": "#/$defs/token"}, "epoch": {"$ref": "#/$defs/token"},
+    "deadline": {"type": "integer", "minimum": 1},
+    "binding": {"type": "object", "additionalProperties": false, "required": ["serverOrigin", "deviceId", "ownerUserId"], "properties": {"serverOrigin": {"type": "string", "minLength": 1, "maxLength": 300}, "deviceId": {"$ref": "#/$defs/token"}, "ownerUserId": {"$ref": "#/$defs/token"}}},
+    "action": {"enum": ["inventory", "install.begin", "install.chunk", "install.commit", "install.abort", "remove", "activate", "deactivate", "invoke", "subscribe", "unsubscribe", "cancel", "surface.open", "surface.close"]},
+    "package": {"$ref": "#/$defs/identity"}, "expectedPackage": {"$ref": "#/$defs/identity"},
+    "manifest": {"type": "object"},
+    "consent": {"type": "object", "additionalProperties": false, "required": ["disclosureVersion", "accepted", "trust", "permissions"], "properties": {"disclosureVersion": {"const": 2}, "accepted": {"const": true}, "trust": {"const": "unsandboxed-user"}, "permissions": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"const": "native.unsandboxed"}}}},
+    "transferId": {"$ref": "#/$defs/token"}, "size": {"type": "integer", "minimum": 1, "maximum": 16777216},
+    "offset": {"type": "integer", "minimum": 0, "maximum": 16777216},
+    "data": {"type": "string", "minLength": 4, "maxLength": 43692, "pattern": "^[A-Za-z0-9+/]+={0,2}$"},
+    "instanceId": {"$ref": "#/$defs/token"}, "contextId": {"$ref": "#/$defs/token"},
+    "name": {"type": "string", "maxLength": 160, "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_]*){2,10}$"},
+    "payload": {"type": "object"}, "subscriptionId": {"$ref": "#/$defs/token"},
+    "targetRequestId": {"$ref": "#/$defs/token"}, "targetOperationId": {"$ref": "#/$defs/token"}, "surfaceId": {"$ref": "#/$defs/token"},
+    "cursor": {"$ref": "#/$defs/token"}, "nextCursor": {"$ref": "#/$defs/token"},
+    "status": {"enum": ["ok", "invalid", "denied", "busy", "unsupported", "conflict", "failed", "cancelled", "unknown"]},
+    "error": {"enum": ["invalid_package", "grant_invalid", "runtime_failed", "artifact_invalid", "store_conflict", "unsupported"]},
+    "entries": {"type": "array", "maxItems": 2, "items": {"$ref": "#/$defs/entry"}},
+    "message": {"type": "object"},
+    "protocol": {"const": "rchub-app-v2-experimental"}, "version": {"enum": [1, 2]},
+    "authorityRevision": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+    "state": {"enum": ["valid", "revoked"]},
+    "reason": {"enum": ["owner-validated", "owner-changed", "owner-inactive", "device-inactive", "link-revoked", "authority-unavailable"]},
+    "features": {"type": "array", "maxItems": 4, "uniqueItems": true, "items": {"enum": ["native-process-v1", "events-v1", "surfaces-v1", "scoped-store-v1"]}}
+  },
+  "$defs": {
+    "token": {"type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$"},
+    "identity": {"type": "object", "additionalProperties": false, "required": ["id", "version", "sha256"], "properties": {"id": {"type": "string", "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*){1,8}$"}, "version": {"type": "string", "maxLength": 32, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}},
+    "entry": {"type": "object", "additionalProperties": false, "required": ["package", "manifest", "availability", "status"], "properties": {"package": {"$ref": "#/$defs/identity"}, "manifest": {"type": "object"}, "availability": {"enum": ["ready", "runtime_unavailable", "unsupported"]}, "status": {"enum": ["installed", "active"]}, "instanceId": {"$ref": "#/$defs/token"}, "contextId": {"$ref": "#/$defs/token"}}}
+  }
+}

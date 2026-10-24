@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "id": "vendor.fixture",
+  "version": "0.0.1",
+  "name": {"en": "Generic fixture", "tr": "Genel örnek"},
+  "description": {"en": "In-memory generic action and state reference.", "tr": "Bellek içi genel eylem ve durum örneği."},
+  "source": "https://example.invalid/vendor/fixture",
+  "license": "MIT",
+  "permissions": ["native.unsandboxed"],
+  "disclosure": {
+    "nativeRisk": {"en": "Unsandboxed normal-user native code can access your files and network. Source and hash do not prove safety.", "tr": "Yalıtılmamış normal kullanıcı yerel kodu dosyalara ve ağa erişebilir. Kaynak ve özet güvenliği kanıtlamaz."},
+    "dataBehavior": {"en": "This fixture keeps state only in memory. Native authors own any custom or temporary filesystem data.", "tr": "Bu örnek durumu yalnız bellekte tutar. Yerel geliştirici özel veya geçici dosya verilerinden sorumludur."}
+  },
+  "requiredFeatures": ["native-process-v1", "events-v1", "surfaces-v1"],
+  "execution": {
+    "kind": "installed-native",
+    "trust": "unsandboxed-user",
+    "artifact": {
+      "target": "windows-x86_64",
+      "entry": "bin/fixture.exe",
+      "sha256": "c925a44666020aa159ad7546c6e033e437f13aeb9107ff20197c1d5fe7eab570"
+    }
+  },
+  "actions": {
+    "vendor.fixture.apply": {
+      "input": {"type": "object", "properties": {"enabled": {"type": "boolean"}}, "required": ["enabled"]},
+      "output": {"type": "object", "properties": {"accepted": {"type": "boolean"}}, "required": ["accepted"]}
+    },
+    "vendor.fixture.open": {
+      "input": {"type": "object", "properties": {}, "required": []},
+      "output": {"type": "object", "properties": {}, "required": []}
+    }
+  },
+  "events": {
+    "vendor.fixture.changed": {"type": "object", "properties": {"revision": {"type": "integer", "minimum": 0, "maximum": 100}}, "required": ["revision"]}
+  },
+  "state": {"type": "object", "properties": {
+    "enabled": {"type": "boolean"},
+    "revision": {"type": "integer", "minimum": 0, "maximum": 100},
+    "items": {"type": "array", "maxItems": 64, "items": {"type": "object", "properties": {"label": {"type": "string", "maxLength": 120}}, "required": ["label"]}}
+  }, "required": ["enabled", "revision", "items"]},
+  "surfaces": [
+    {"id": "controls", "kind": "declarative", "clients": ["pc", "mobile", "web"], "actions": ["vendor.fixture.apply"], "events": ["vendor.fixture.changed"], "label": {"en": "Controls", "tr": "Kontroller"}, "controls": [
+      {"id": "main", "type": "section", "children": [
+        {"id": "enabled", "type": "toggle", "label": {"en": "Enabled", "tr": "Etkin"}, "bind": "enabled", "action": "vendor.fixture.apply", "argument": "enabled"},
+        {"id": "revision", "type": "value", "label": {"en": "Revision", "tr": "Revizyon"}, "bind": "revision"},
+        {"id": "items", "type": "list", "bind": "items", "itemLabel": "label"}
+      ]}
+    ]},
+    {"id": "native_window", "kind": "extension-window", "action": "vendor.fixture.open", "trust": "extension-owned-not-host-ui"}
+  ],
+  "storage": {"choices": ["native-filesystem"]}
+}

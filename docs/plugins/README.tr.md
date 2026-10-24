@@ -1,5 +1,111 @@
 # RCHub Eklenti Geliştirici Rehberi
 
+## V1 veya native ABI2 seçimi (2026-10-24)
+
+İki ayrı DEV yolu var. **V1 Wasm desteklenir; geçiş zorunlu değildir.** Mevcut
+resmi paket/kimlik/hash/izinler değişmedi. Aşağıdaki V1 bölümleri native uygulamanın
+sınırlarını değil taşınabilir Wasm paketlerini anlatır.
+
+| Gereksinim | Model / karar |
+| --- | --- |
+| Var olan izinli host işlemleri, çağrı başına sınırlı konuk mantığı | V1 Wasm; mevcut `rchub_plugin.py` ve resmi paketler. |
+| Host sağlayıcısı eklemeden yeni PC davranışı, uzun ömürlü durum/olay | Deneysel Integration ABI2; geliştirici hedef-native mantığını yazar. |
+| Telefon/web/PC ortak kontrol paneli | İki modelde de bildirimsel; ABI2 daha küçük ayrı denetim kümesi kullanır, tüm V1 alanlarını kopyalamayın. |
+| Eklentiye ait PC penceresi, özel/geçici dosya verisi | Normal kullanıcı yetkileriyle yalıtılmamış native ABI2. Pencereyi host auth/izin UI'sı gibi sunmayın. |
+| Üretim native çalıştırma veya Linux kabulü | Bu snapshot ile teslim/doğrulama iddiası yok; test/target adı yeterli değil. |
+
+Native kod normal kullanıcının dosya/ağ/OS erişimini broker dışında kullanabilir.
+**YALITILMAMIŞ (UNSANDBOXED)** yalnız paket sürümü farkı değildir.
+`native.unsandboxed`, kaynak/hash, süreç sınırı veya kurulum onayı keyfi kodu
+güvenli/yayıncıyı doğrulanmış yapmaz. V1 sınırlı kalır; arbitraryFS/WASI veya native
+izin devri yoktur. Wasm güncellemesini yeni güven sınıfı izni saymak yerine yeni
+uygulama kimliği kullanın.
+
+### Native ABI2 geliştirme akışı
+
+Bağımsız [ABI2 sözleşmesi](../../contracts/plugins/v2/README.md), üç şema, ayrı
+import edilebilir Python SDK ve ortak pozitif/negatif örneklere bağlanır.
+[EN/TR derlenebilir örnek](../../plugins/examples/application-v2/README.md) yeni
+`com.example.switchboard` kimliğini kullanır; chat ürünü veya resmi ID'ye özel host
+dalı yoktur. Kurulu Python 3.9+, Windows x64 Rust/linker yeterlidir; derleme/doğrulama
+için özel host kaynağı, Cargo crate veya pip bağımlılığı gerekmez.
+
+```powershell
+New-Item -ItemType Directory -Force plugins/examples/application-v2/build | Out-Null
+rustc --edition=2021 plugins/examples/application-v2/native.rs -o plugins/examples/application-v2/build/switchboard.exe
+python -B plugins/examples/application-v2/prepare.py --artifact plugins/examples/application-v2/build/switchboard.exe --out plugins/examples/application-v2/build/import
+python -B -m unittest discover -s tools/plugins -p "test_rchub*.py" -v
+python -B -m unittest discover -s plugins/examples/application-v2 -p "test_example.py" -v
+```
+
+Tekrarda yeni `--out` seçin. `prepare.py` kurulum CLI'sı değil örnek aracıdır;
+canonical descriptor/identity/base64 üretir, sunucuya bağlanmaz/kod çalıştırmaz.
+Dağıtım öncesi placeholder kaynak URL'sini gerçek incelenebilir kaynakla değiştirin.
+Tek ham x64 executable <=16 MiB, exact hash/göreli entry gerekir; script/interpreter,
+shell/URL indirme/arşiv/hook/bağımlılık kurma yoktur. `.py` peer yalnız protokol test
+betiğidir, kurulabilir native dosya değildir.
+
+Kurulum için ayrı sağlanan uyumlu/yetkili DEV host gerekir. PC veya mobil/web
+**native uygulama** içe aktarma alanına descriptor ve artifact base64 yapıştırın;
+V1 JSON paket alanına değil. Kaynak/risk/lisans, exact hedef/hash, native izin ve
+veri davranışını inceleyip telefon veya PC'den açıkça onaylayın; fiziksel PC onayı
+şart değil. UI begin/chunk/commit akışını exact offset onayıyla tamamlar; envanterde
+kurulu sonucu gözleyin. Kurulum kod başlatmaz; **ayrıca Etkinleştir**, Kontrolleri
+açın. Örnek yalnız bellek içi durum değiştirir, pencere eylemini bilinçli reddeder.
+Bu depo host executable veya public kurulum servisi sunmaz. Adımlar kaynakta
+uygulanmış akıştır; görünür/canlı kabul kanıtı değildir.
+
+Descriptor `schemaVersion:2`; taşıma bütün zarflarda `v:3,version:2`; IPC
+`rchub-app-v2-experimental` hello/welcome `version:2` anlaşması yapar. ABI1'e
+düşürme yok. `ProtocolSession(...,version=2)` ve
+`validate_transport(message,expected_version=2)` kullanın. Şema tek başına adları,
+UI bağlarını, payload/kimlik/anlaşma/yetkiyi doğrulamaz. Tarihsel MockSession ve
+version1 örnekleri yalnız uyumluluk testi olarak kalır.
+
+### Onay, ömür, pencere ve veri
+
+Kurulum ve her yeni native hedef güncellemesinde disclosure v2 açık onayı gerekir;
+exact native izin/kimlik, sayısal daha yeni sürüm ve güncellemede expected kurulu
+kimliği denetlenir. V1 onayı taşınmaz. Verilmiş izin dahilinde işlem/session/
+reconnect/restart başına popup yok; her işlem/gözlem yine current auth/owner/link,
+exact grant/hash, canonical socket/epoch, authorityRevision ve aktif context
+denetiminden geçer. Telefon JWT/session kuralı değişmez. PC-local viewer ayrı,
+self-only ve server-validated'dır; sahte kullanıcı session/JWT'si üretmez.
+
+Uzun ömürlü süreç tek viewer JWT'sine değil yetkili owner context'e bağlıdır.
+Viewer kapatma/logout/süre bitimi yalnız kendi pending/watch işini temizler;
+diğer yetkili viewer ve ortak süreç devam edebilir. Owner/link/device/grant iptali
+ve canonical bağlantı kaybı ilgili runtime/stage'i durdurur. Kapatma hedefi serverın
+çözdüğü exact açık watch'tır; yabancı watch kapatılamaz. Devre dışı bırakmak panel
+kapatmadan farklıdır. Unknown sonuçta envanteri uzlaştırın; otomatik replay/rollback
+iddiası yok.
+
+PC/mobil/web UI sıralı türlenmiş deklaratif kontrol/state kullanır; HTML/JS/keyfi
+çizici yoktur. Native pencere eklentiye aittir, host izin/kimlik arayüzü değildir;
+ömrü/verisi geliştiricinin sorumluluğudur. Özel/geçici dosya seçimi açıklanır ve
+host cleanup garantisi dışındadır. `storage.choices` yalnız beyan; `none` yazmayı
+engellemez. İsteğe bağlı `host-scoped` + `scoped-store-v1` hostun origin/device/
+current owner/plugin ID ile belirlediği scope'ta kotaya bağlı CAS nesne deposudur.
+Kaldırma scoped veriyi silmez; aynı scope'ta onaylı yeniden kurulum/güncelleme erişim
+sağlayabilir, yeni sahibe aktarılmaz. Silme/global retention/mesaj ürünü kuralı eklenmedi.
+
+### Kanıt ve yayın sınırı
+
+ABI2 varlıkları **yerel deneysel DEV** değişikliğidir; üretim yayını değildir.
+Yerel commit açıkça onaylandı; push/tag/release/publication ayrı onay bekler ve
+gerçekleştirilmedi. V1 paketleri clone halini
+korur; ayrı V1 select/Speech kaynak/SDK eşleme işi bu ABI2 sync'e gizlice dahil
+edilmedi. Ana agentın 61 bağımsız Windows-isolated installed kontrolü gerçek native
+child/RustLocal/headless çizim kullandı, ancak **synthetic DB ve injected transport**
+ile: `bRustLocalVerified:true`, `headlessRendererVerified:true`,
+`socketIoLoopbackVerified:false`, `pcConnectionLocalUiVerified:false`,
+`liveDbAuthVerified:false`, `uiVerified:false`, `productComplete:false`.
+Host testleri public checkout'ta yeniden çalıştırılmadı; görünür UI/live DB/JWT/
+tam Socket.IO kabulü değildir. Linux kabulü ertelendi; üretim/güvenlik garantisi yok.
+[Varlık kökeni](../../plugins/examples/application-v2/PROVENANCE.md).
+
+## V1 Wasm geliştirici rehberi
+
 RCHub eklentileri, küçük bir WebAssembly konuğuyla çalışan bildirimsel yerel kontrol panelleridir. Paneli, kurulumu, saklanan izni ve yetenek denetimlerini ana uygulama yönetir. Eklenti yalnızca bildiriminde belirtilen yetenekleri isteyebilir; keyfi arayüz kodu veya JavaScript/HTML çalıştıramaz.
 
 Bu rehber mevcut geliştirme uygulamasını anlatır. Marketplace kaydı ve uzaktan çalıştırma yalnızca DEV içindir. Katalog kaydını, `publisher.kind` değerini, kaynak URL'sini veya lisans metnini yayıncı kimliği, kod kaynağı, inceleme ya da güvenlik kanıtı olarak görmeyin. Kurmadan önce paketi ve istediği yetenekleri inceleyin.

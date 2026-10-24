@@ -1,0 +1,16 @@
+[
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"host","body":{"kind":"hello","version":1,"features":["native-process-v1","events-v1","surfaces-v1"]}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"welcome","version":1,"features":["native-process-v1","events-v1","surfaces-v1"]}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"lifecycle","state":"started"}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"host","body":{"kind":"request","requestId":"1","operation":"surface.open","name":"rchub.surface.lifecycle","payload":{"surfaceId":"controls"}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"result","requestId":"1","operation":"surface.open","name":"rchub.surface.lifecycle","status":"ok","payload":{}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"state","surfaceId":"controls","revision":1,"values":{"enabled":false,"revision":0,"items":[{"label":"Generic item"}]}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"host","body":{"kind":"request","requestId":"2","operation":"subscribe","name":"vendor.fixture.changed","payload":{}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"result","requestId":"2","operation":"subscribe","name":"vendor.fixture.changed","status":"ok","payload":{}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"host","body":{"kind":"request","requestId":"3","operation":"invoke","name":"vendor.fixture.apply","payload":{"enabled":true}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"result","requestId":"3","operation":"invoke","name":"vendor.fixture.apply","status":"ok","payload":{"accepted":true}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"event","subscriptionId":"2","name":"vendor.fixture.changed","payload":{"revision":1}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"state","surfaceId":"controls","revision":2,"values":{"enabled":true,"revision":1,"items":[{"label":"Generic item"}]}}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"host","body":{"kind":"shutdown","reason":"host-exit"}},
+  {"protocol":"rchub-app-v2-experimental","instanceId":"instance1","contextId":"context1","sender":"plugin","body":{"kind":"lifecycle","state":"stopped"}}
+]

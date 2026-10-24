@@ -1,6 +1,32 @@
 # RCHub Plugins
 
-> RCHub is a development plugin platform for PC controls. Plugins are WebAssembly packages with a strict manifest-defined UI and typed, permission-gated capabilities.
+> RCHub has two DEV plugin models: supported V1 bounded Wasm packages and separate experimental Integration ABI2 long-lived normal-user UNSANDBOXED native applications. No mandatory migration, grant transfer or production-readiness claim.
+
+## Decide first: V1 or native ABI2
+
+- Existing permission-gated host capabilities / bounded per-call guests: use V1 below. Existing official packages, IDs, hashes and grants stay unchanged.
+- New arbitrary developer-written PC logic without host provider edits, state/events and extension-owned native windows: use experimental ABI2. Unsandboxed code can access normal-user files/network outside broker calls; source/hash/process/consent does not make arbitrary native code safe or publisher verified.
+- ABI2 exact versions: descriptor schemaVersion:2; authenticated Socket.IO v:3 with version:2 on EVERY envelope; process protocol rchub-app-v2-experimental hello/welcome version:2. Do not confuse V1 package wire v2 or fall back to ABI1.
+- [ABI2 contract](contracts/plugins/v2/README.md): authoritative current developer boundaries and all three schemas.
+- [ABI2 Python module](tools/plugins/rchub_app_v2.py): no install/build CLI; use ProtocolSession(...,version=2), validate_transport(message,expected_version=2) plus semantic/authority/correlation checks.
+- [ABI2 Windows new-ID example EN/TR](plugins/examples/application-v2/README.md): installed rustc/Python build; prepare.py writes canonical manifest/identity/base64 for native import, not .rchub-plugin.json. New ID com.example.switchboard; no chat product or official-ID host branch.
+- [Application schema](contracts/plugins/v2/application.schema.json), [IPC schema](contracts/plugins/v2/protocol.schema.json), [wire schema](contracts/plugins/v2/transport.schema.json), [shared descriptor](tools/plugins/fixtures/v2/vendor.fixture.json), [owner/watch corpus](tools/plugins/fixtures/v2/owner-context.corpus.json).
+- [Provenance](plugins/examples/application-v2/PROVENANCE.md): reviewed public-safe assets only, no private host sources/history/secrets. V1 select/Speech parity changes excluded; existing V1 SDK/packages preserved.
+
+Native build/validation from repository root (Windows x64 installed compiler/linker):
+`New-Item -ItemType Directory -Force plugins/examples/application-v2/build | Out-Null`
+`rustc --edition=2021 plugins/examples/application-v2/native.rs -o plugins/examples/application-v2/build/switchboard.exe`
+`python -B plugins/examples/application-v2/prepare.py --artifact plugins/examples/application-v2/build/switchboard.exe --out plugins/examples/application-v2/build/import`
+`python -B -m unittest discover -s tools/plugins -p "test_rchub*.py" -v`
+`python -B -m unittest discover -s plugins/examples/application-v2 -p "test_example.py" -v`
+
+Fresh output directory on repeat; source URL placeholder must be replaced before distribution. Compatible separately supplied authenticated DEV host required. Paste descriptor/base64 into native application import, review source/risk/exact permission/hash/data disclosure, approve explicitly on phone or PC. Staged begin/chunks/commit <=16MiB, <=32KiB chunks; installation runs no code. Activate explicitly, then open declarative controls. No public host installer, SDK install CLI, shell/interpreter/hooks/dependency execution or automatic reconnect activation.
+
+ABI2 surfaces use bounded direct state/draft/action bindings for phone/web/PC, not arbitrary JS/HTML or the entire V1 vocabulary. Native windows belong to extension, never host auth/consent. Native custom/temp storage is developer-owned; choices are disclosure not isolation. Optional host-scoped CAS/quota store is scoped to origin/device/current owner/plugin ID. Removal retains scoped data, no owner rebinding or automatic purge. No global data format/retention/message product policy.
+
+Install/each native target update needs exact disclosure-v2 consent; later granted use has no per-action/session/reconnect/restart popup. Every operation/observation still enforces current auth/owner/link, exact grant/hash, canonical socket/epoch and authorityRevision. Separate PC-local self-only viewer requires server validation, never a fabricated user session. Viewer close/logout cancels only its own watches/pending work; owner/grant revoke/canonical disconnect stops affected runtime/stages. Exact server-resolved watch close; no client targetOperationId. Current same-process mutation invalidation is not immediate direct-SQL/admin/other-process coverage.
+
+2026-10-24 LOCAL ONLY: local developer-kit commit explicitly authorized; push/tag/release/publication remain pending separate authorization and were not performed. ABI2 experimental DEV, Linux acceptance deferred. Separate coordinator installed61 Windows proof used synthetic DB/injected transport/headless frames: bRustLocalVerified:true, headlessRendererVerified:true; socketIoLoopbackVerified:false, pcConnectionLocalUiVerified:false, liveDbAuthVerified:false, uiVerified:false, productComplete:false. Not live UI/auth/real-socket or production completion; public asset tests do not rerun that host harness.
 
 ## Start here
 
@@ -11,7 +37,7 @@
 - [Python SDK](https://github.com/CetTek/rchub-plugins/blob/main/tools/plugins/rchub_plugin.py)
 - [Official plugin builder](https://github.com/CetTek/rchub-plugins/blob/main/tools/plugins/build_official.py)
 
-## Build a plugin
+## Build a V1 Wasm plugin
 
 1. Create a starter manifest and readable Wasm source:
    `python tools/plugins/rchub_plugin.py create examples/my-plugin --id com.example.myplugin --name "My Plugin"`
@@ -22,7 +48,7 @@
 4. Preview declarative controls in the RCHub development app at `/plugin-preview`. The preview uses local mock state and never sends device commands.
 5. Review the source and requested permissions before installing. The host enforces current authorization and the exact saved grant for every operation.
 
-## UI and examples
+## V1 UI and examples
 
 - Layouts: sections, rows, columns and tabs.
 - Controls: buttons, sliders, toggles, selects, inputs, progress indicators, images, typed lists, text, values and status.
@@ -35,10 +61,10 @@
 - [Power example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/power/manifest.json): typed draft-only inputs and inputBindings merge delay/force into shutdown/restart; cancellation is separate.
 - Optional shared fields: progress appearance, multiline/inputMode/submit/defaultValue, inputBindings, localized confirm, searchable/itemActions. See the contract for exact field types, required arguments and bounds. No plugin-ID-specific renderer screen.
 
-## Security and compatibility
+## V1 security and compatibility
 
 - Packages use a strict schema, canonical SHA-256 identity and bounded Core WebAssembly.
-- Plugin code has no WASI, arbitrary JavaScript/HTML, filesystem access or package hooks.
+- V1 guest code has no WASI, arbitrary JavaScript/HTML, filesystem access or package hooks. This restriction does NOT sandbox ABI2 native code.
 - Installation requires explicit review and consent. Later actions still validate identity, current device ownership, capability, grant and typed payload.
 - The authenticated Rust desktop advertises atomic-update support for its current device socket/epoch; reconnect or rebind clears it. Mobile shows eligible same-permission updates. Older hosts return `unsupported` until restarted with the update-capable build. An `unknown` result requires refreshing installed inventory before an explicit retry.
 - Marketplace and remote execution are development-only. Official packages are MIT reference implementations; native capability availability depends on the host/runtime and platform.

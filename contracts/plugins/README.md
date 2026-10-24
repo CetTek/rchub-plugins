@@ -1,5 +1,12 @@
 # Plugin platform v1 implementation contract
 
+This file describes **supported V1 Wasm**, not a deprecated/migration-only path.
+For separate normal-user unsandboxed native applications, see the experimental
+[Integration ABI2 contract](v2/README.md): descriptor schemaVersion2, wire v3 /
+version2, process negotiation version2. Existing V1 formats, packages and grants
+do not change. The 2026-10-24 native assets are local-only, publication pending;
+historical publication authorization below is not permission to publish this batch.
+
 Approved plan: user requested a plugin-owned card/panel system, management,
 Marketplace and public developer docs, then approved the parallel plan on
 2026-10-20. This is the development implementation of that plan; production

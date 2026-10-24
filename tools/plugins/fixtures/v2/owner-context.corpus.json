@@ -1,0 +1,17 @@
+{
+  "binding": {"serverOrigin": "http://127.0.0.1:5000", "deviceId": "device1", "ownerUserId": "owner1"},
+  "controls": [
+    {"v":3,"kind":"owner-context","version":2,"epoch":"epoch1","binding":{"serverOrigin":"http://127.0.0.1:5000","deviceId":"device1","ownerUserId":"owner1"},"authorityRevision":1,"state":"valid","reason":"owner-validated"},
+    {"v":3,"kind":"owner-context","version":2,"epoch":"epoch1","binding":{"serverOrigin":"http://127.0.0.1:5000","deviceId":"device1","ownerUserId":"owner1"},"authorityRevision":2,"state":"revoked","reason":"link-revoked"}
+  ],
+  "surfaceCloseDispatch": {"v":3,"kind":"dispatch","version":2,"operationId":"close1","epoch":"epoch1","deadline":12345,"binding":{"serverOrigin":"http://127.0.0.1:5000","deviceId":"device1","ownerUserId":"owner1"},"authorityRevision":1,"action":"surface.close","package":{"id":"vendor.fixture","version":"0.0.1","sha256":"0000000000000000000000000000000000000000000000000000000000000000"},"instanceId":"instance1","contextId":"context1","surfaceId":"controls","targetOperationId":"openA"},
+  "watchScenario": [
+    {"step":"open","operationId":"openA","surfaceId":"controls","first":true},
+    {"step":"snapshot","ipcRevision":1,"expectedWireRevisions":{"openA":1}},
+    {"step":"open","operationId":"openB","surfaceId":"controls","first":false,"initialWireRevision":1},
+    {"step":"snapshot","ipcRevision":2,"expectedWireRevisions":{"openA":2,"openB":2}},
+    {"step":"close","operationId":"openA","surfaceId":"controls","last":false},
+    {"step":"snapshot","ipcRevision":3,"expectedWireRevisions":{"openB":3}},
+    {"step":"close","operationId":"openB","surfaceId":"controls","last":true}
+  ]
+}

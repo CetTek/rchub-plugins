@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["protocol", "instanceId", "contextId", "sender", "body"],
+  "properties": {
+    "protocol": {"const": "rchub-app-v2-experimental"},
+    "instanceId": {"$ref": "#/$defs/token"},
+    "contextId": {"$ref": "#/$defs/token"},
+    "sender": {"enum": ["host", "plugin"]},
+    "body": {"oneOf": [
+      {"type": "object", "additionalProperties": false, "required": ["kind", "requestId", "operation", "name", "payload"], "properties": {
+        "kind": {"const": "request"}, "requestId": {"$ref": "#/$defs/token"},
+        "operation": {"enum": ["invoke", "subscribe", "unsubscribe", "store.get", "store.put", "surface.open", "surface.close"]},
+        "name": {"$ref": "#/$defs/name"}, "payload": {"type": "object"},
+        "subscriptionId": {"$ref": "#/$defs/token"}
+      }},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "requestId", "operation", "name", "status", "payload"], "properties": {
+        "kind": {"const": "result"}, "requestId": {"$ref": "#/$defs/token"},
+        "operation": {"enum": ["invoke", "subscribe", "unsubscribe", "store.get", "store.put", "surface.open", "surface.close"]},
+        "name": {"$ref": "#/$defs/name"}, "status": {"enum": ["ok", "rejected", "cancelled", "unknown", "conflict"]}, "payload": {"type": "object"}
+      }},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "subscriptionId", "name", "payload"], "properties": {
+        "kind": {"const": "event"}, "subscriptionId": {"$ref": "#/$defs/token"},
+        "name": {"$ref": "#/$defs/name"}, "payload": {"type": "object"}
+      }},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "state"], "properties": {
+        "kind": {"const": "lifecycle"}, "state": {"enum": ["started", "stopped"]}
+      }},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "version", "features"], "properties": {"kind": {"enum": ["hello", "welcome"]}, "version": {"enum": [1, 2]}, "features": {"type": "array", "maxItems": 4, "uniqueItems": true, "items": {"enum": ["native-process-v1", "events-v1", "surfaces-v1", "scoped-store-v1"]}}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "requestId"], "properties": {"kind": {"const": "cancel"}, "requestId": {"$ref": "#/$defs/token"}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "surfaceId", "revision", "values"], "properties": {"kind": {"const": "state"}, "surfaceId": {"$ref": "#/$defs/token"}, "revision": {"type": "integer", "minimum": 1}, "values": {"type": "object", "maxProperties": 32}}},
+      {"type": "object", "additionalProperties": false, "required": ["kind", "reason"], "properties": {"kind": {"const": "shutdown"}, "reason": {"enum": ["deactivate", "removed", "updated", "context-lost", "host-exit"]}}}
+    ]}
+  },
+  "$defs": {
+    "token": {"type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$"},
+    "name": {"type": "string", "maxLength": 160, "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_]*){2,10}$"}
+  }
+}

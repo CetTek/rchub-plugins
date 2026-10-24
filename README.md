@@ -1,18 +1,45 @@
 # RCHub Plugins
 
-Open-source reference plugins and a dependency-free Python SDK for RCHub, maintained by CetTek. Licensed under MIT. The RCHub host application is maintained separately.
+Open-source reference plugins and dependency-free Python developer SDKs for RCHub, maintained by CetTek. Licensed under MIT. The RCHub host application is maintained separately; no private host sources or account data are included.
 
 [Developer guide (English)](docs/plugins/README.md) · [Geliştirici rehberi (Türkçe)](docs/plugins/README.tr.md) · [Package contract](contracts/plugins/README.md) · [JSON Schema](contracts/plugins/plugin.schema.json)
 
 For AI coding tools, see [`llms.txt`](llms.txt), a concise index of the guides, SDK, contracts and official examples.
 
-## Included plugins
+## Choose a development model — no mandatory migration
+
+| Need | Choose | Boundary |
+| --- | --- | --- |
+| Existing typed host capabilities and portable manifest panels | Supported **V1 Wasm** (`rchub_plugin.py`, existing official packages) | Bounded guest, declared capabilities; no arbitrary OS/filesystem guest access. |
+| New developer-written PC logic, long-lived state/events, native extension windows | Experimental **native application / Integration ABI2** | Normal-user **UNSANDBOXED** executable; source/hash/process is not safety or publisher proof. |
+| Production-ready arbitrary native execution, verified live UI/auth/Socket.IO or Linux acceptance | Neither is established by this snapshot | DEV only; those acceptance gates remain open. |
+
+ABI2 uses descriptor **`schemaVersion:2`**, Socket.IO wire **`v:3` with
+`version:2` on all envelopes**, and process hello/welcome **`version:2`**.
+It is not V1 wire v2. Existing V1 packages, IDs, hashes and grants remain intact;
+no automated conversion or transfer of Wasm consent to unsandboxed native.
+
+Start with the [ABI2 contract](contracts/plugins/v2/README.md),
+[Python module](tools/plugins/rchub_app_v2.py) and
+[buildable new-ID example (EN/TR)](plugins/examples/application-v2/README.md).
+Native code implements its own PC behavior without host provider edits; phone/web/PC
+surfaces are declarative, while native windows belong to the extension, never host
+authentication/consent. Custom/temp storage is developer-owned; optional host-scoped
+store has exact scope/CAS/retention rules, not OS isolation.
+
+**2026-10-24 local-only sync:** reviewed public-safe SDK/schema/fixtures and examples
+are included in the explicitly authorized local developer-kit commit. Push, tag,
+release and publication remain pending separate approval; none was performed.
+Host evidence is bounded Windows/injected-transport/headless testing, not live
+UI/auth/socket-loopback acceptance or product completion. Linux acceptance deferred.
+
+## Included V1 plugins
 
 Audio, System, Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech and Effects live in [plugins/official](plugins/official). Each directory includes a manifest, readable Wasm proxy source and a portable `.rchub-plugin.json` package.
 
 These are development reference packages for a compatible RCHub host. Native capabilities currently target Windows; provider availability depends on the host/runtime and hardware. Apps controls observed processes/windows, Screenshot returns a bounded optimized image, and Effects plays a beep. They do not reproduce every legacy control. Source availability does not certify safety or production readiness.
 
-## Build
+## Build V1 packages
 
 Python 3.9 or newer; no third-party Python dependencies:
 
@@ -23,7 +50,7 @@ python tools/plugins/rchub_plugin.py validate plugins/official/audio/audio.rchub
 
 The builder reproduces all twelve packages from the definitions in `build_official.py`. Source `manifest.json` files use readable two-space JSON indentation. Built `.rchub-plugin.json` files stay compact and canonical because their SHA-256 identity is calculated from canonical bytes; use `inspect` for a readable package view. The SDK also supports community manifests and custom compiled Wasm. See the guides for schemas, UI controls, permissions and installation.
 
-## Releases and installation
+## Existing V1 releases and installation
 
 Release `v0.3.0` contains twelve source packages whose source links point to the matching tag. Media is now **Media & Display**, combining volume/mute, DDC/CI brightness and playback. Standalone Audio/Display remain available for compatibility; the current DEV catalog recommends the combined package in their place. All plugins define their own control layout, icons and button tones through the shared UI schema. See the guides' Panel customization section.
 

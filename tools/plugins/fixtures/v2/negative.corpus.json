@@ -1,0 +1,6 @@
+{
+  "invalidJson": ["{} trailing", "{\"a\":1,\"a\":2}", "{\"a\":NaN}", "{\"a\":1.0}", "{\"a\":9007199254740992}", "{\"a\":\"\\ud800\"}", "{\"constructor\":{}}"],
+  "invalidEntries": ["../x", "/x", "C:/x", "bin\\x", "bin/../x", "bin//x", "https://x", "bin/x:stream", "con.exe", "bin/NUL", "x."],
+  "invalidChunks": ["", "eA", "eA===", "eB==", "eA==\n", "https://x"],
+  "invalidStoreKeys": ["../x", "/x", "C:/x", "x/y", "https://x", "constructor", "prototype", "__proto__"]
+}
