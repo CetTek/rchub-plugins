@@ -61,7 +61,10 @@ the separately built official Windows packages are published in
 
 In a separately supplied compatible authenticated DEV host, enter your public GitHub
 repository root URL in the native workspace (`https://github.com/<owner>/<repository>`
-is syntax only). The resolver pins the default-branch commit, verifies the root
+is syntax only). Resolution is available on the phone with the account session token
+and on the PC with the desktop's paired-device credentials; both are required by the
+server, and an unpaired computer cannot resolve or download the artifact. The
+resolver pins the default-branch commit, verifies the root
 manifest and executable hash, and binds the download to that commit and manifest
 identity. Review repository, commit, source, license, target, hash, native permission
 and data behavior, then explicitly approve on PC or phone. Installation stages bytes
