@@ -65,7 +65,11 @@ Unauthorized requests are rejected with `401`, responses are non-cacheable, and 
 desktop catalog action stays disabled until it can send its paired-device credentials.
 Catalog listing and hash-bound download are not installation, activation, publisher
 verification or proof of safety, and the artifact route only serves bytes whose size
-and SHA-256 match the catalog descriptor.
+and SHA-256 match the catalog descriptor. `POST /api/plugins/github/resolve` and its
+commit-bound artifact route accept the same two authorities: an account session
+Bearer token for mobile/web, or the paired-device headers for the desktop. An
+unpaired computer cannot resolve a repository or download its artifact, and the
+device password is sent only as a request header over the bound server origin.
 
 This repository is a distribution catalog, not a per-package repository root. The
 GitHub-URL resolver requires `rchub-app.json` at a repository root, so these

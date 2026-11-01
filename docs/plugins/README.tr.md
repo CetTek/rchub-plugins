@@ -64,7 +64,11 @@ belirteci, masaüstü için zaten kullandığı eşleşmiş cihaz `x-device-id` 
 cache'lenmez ve masaüstü katalog eylemi cihaz kimlik bilgilerini gönderemediği sürece
 kapalı kalır. Katalog listesi ve hash'e bağlı indirme; kurulum, etkinleştirme, yayıncı
 doğrulaması veya güvenlik kanıtı değildir; artifact yolu yalnız boyutu ve SHA-256
-değeri katalog bildirimiyle eşleşen baytları sunar.
+değeri katalog bildirimiyle eşleşen baytları sunar. `POST /api/plugins/github/resolve`
+ve commit'e bağlı artifact yolu aynı iki yetkiyi kabul eder: mobil/web için hesap
+oturumu Bearer belirteci, masaüstü için eşleşmiş cihaz başlıkları. Eşleşmemiş bir
+bilgisayar depo çözemez veya artifact indiremez; cihaz parolası yalnız bağlı sunucu
+origin'ine istek başlığı olarak gider.
 
 Bu depo dağıtım kataloğudur, paket başına depo kökü değildir. GitHub URL çözümleyicisi
 depo kökünde `rchub-app.json` ister; bu monorepo alt dizin URL'leri onunla kurulamaz.
