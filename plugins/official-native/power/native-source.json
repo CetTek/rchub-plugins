@@ -1,0 +1,221 @@
+{
+  "id": "com.rchub.power",
+  "name": {
+    "en": "Power",
+    "tr": "Güç"
+  },
+  "description": {
+    "en": "Lock, sleep, restart or shut down your PC.",
+    "tr": "PC’nizi kilitleyin, uyutun, yeniden başlatın veya kapatın."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "power.write",
+      "id": "change",
+      "input": {
+        "properties": {
+          "action": {
+            "enum": [
+              "lock",
+              "sleep",
+              "shutdown",
+              "restart",
+              "cancel_shutdown"
+            ],
+            "maxLength": 15,
+            "type": "string"
+          },
+          "delay_seconds": {
+            "maximum": 86400,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "force": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "accepted": {
+      "type": "boolean"
+    }
+  },
+  "ui": {
+    "color": "orange",
+    "controls": [
+      {
+        "children": [
+          {
+            "action": "change",
+            "argument": "delay_seconds",
+            "defaultValue": 30,
+            "id": "delay_seconds",
+            "inputMode": "numeric",
+            "label": {
+              "en": "Delay (seconds)",
+              "tr": "Gecikme (saniye)"
+            },
+            "submit": false,
+            "type": "input"
+          },
+          {
+            "action": "change",
+            "argument": "force",
+            "defaultValue": false,
+            "id": "force",
+            "label": {
+              "en": "Force applications to close",
+              "tr": "Uygulamaları zorla kapat"
+            },
+            "submit": false,
+            "type": "input"
+          }
+        ],
+        "id": "schedule",
+        "label": {
+          "en": "Shutdown / restart options",
+          "tr": "Kapatma / yeniden başlatma seçenekleri"
+        },
+        "type": "section"
+      },
+      {
+        "children": [
+          {
+            "action": "change",
+            "argument": "action",
+            "confirm": {
+              "message": {
+                "en": "This may close applications and lose unsaved work. Continue?",
+                "tr": "Uygulamalar kapanabilir ve kaydedilmemiş çalışmalar kaybolabilir. Devam edilsin mi?"
+              },
+              "title": {
+                "en": "Confirm power action",
+                "tr": "Güç işlemini onayla"
+              }
+            },
+            "icon": "power",
+            "id": "shutdown",
+            "inputBindings": {
+              "delay_seconds": "delay_seconds",
+              "force": "force"
+            },
+            "label": {
+              "en": "Shut down",
+              "tr": "Kapat"
+            },
+            "tone": "danger",
+            "type": "button",
+            "value": "shutdown"
+          },
+          {
+            "action": "change",
+            "argument": "action",
+            "confirm": {
+              "message": {
+                "en": "This may close applications and lose unsaved work. Continue?",
+                "tr": "Uygulamalar kapanabilir ve kaydedilmemiş çalışmalar kaybolabilir. Devam edilsin mi?"
+              },
+              "title": {
+                "en": "Confirm power action",
+                "tr": "Güç işlemini onayla"
+              }
+            },
+            "icon": "power",
+            "id": "restart",
+            "inputBindings": {
+              "delay_seconds": "delay_seconds",
+              "force": "force"
+            },
+            "label": {
+              "en": "Restart",
+              "tr": "Yeniden başlat"
+            },
+            "tone": "primary",
+            "type": "button",
+            "value": "restart"
+          },
+          {
+            "action": "change",
+            "argument": "action",
+            "icon": "power",
+            "id": "lock",
+            "label": {
+              "en": "Lock",
+              "tr": "Kilitle"
+            },
+            "tone": "default",
+            "type": "button",
+            "value": "lock"
+          },
+          {
+            "action": "change",
+            "argument": "action",
+            "icon": "power",
+            "id": "sleep",
+            "label": {
+              "en": "Sleep",
+              "tr": "Uyku"
+            },
+            "tone": "default",
+            "type": "button",
+            "value": "sleep"
+          }
+        ],
+        "id": "power_actions",
+        "type": "column"
+      },
+      {
+        "action": "change",
+        "argument": "action",
+        "icon": "power",
+        "id": "cancel_shutdown",
+        "label": {
+          "en": "Cancel scheduled shutdown",
+          "tr": "Planlanan kapatmayı iptal et"
+        },
+        "type": "button",
+        "value": "cancel_shutdown"
+      }
+    ],
+    "icon": "power",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Locks or sleeps the PC, schedules/cancels shutdown or restart; forced actions can lose unsaved work.",
+      "tr": "PC’yi kilitler veya uyutur; kapatma veya yeniden başlatmayı planlar/iptal eder; zorlanan işlemler kaydedilmemiş çalışmaları kaybettirebilir."
+    }
+  }
+}

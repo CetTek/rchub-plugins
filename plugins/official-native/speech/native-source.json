@@ -1,0 +1,152 @@
+{
+  "id": "com.rchub.speech",
+  "name": {
+    "en": "Speech",
+    "tr": "Metni Seslendir"
+  },
+  "description": {
+    "en": "Show and speak messages with Google TTS, or an installed Windows voice when unavailable.",
+    "tr": "İletileri gösterin ve Google TTS ile; kullanılamıyorsa kurulu Windows sesiyle seslendirin."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "speech.write",
+      "id": "speak",
+      "input": {
+        "properties": {
+          "language": {
+            "enum": [
+              "tr",
+              "en"
+            ],
+            "maxLength": 2,
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 200,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "accepted": {
+      "type": "boolean"
+    }
+  },
+  "ui": {
+    "color": "green",
+    "controls": [
+      {
+        "action": "speak",
+        "argument": "language",
+        "defaultValue": "tr",
+        "id": "language",
+        "label": {
+          "en": "Language",
+          "tr": "Dil"
+        },
+        "options": [
+          {
+            "label": {
+              "en": "Turkish",
+              "tr": "Türkçe"
+            },
+            "value": "tr"
+          },
+          {
+            "label": {
+              "en": "English",
+              "tr": "İngilizce"
+            },
+            "value": "en"
+          }
+        ],
+        "submit": false,
+        "type": "select"
+      },
+      {
+        "action": "speak",
+        "argument": "text",
+        "id": "text",
+        "inputBindings": {
+          "language": "language"
+        },
+        "label": {
+          "en": "Message",
+          "tr": "İleti"
+        },
+        "multiline": true,
+        "placeholder": {
+          "en": "Write a message to show and speak on your PC",
+          "tr": "PC’nizde gösterilecek ve seslendirilecek iletiyi yazın"
+        },
+        "type": "input"
+      },
+      {
+        "id": "hint",
+        "label": {
+          "en": "Your message text is sent to Google TTS for speech. If unavailable, an installed Windows voice for the selected language is used.",
+          "tr": "İleti metniniz seslendirme için Google TTS’ye gönderilir. Kullanılamıyorsa seçilen dilin kurulu Windows sesi kullanılır."
+        },
+        "type": "text"
+      },
+      {
+        "id": "playback_hint",
+        "label": {
+          "en": "Send to show and speak the message, up to 10 seconds. Closing the message stops speech.",
+          "tr": "İletiyi göstermek ve en fazla 10 saniye seslendirmek için gönderin. İletiyi kapatmak sesi durdurur."
+        },
+        "type": "text"
+      },
+      {
+        "bind": "accepted",
+        "id": "accepted",
+        "label": {
+          "en": "Message delivered",
+          "tr": "İleti iletildi"
+        },
+        "type": "status"
+      }
+    ],
+    "icon": "message",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Shows a closable message and sends its text to Google TTS. Falls back to an installed Windows voice. Temporary audio is deleted by the owned helper.",
+      "tr": "Kapatılabilir ileti gösterir ve metni Google TTS’ye gönderir. Kurulu Windows sesiyle yedeklenir. Geçici ses, sahip olunan yardımcı tarafından silinir."
+    }
+  }
+}

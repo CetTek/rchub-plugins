@@ -1,0 +1,254 @@
+{
+  "id": "com.rchub.keyboard",
+  "name": {
+    "en": "Keyboard",
+    "tr": "Klavye"
+  },
+  "description": {
+    "en": "Type text and send keyboard shortcuts.",
+    "tr": "Metin yazın ve klavye kısayolları gönderin."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "keyboard.write",
+      "id": "type_text",
+      "input": {
+        "properties": {
+          "text": {
+            "maxLength": 4096,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "sent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sent"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "capability": "keyboard.write",
+      "id": "shortcut",
+      "input": {
+        "properties": {
+          "keys": {
+            "maxLength": 80,
+            "type": "string"
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "sent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sent"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "sent": {
+      "type": "boolean"
+    }
+  },
+  "ui": {
+    "color": "purple",
+    "controls": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "action": "type_text",
+                "argument": "text",
+                "id": "text",
+                "label": {
+                  "en": "Type on PC",
+                  "tr": "PC’de yaz"
+                },
+                "multiline": true,
+                "placeholder": {
+                  "en": "Write a message or paste multiple lines",
+                  "tr": "Bir ileti yazın veya çok satırlı metin yapıştırın"
+                },
+                "type": "input"
+              }
+            ],
+            "id": "typing",
+            "label": {
+              "en": "Text",
+              "tr": "Metin"
+            },
+            "type": "section"
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "copy",
+                    "label": {
+                      "en": "Copy",
+                      "tr": "Kopyala"
+                    },
+                    "type": "button",
+                    "value": "ctrl+c"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "paste",
+                    "label": {
+                      "en": "Paste",
+                      "tr": "Yapıştır"
+                    },
+                    "type": "button",
+                    "value": "ctrl+v"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "select_all",
+                    "label": {
+                      "en": "Select all",
+                      "tr": "Tümünü seç"
+                    },
+                    "type": "button",
+                    "value": "ctrl+a"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "undo",
+                    "label": {
+                      "en": "Undo",
+                      "tr": "Geri al"
+                    },
+                    "type": "button",
+                    "value": "ctrl+z"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "enter",
+                    "label": {
+                      "en": "Enter",
+                      "tr": "Enter"
+                    },
+                    "type": "button",
+                    "value": "enter"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "escape",
+                    "label": {
+                      "en": "Escape",
+                      "tr": "Escape"
+                    },
+                    "type": "button",
+                    "value": "esc"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "switch",
+                    "label": {
+                      "en": "Switch app",
+                      "tr": "Uygulama değiştir"
+                    },
+                    "type": "button",
+                    "value": "alt+tab"
+                  },
+                  {
+                    "action": "shortcut",
+                    "argument": "keys",
+                    "id": "desktop",
+                    "label": {
+                      "en": "Show desktop",
+                      "tr": "Masaüstünü göster"
+                    },
+                    "type": "button",
+                    "value": "win+d"
+                  }
+                ],
+                "id": "quick_keys",
+                "type": "row"
+              },
+              {
+                "action": "shortcut",
+                "argument": "keys",
+                "id": "shortcut",
+                "label": {
+                  "en": "Shortcut (e.g. ctrl+a)",
+                  "tr": "Kısayol (ör. ctrl+a)"
+                },
+                "type": "input"
+              }
+            ],
+            "id": "shortcuts",
+            "label": {
+              "en": "Shortcuts",
+              "tr": "Kısayollar"
+            },
+            "type": "section"
+          }
+        ],
+        "id": "keyboard_tabs",
+        "type": "tabs"
+      },
+      {
+        "bind": "sent",
+        "id": "sent",
+        "label": {
+          "en": "Sent",
+          "tr": "Gönderildi"
+        },
+        "type": "status"
+      }
+    ],
+    "icon": "keyboard",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Sends Unicode text and shortcuts to the current foreground application.",
+      "tr": "Öndeki uygulamaya Unicode metin ve klavye kısayolları gönderir."
+    }
+  }
+}

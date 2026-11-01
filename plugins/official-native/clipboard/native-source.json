@@ -1,0 +1,113 @@
+{
+  "id": "com.rchub.clipboard",
+  "name": {
+    "en": "Clipboard",
+    "tr": "Pano"
+  },
+  "description": {
+    "en": "Read and replace PC clipboard text.",
+    "tr": "PC panosundaki metni okuyun ve değiştirin."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "clipboard.read",
+      "id": "read",
+      "input": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "text": {
+            "maxLength": 8192,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "capability": "clipboard.write",
+      "id": "write",
+      "input": {
+        "properties": {
+          "text": {
+            "maxLength": 8192,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "text": {
+            "maxLength": 8192,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {},
+  "ui": {
+    "color": "teal",
+    "controls": [
+      {
+        "action": "read",
+        "icon": "clipboard",
+        "id": "read",
+        "label": {
+          "en": "Read PC clipboard",
+          "tr": "PC panosunu oku"
+        },
+        "type": "button"
+      },
+      {
+        "action": "write",
+        "argument": "text",
+        "id": "write",
+        "label": {
+          "en": "Write PC clipboard",
+          "tr": "PC panosuna yaz"
+        },
+        "multiline": true,
+        "type": "input"
+      }
+    ],
+    "icon": "clipboard",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "string-8192-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Reads and replaces up to 8192 UTF-16 units of clipboard text; text is returned to the requesting client.",
+      "tr": "En fazla 8192 UTF-16 birimi pano metnini okur ve değiştirir; metin isteyen istemciye iletilir."
+    }
+  }
+}

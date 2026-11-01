@@ -1,0 +1,88 @@
+{
+  "id": "com.rchub.effects",
+  "name": {
+    "en": "Effects",
+    "tr": "Ses Efekti"
+  },
+  "description": {
+    "en": "Play a short Windows system sound.",
+    "tr": "Kısa bir Windows sistem sesi çalın."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "effects.write",
+      "id": "beep",
+      "input": {
+        "properties": {
+          "effect": {
+            "enum": [
+              "beep"
+            ],
+            "maxLength": 4,
+            "type": "string"
+          }
+        },
+        "required": [
+          "effect"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "accepted": {
+      "type": "boolean"
+    }
+  },
+  "ui": {
+    "color": "pink",
+    "controls": [
+      {
+        "action": "beep",
+        "argument": "effect",
+        "icon": "smile",
+        "id": "beep",
+        "label": {
+          "en": "Play system beep",
+          "tr": "Sistem sesi çal"
+        },
+        "type": "button",
+        "value": "beep"
+      }
+    ],
+    "icon": "smile",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Plays the Windows system beep.",
+      "tr": "Windows sistem uyarı sesini çalar."
+    }
+  }
+}

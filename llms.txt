@@ -1,75 +1,59 @@
 # RCHub Plugins
 
-> RCHub has two DEV plugin models: supported V1 bounded Wasm packages and separate experimental Integration ABI2 long-lived normal-user UNSANDBOXED native applications. No mandatory migration, grant transfer or production-readiness claim.
-
-## Decide first: V1 or native ABI2
-
-- Existing permission-gated host capabilities / bounded per-call guests: use V1 below. Existing official packages, IDs, hashes and grants stay unchanged.
-- New arbitrary developer-written PC logic without host provider edits, state/events and extension-owned native windows: use experimental ABI2. Unsandboxed code can access normal-user files/network outside broker calls; source/hash/process/consent does not make arbitrary native code safe or publisher verified.
-- ABI2 exact versions: descriptor schemaVersion:2; authenticated Socket.IO v:3 with version:2 on EVERY envelope; process protocol rchub-app-v2-experimental hello/welcome version:2. Do not confuse V1 package wire v2 or fall back to ABI1.
-- [ABI2 contract](contracts/plugins/v2/README.md): authoritative current developer boundaries and all three schemas.
-- [ABI2 Python module](tools/plugins/rchub_app_v2.py): no install/build CLI; use ProtocolSession(...,version=2), validate_transport(message,expected_version=2) plus semantic/authority/correlation checks.
-- [ABI2 Windows new-ID example EN/TR](plugins/examples/application-v2/README.md): installed rustc/Python build; prepare.py writes canonical manifest/identity/base64 for native import, not .rchub-plugin.json. New ID com.example.switchboard; no chat product or official-ID host branch.
-- [Application schema](contracts/plugins/v2/application.schema.json), [IPC schema](contracts/plugins/v2/protocol.schema.json), [wire schema](contracts/plugins/v2/transport.schema.json), [shared descriptor](tools/plugins/fixtures/v2/vendor.fixture.json), [owner/watch corpus](tools/plugins/fixtures/v2/owner-context.corpus.json).
-- [Provenance](plugins/examples/application-v2/PROVENANCE.md): reviewed public-safe assets only, no private host sources/history/secrets. V1 select/Speech parity changes excluded; existing V1 SDK/packages preserved.
-
-Native build/validation from repository root (Windows x64 installed compiler/linker):
-`New-Item -ItemType Directory -Force plugins/examples/application-v2/build | Out-Null`
-`rustc --edition=2021 plugins/examples/application-v2/native.rs -o plugins/examples/application-v2/build/switchboard.exe`
-`python -B plugins/examples/application-v2/prepare.py --artifact plugins/examples/application-v2/build/switchboard.exe --out plugins/examples/application-v2/build/import`
-`python -B -m unittest discover -s tools/plugins -p "test_rchub*.py" -v`
-`python -B -m unittest discover -s plugins/examples/application-v2 -p "test_example.py" -v`
-
-Fresh output directory on repeat; source URL placeholder must be replaced before distribution. Compatible separately supplied authenticated DEV host required. Paste descriptor/base64 into native application import, review source/risk/exact permission/hash/data disclosure, approve explicitly on phone or PC. Staged begin/chunks/commit <=16MiB, <=32KiB chunks; installation runs no code. Activate explicitly, then open declarative controls. No public host installer, SDK install CLI, shell/interpreter/hooks/dependency execution or automatic reconnect activation.
-
-ABI2 surfaces use bounded direct state/draft/action bindings for phone/web/PC, not arbitrary JS/HTML or the entire V1 vocabulary. Native windows belong to extension, never host auth/consent. Native custom/temp storage is developer-owned; choices are disclosure not isolation. Optional host-scoped CAS/quota store is scoped to origin/device/current owner/plugin ID. Removal retains scoped data, no owner rebinding or automatic purge. No global data format/retention/message product policy.
-
-Install/each native target update needs exact disclosure-v2 consent; later granted use has no per-action/session/reconnect/restart popup. Every operation/observation still enforces current auth/owner/link, exact grant/hash, canonical socket/epoch and authorityRevision. Separate PC-local self-only viewer requires server validation, never a fabricated user session. Viewer close/logout cancels only its own watches/pending work; owner/grant revoke/canonical disconnect stops affected runtime/stages. Exact server-resolved watch close; no client targetOperationId. Current same-process mutation invalidation is not immediate direct-SQL/admin/other-process coverage.
-
-2026-10-24 LOCAL ONLY: local developer-kit commit explicitly authorized; push/tag/release/publication remain pending separate authorization and were not performed. ABI2 experimental DEV, Linux acceptance deferred. Separate coordinator installed61 Windows proof used synthetic DB/injected transport/headless frames: bRustLocalVerified:true, headlessRendererVerified:true; socketIoLoopbackVerified:false, pcConnectionLocalUiVerified:false, liveDbAuthVerified:false, uiVerified:false, productComplete:false. Not live UI/auth/real-socket or production completion; public asset tests do not rerun that host harness.
+> New authoring model: native application installed from a public GitHub repository URL. Twelve official Windows x64 native packages (version 1.0.0) are published in `plugins/official-native` and served by a compatible host's authenticated V2 catalog; production native capability is still fail-closed because cross-process owner invalidation is not covered, and Linux packages are not published. Legacy V1 Wasm support, imports and catalog paths have not yet been technically removed.
 
 ## Start here
 
-- [English developer guide](https://github.com/CetTek/rchub-plugins/blob/main/docs/plugins/README.md): quick start, package format, permissions, UI controls, examples and compatibility.
-- [Türkçe geliştirici rehberi](https://github.com/CetTek/rchub-plugins/blob/main/docs/plugins/README.tr.md)
-- [Package and protocol contract](https://github.com/CetTek/rchub-plugins/blob/main/contracts/plugins/README.md)
-- [JSON Schema](https://github.com/CetTek/rchub-plugins/blob/main/contracts/plugins/plugin.schema.json)
-- [Python SDK](https://github.com/CetTek/rchub-plugins/blob/main/tools/plugins/rchub_plugin.py)
-- [Official plugin builder](https://github.com/CetTek/rchub-plugins/blob/main/tools/plugins/build_official.py)
+- [English developer guide](docs/plugins/README.md) and [Türkçe geliştirici rehberi](docs/plugins/README.tr.md): developer workflow, installation and security.
+- [Published official native packages](plugins/official-native/README.md): twelve Windows x64 packages, version 1.0.0, with exact artifact SHA-256 values.
+- [Native ABI2 contract](contracts/plugins/v2/README.md): schema, IPC and semantic requirements; descriptor schemaVersion 2, authenticated wire v3/version 2 and negotiated IPC version 2 are distinct.
+- [Native example EN/TR](plugins/examples/application-v2/README.md): local illustrative Windows example; it is not one of the published official packages.
+- [Preparation CLI](tools/plugins/rchub_app_v2_cli.py): prepare binds a template to supplied native bytes; verify checks the binding. Neither builds, publishes, installs, executes or approves the application.
+- [Python protocol module](tools/plugins/rchub_app_v2.py), [application schema](contracts/plugins/v2/application.schema.json), [IPC schema](contracts/plugins/v2/protocol.schema.json), [transport schema](contracts/plugins/v2/transport.schema.json).
 
-## Build a V1 Wasm plugin
+## Published official packages
 
-1. Create a starter manifest and readable Wasm source:
-   `python tools/plugins/rchub_plugin.py create examples/my-plugin --id com.example.myplugin --name "My Plugin"`
-2. Edit `manifest.json`: declare exact permissions, typed action inputs/outputs and state, and choose controls from the bounded UI schema.
-3. Build and validate the package:
-   `python tools/plugins/rchub_plugin.py build examples/my-plugin --proxy --out examples/my-plugin/my-plugin.rchub-plugin.json`
-   `python tools/plugins/rchub_plugin.py validate examples/my-plugin/my-plugin.rchub-plugin.json`
-4. Preview declarative controls in the RCHub development app at `/plugin-preview`. The preview uses local mock state and never sends device commands.
-5. Review the source and requested permissions before installing. The host enforces current authorization and the exact saved grant for every operation.
+All twelve are MIT-licensed, target `windows-x86_64`, use entry `bin/rchub-official-native.exe` and permission `native.unsandboxed`, and sit in `plugins/official-native/<directory>/` as complete package roots (`rchub-app.json`, artifact, `native-source.json`, `native-runtime/` sources and lockfile, `LICENSE`, README).
 
-## V1 UI and examples
+| Directory | ID | Version | Artifact SHA-256 |
+| --- | --- | --- | --- |
+| `apps` | `com.rchub.apps` | 1.0.0 | `ec04c89844a79e25aff04655ddf6e681a3e6abd093afa82e3b0cc206e639c8f1` |
+| `audio` | `com.rchub.audio` | 1.0.0 | `db6d24b13cfec4fb3555e110634d298f04dc65540398219606d039cadea5d49a` |
+| `browser` | `com.rchub.browser` | 1.0.0 | `4a114f702da7ac1c994554739d8a25b3056d03b95d6fa311bd54f08fd7247810` |
+| `clipboard` | `com.rchub.clipboard` | 1.0.0 | `2137e5fb94be53a6dc2baeaeede7c37b2b93113b0bcb57665aec87be3ce3234a` |
+| `display` | `com.rchub.display` | 1.0.0 | `05f4590cd76206a95ce83b33cfc6127af528ed0ba4bf249df58de1556a42f60d` |
+| `effects` | `com.rchub.effects` | 1.0.0 | `ad639893671e4f230f37e07919115a30bed503a54c4cfcbabb8dfff984b54b7a` |
+| `keyboard` | `com.rchub.keyboard` | 1.0.0 | `bc326151fd2088cae2e2351372fdc42ac702744806e0572d9580f68b00858fa5` |
+| `media` | `com.rchub.media` | 1.0.0 | `48af5ddb78f5a347f1330ce1cd91e820257896f7c834f99ef77294180dec50e6` |
+| `power` | `com.rchub.power` | 1.0.0 | `680ba0972fa3ec08753abd9cdfe9475e00589af95740af28816adc5bfb37d0fe` |
+| `screenshot` | `com.rchub.screenshot` | 1.0.0 | `39f1bea777bb5f2051dd701ed146a79dc7236da3d19ceb3a7c70e0b1330b8b31` |
+| `speech` | `com.rchub.speech` | 1.0.0 | `4de8591d6a86b92614b35339fe2d9173109f1aa93286dc7e1ea5f4d50556afe3` |
+| `system` | `com.rchub.system` | 1.0.0 | `7fc767a4cc8fccd1c50f63f4510c295f1d1b34bcba3b1caeb3c910e8de465585` |
 
-- Layouts: sections, rows, columns and tabs.
-- Controls: buttons, sliders, toggles, selects, inputs, progress indicators, images, typed lists, text, values and status.
-- [System example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/system/manifest.json): bounded host metrics, CPU/RAM ring progress charts, compact computer/OS observations and truthful used/total MB values; uptime is seconds.
-- [Media & Display example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/media/manifest.json): grouped volume/mute, brightness and playback controls.
-- [Apps example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/apps/manifest.json): searchable typed process/window rows, selected-row action menus and action confirmation.
+The host serves them from its own `plugins/official-native` checkout through `GET /api/plugins/v2/catalog` and `GET /api/plugins/v2/artifacts/<id>/<version>/<sha256>`. Both routes require authority: an account session Bearer token for mobile/web, or the paired-device `x-device-id`/`x-device-password` headers for the desktop; unauthorized requests get `401`, responses are non-cacheable, and the desktop catalog action stays disabled until it can send those credentials. The artifact route serves only bytes whose size and SHA-256 match the descriptor. Catalog listing and download are not installation, activation, publisher verification or proof of safety. This repository is a distribution catalog, not a per-package repository root: the GitHub-URL resolver requires `rchub-app.json` at a repository root, so these monorepo subdirectory URLs cannot be installed through it.
 
-- [Keyboard example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/keyboard/manifest.json): multiline input, tabs and quick hotkeys.
-- [Browser example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/browser/manifest.json): URL input and quick sites.
-- [Power example](https://github.com/CetTek/rchub-plugins/blob/main/plugins/official/power/manifest.json): typed draft-only inputs and inputBindings merge delay/force into shutdown/restart; cancellation is separate.
-- Optional shared fields: progress appearance, multiline/inputMode/submit/defaultValue, inputBindings, localized confirm, searchable/itemActions. See the contract for exact field types, required arguments and bounds. No plugin-ID-specific renderer screen.
+## Author and install your own repository
 
-## V1 security and compatibility
+1. Implement framed IPC and declared actions, events and declarative surfaces against the ABI2 contract. Choose your own ID, version, reviewable source, license, EN/TR risk and data disclosures and `native.unsandboxed`; compile a real executable for the host target.
+2. In your own repository place a validated descriptor named `rchub-app.json` at its root and the executable at the relative `execution.artifact.entry` path as a regular Git file. Set the artifact SHA-256 to the exact committed bytes. Manifest limit 64 KiB; artifact limit 16 MiB. Symlinks, submodules and Git LFS pointers are rejected.
+3. Example for your own template and executable, from the developer-kit root:
+   `python tools/plugins/rchub_app_v2_cli.py prepare --template template.json --artifact app.exe --target windows-x86_64 --entry app.exe --output rchub-app.json`
+   `python tools/plugins/rchub_app_v2_cli.py verify --manifest rchub-app.json --artifact app.exe --target windows-x86_64 --entry app.exe`
+4. Review code, binary, disclosures and license; commit descriptor and artifact to your repository's default branch, and make it public when ready. `https://github.com/<owner>/<repository>` is URL syntax only, not a published example. A compatible authenticated host with native capability and current authorized owner/device connection is required; production capability is currently disabled.
+5. Enter that repository root URL in the native application workspace. HTTPS GitHub root URLs with optional `.git`/trailing slash are accepted, not branch or file URLs. The resolver pins the default branch commit, reads the root descriptor and artifact from that Git tree, verifies identity and SHA-256, and binds the download to the pinned commit and manifest hash. Resolution is not installation or publisher verification.
+6. Review repository, commit, source, license, target, identity/hash, native permission and data behavior; explicitly approve installation on the available PC or phone. Installation stages bytes but does not activate them. Activate separately and open Controls. Authentication, ownership and exact grant checks remain in force; reconcile inventory before retrying an unknown outcome.
 
-- Packages use a strict schema, canonical SHA-256 identity and bounded Core WebAssembly.
-- V1 guest code has no WASI, arbitrary JavaScript/HTML, filesystem access or package hooks. This restriction does NOT sandbox ABI2 native code.
-- Installation requires explicit review and consent. Later actions still validate identity, current device ownership, capability, grant and typed payload.
-- The authenticated Rust desktop advertises atomic-update support for its current device socket/epoch; reconnect or rebind clears it. Mobile shows eligible same-permission updates. Older hosts return `unsupported` until restarted with the update-capable build. An `unknown` result requires refreshing installed inventory before an explicit retry.
-- Marketplace and remote execution are development-only. Official packages are MIT reference implementations; native capability availability depends on the host/runtime and platform.
-- Read the developer guide and contract for current limits; repository labels and manifest publisher/source text are not cryptographic provenance.
+**Unsandboxed:** native code runs with normal user privileges and can access files, network and OS resources outside the broker. Hashes, source text, process boundaries and consent do not make untrusted binaries safe or verify their publisher. V1 grants do not transfer. Client/platform availability and live UI/authentication acceptance are not implied by this DEV workflow.
 
-Official 0.3.0 keeps schema/UI/hostApi 1 but needs an upgraded host: older strict validators reject new optional fields. Compatible upgraded hosts offer an explicitly approved same-permission Update: compare-and-swap against the exact installed identity, validate target bytes/permissions and atomically replace the package. Failure preserves the old installation; permission expansion is rejected. Older hosts require explicit removal/reinstallation. New proxy guests use 5/16 pages and 64 KiB JSON input; legacy 2-page guests retain 8 KiB. Per-field UTF-16 limits still apply. Source tag: v0.3.0.
+## Host wiring and boundaries
 
-System 0.3.1 source and package are included in this snapshot; installation or update must be explicitly approved and observed separately. Other official packages remain at 0.3.0.
+- Native V2 is included in default/release desktop builds; `plugin-dev-runtime` gates legacy Wasm development, not native V2. Production desktop builds require the build-time `RCHUB_SERVER_ORIGIN` to match the server's `RCHUB_PLUGIN_SERVER_ORIGIN` as a bare HTTPS origin; missing or invalid configuration fails closed. Loopback HTTP is for development only.
+- `ownerInvalidationCovered` covers audited same-process mutations, not immediate changes via direct SQL, admin or other processes. Missing coverage or owner reader disables native readiness and dispatch. Production deliberately disables coverage, so native capability is unavailable there despite release wiring.
+- In the RcHub host checkout, `tools/plugins/build_official_native.py` builds target bytes from `plugins/official/*/native-source.json` into `plugins/official-native/<name>/rchub-app.json` and its artifact by default. The host server reads `plugins/official-native` relative to its working directory or parent and exposes `/api/plugins/v2/catalog` and hash-bound artifact paths, and omits missing/invalid entries. This sibling repository publishes the same layout for Windows x64. Serving a catalog entry is not publisher verification, installation or safety.
+- The RcHub official native builder preserves its checked-in `Cargo.lock` and builds with Cargo `--locked`; it fails if the lockfile is missing or inconsistent.
+- For official native batch builds, `--repositories` accepts a JSON map of every package supported by the selected platform to its actual public repository URL; existing output directories are never overwritten. Building is not publication.
+- Live DB/JWT, visible UI, full production deployment and Linux acceptance remain unverified. Synthetic DB, injected transport and headless evidence are not release acceptance.
+
+## Historical compatibility
+
+The [legacy V1 contract](contracts/plugins/README.md), SDK and old packages remain in this checkout while technical removal is pending. They are not the recommended model for new development; the published native packages above are catalog-distributed, not V1-compatible replacements, and V1 grants never transfer. [Provenance](plugins/examples/application-v2/PROVENANCE.md) records the scope and limitations of earlier local asset work.

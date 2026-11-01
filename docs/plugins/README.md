@@ -1,66 +1,117 @@
 # RCHub Plugin Developer Guide
 
-## Choose V1 or native ABI2 (2026-10-24)
+## Native application development and GitHub installation
 
-There are two distinct DEV paths. **V1 Wasm remains supported; migration is not
-mandatory.** Existing official packages/IDs/hashes/grants are unchanged. The V1
-sections below describe portable packages, not the native application's limits.
+The new model is a native application installed from its public GitHub repository
+URL. Twelve official Windows x64 native packages (version 1.0.0) are published in
+[`plugins/official-native`](../../plugins/official-native/README.md) and served by a
+compatible host's V2 catalog; production native capability remains fail-closed until
+reliable cross-process owner revocation exists. **Legacy V1 Wasm support and its
+import/catalog paths have not yet been technically removed.** The V1 sections later
+in this document are historical/compatibility material, not the recommended new
+authoring path or a completed-migration claim.
 
-| Your requirement | Model / decision |
-| --- | --- |
-| Existing permission-gated host operations, bounded per-call guest logic | V1 Wasm, existing `rchub_plugin.py` and official packages. |
-| New native PC behavior without host provider edits; long-lived state/events | Native application, experimental Integration ABI2. Write your own target-native logic. |
-| Shared phone/web/PC controls | Both declare bounded UI. ABI2 has its own smaller control vocabulary; do not copy all V1 optional fields. |
-| Extension-owned native PC window or custom/temp filesystem data | ABI2 normal-user unsandboxed code; never present its window as host auth/consent. |
-| Production native execution or Linux acceptance | Not delivered/verified by this snapshot; do not infer from tests or target names. |
+1. Implement your native application against the [ABI2 contract](../../contracts/plugins/v2/README.md),
+   including framed IPC, handshake and declared actions, events and controls.
+   Choose your own ID and version, reviewable source and license, English/Turkish
+   risk and data disclosures, and the `native.unsandboxed` permission. Build a real
+   executable for the host target. The [example](../../plugins/examples/application-v2/README.md)
+   is local illustrative code, not a published official package.
+2. Place the executable in your own repository as a regular Git file at the relative
+   `execution.artifact.entry` path. Put its validated descriptor at repository root
+   as **`rchub-app.json`**. The artifact SHA-256 must match committed bytes; the
+   descriptor is limited to 64 KiB and artifact to 16 MiB. Artifact symlinks,
+   submodules and Git LFS pointers are rejected.
+3. The local CLI binds and verifies your own template and binary; it does not build,
+   publish, install or grant permission:
 
-Native code can access OS/files/network available to the normal user, outside
-the broker. **UNSANDBOXED** is a trust difference, not just a package version.
-`native.unsandboxed`, hashes, source text, pipe boundaries and install consent do
-not make arbitrary native code safe or a publisher verified. V1 stays bounded;
-no arbitraryFS/WASI added and no grant transfer to native. A new app ID is safer
-than pretending a Wasm update authorizes this new trust class.
+   ```powershell
+   python tools/plugins/rchub_app_v2_cli.py prepare --template template.json --artifact app.exe --target windows-x86_64 --entry app.exe --output rchub-app.json
+   python tools/plugins/rchub_app_v2_cli.py verify --manifest rchub-app.json --artifact app.exe --target windows-x86_64 --entry app.exe
+   ```
 
-### Native ABI2 workflow
+4. Review source, binary, disclosures and license, commit descriptor and artifact
+   to your repository's default branch, and make it public when ready. No example
+   URL in these instructions represents an already published package.
+5. In a compatible authenticated host, enter the public repository root URL
+   `https://github.com/<owner>/<repository>` in the native application workspace
+   (syntax only). HTTPS GitHub repository roots, optional `.git` and trailing slash
+   are accepted; branch and file URLs are not. The resolver pins the default-branch
+   commit, reads root `rchub-app.json` and its artifact from that Git tree, verifies
+   hashes, and binds download to the commit and manifest identity. A later branch
+   change cannot silently replace reviewed bytes. Resolution is not installation or
+   proof of publisher identity.
+6. Review repository, commit, target, source, license, identity/hash, permission and
+   data behavior; explicitly approve installation on the available PC or phone.
+   Staging does not activate code: activate separately and open Controls. Current
+   authentication, owner/device and grant checks remain necessary. If the outcome
+   is unknown, reconcile inventory before a retry.
 
-The self-contained [ABI2 contract](../../contracts/plugins/v2/README.md) links all
-three schemas, separate importable Python SDK and shared positive/negative
-fixtures. The [EN/TR buildable example](../../plugins/examples/application-v2/README.md)
-uses new ID `com.example.switchboard`, not chat or an official-ID host branch.
-Installed Python 3.9+ and Windows x64 Rust/linker are sufficient; no private host
-sources, Cargo crates or pip dependencies needed to build/validate that example.
+### Published official packages
 
-```powershell
-New-Item -ItemType Directory -Force plugins/examples/application-v2/build | Out-Null
-rustc --edition=2021 plugins/examples/application-v2/native.rs -o plugins/examples/application-v2/build/switchboard.exe
-python -B plugins/examples/application-v2/prepare.py --artifact plugins/examples/application-v2/build/switchboard.exe --out plugins/examples/application-v2/build/import
-python -B -m unittest discover -s tools/plugins -p "test_rchub*.py" -v
-python -B -m unittest discover -s plugins/examples/application-v2 -p "test_example.py" -v
-```
+`plugins/official-native/<name>/` holds twelve complete package roots, each with a
+canonical `rchub-app.json`, the hash-bound `bin/rchub-official-native.exe`, its
+`native-source.json`, the package-owned `native-runtime/` sources and lockfile,
+`LICENSE` and README. All twelve are version 1.0.0, target `windows-x86_64`, entry
+`bin/rchub-official-native.exe` and permission `native.unsandboxed`; the artifact
+SHA-256 of each package is listed in the
+[package index](../../plugins/official-native/README.md).
 
-Use a fresh `--out` on repeats. `prepare.py` is example tooling, not an install
-CLI: writes canonical descriptor, identity and base64 bytes, never connects or
-executes. Review generated source placeholder and replace it before distribution.
-One raw x64 native executable, <=16 MiB, exact hash/relative entry; no script/
-interpreter/shell/URL fetch/archive/hooks/dependency installer. The `.py` protocol
-peer is a test peer, not an installable native artifact.
+A compatible host serves them from its own checkout through
+`GET /api/plugins/v2/catalog` and `GET /api/plugins/v2/artifacts/<id>/<version>/<sha256>`.
+Both routes require authorization: an account session Bearer token for mobile/web, or
+the paired-device `x-device-id`/`x-device-password` headers the desktop already uses.
+Unauthorized requests are rejected with `401`, responses are non-cacheable, and the
+desktop catalog action stays disabled until it can send its paired-device credentials.
+Catalog listing and hash-bound download are not installation, activation, publisher
+verification or proof of safety, and the artifact route only serves bytes whose size
+and SHA-256 match the catalog descriptor.
 
-Separately provided compatible authenticated DEV host required for installation.
-Paste **native descriptor + artifact base64** into its native application import
-workspace (PC or mobile/web), not the V1 JSON bundle field. Review source/risk,
-license, exact target/hash, native permission and data behavior; explicitly approve
-on phone or PC. No physical PC approval needed. UI sends staged begin/chunks/commit
-with exact offsets, then installation must appear in inventory. **Activate
-separately**, then open Controls; sample changes only in-memory state and rejects
-the native-window action deliberately. No host executable or public installer
-ships here. UI steps are implementation-backed, not visible/live acceptance proof.
+This repository is a distribution catalog, not a per-package repository root. The
+GitHub-URL resolver requires `rchub-app.json` at a repository root, so these
+monorepo subdirectory URLs cannot be installed through it; install from the catalog
+or publish a single-package repository as described above. Linux packages are not
+published. The legacy V1 directories in [`plugins/official`](../../plugins/official) are
+untouched and their IDs, hashes and grants are unchanged.
 
-Descriptor `schemaVersion:2`; authenticated transport `v:3,version:2` on **every**
-envelope; IPC `rchub-app-v2-experimental` negotiates hello/welcome `version:2`.
-No fallback to ABI1. Use `ProtocolSession(...,version=2)` and
-`validate_transport(message,expected_version=2)`; schema alone cannot validate
-names, controls, identities, payloads, negotiation or authority. Historical
-MockSession/version1 fixtures remain compatibility tests only.
+**Native code is unsandboxed:** it can access normal-user files, network and OS
+resources outside broker calls. A hash, process boundary, declared storage choice,
+source URL or consent does not prove code is safe or its publisher verified. Install
+only trusted binaries; V1 grants do not carry over. Client/platform availability and
+live UI/authentication acceptance are not guaranteed by this DEV description.
+
+The following lifetime/protocol notes describe the experimental implementation;
+older V1 instructions below are retained only as historical compatibility context.
+
+### Host release wiring and official catalog
+
+In the RcHub host checkout, native V2 is wired into default/release desktop builds;
+`plugin-dev-runtime` gates the legacy Wasm development runtime, not native V2. Set
+the desktop's build-time `RCHUB_SERVER_ORIGIN` to the exact HTTPS origin configured
+on the server as `RCHUB_PLUGIN_SERVER_ORIGIN`. Missing or invalid production
+configuration fails closed; the server accepts a bare HTTPS origin or development
+loopback HTTP, without credentials, path, query or fragment. A mismatch prevents
+authority binding.
+
+The host's official native source descriptors live at
+`plugins/official/*/native-source.json`; its `tools/plugins/build_official_native.py`
+builds real target bytes under `plugins/official-native/<name>/rchub-app.json` and
+the descriptor's artifact path by default. The server reads `plugins/official-native`
+from its working directory or parent and serves `/api/plugins/v2/catalog` and
+hash-bound artifact paths; absent/invalid entries are omitted. Both routes require
+current authority, as described under
+[Published official packages](#published-official-packages). This sibling checkout
+publishes the built Windows packages in the same layout, so a host checkout can use
+those reviewed bytes directly. Serving and downloading remain distinct from
+installation, publisher identity and safety.
+
+`ownerInvalidationCovered` covers audited same-process mutations only, not immediate
+invalidation for direct SQL, admin changes or other server processes. Missing coverage
+or an owner reader fails native readiness and dispatch closed. The production adapter
+deliberately disables coverage because cross-process invalidation is not reliable, so
+native capability is unavailable in production despite release build wiring. Live
+DB/JWT, visible UI, full production deployment and Linux acceptance remain unverified;
+synthetic, injected or headless evidence does not prove release acceptance.
 
 ### Consent, lifetime, windows and storage
 
@@ -92,9 +143,11 @@ No deletion/global retention/message product policy added.
 
 ### Evidence and publication boundary
 
-ABI2 assets here are **local experimental DEV changes, not a production release**;
-local commit explicitly authorized; push/tag/release/publication remain pending
-separate authorization and were not performed. V1 packages
+ABI2 remains an experimental DEV integration, not a production release. The twelve
+official Windows x64 packages at version 1.0.0 are published in this repository's
+`plugins/official-native` directory and are served by the host's authenticated V2
+catalog; production native capability is still fail-closed pending reliable
+cross-process owner revocation, and Linux packages are not published. V1 packages
 remain as cloned; separate V1 select/Speech source/SDK parity work is not silently
 included in this ABI2 sync. Coordinator's 61 independent Windows-isolated installed
 checks used a real native child/RustLocal/headless frames but **synthetic DB facts

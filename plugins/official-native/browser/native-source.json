@@ -1,0 +1,144 @@
+{
+  "id": "com.rchub.browser",
+  "name": {
+    "en": "Browser",
+    "tr": "Web Tarayıcısı"
+  },
+  "description": {
+    "en": "Open an HTTP(S) website on your PC.",
+    "tr": "PC’nizde HTTP(S) web sitesi açın."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows",
+    "linux"
+  ],
+  "actions": [
+    {
+      "capability": "browser.open",
+      "id": "open",
+      "input": {
+        "properties": {
+          "url": {
+            "maxLength": 2048,
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "opened": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "opened"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "opened": {
+      "type": "boolean"
+    }
+  },
+  "ui": {
+    "color": "orange",
+    "controls": [
+      {
+        "action": "open",
+        "argument": "url",
+        "id": "url",
+        "inputMode": "url",
+        "label": {
+          "en": "Open website on PC",
+          "tr": "PC’de web sitesi aç"
+        },
+        "placeholder": {
+          "en": "https://example.com",
+          "tr": "https://example.com"
+        },
+        "type": "input"
+      },
+      {
+        "children": [
+          {
+            "action": "open",
+            "argument": "url",
+            "icon": "globe",
+            "id": "google",
+            "label": {
+              "en": "Google",
+              "tr": "Google"
+            },
+            "type": "button",
+            "value": "https://www.google.com"
+          },
+          {
+            "action": "open",
+            "argument": "url",
+            "icon": "globe",
+            "id": "youtube",
+            "label": {
+              "en": "YouTube",
+              "tr": "YouTube"
+            },
+            "type": "button",
+            "value": "https://www.youtube.com"
+          },
+          {
+            "action": "open",
+            "argument": "url",
+            "icon": "globe",
+            "id": "github",
+            "label": {
+              "en": "GitHub",
+              "tr": "GitHub"
+            },
+            "type": "button",
+            "value": "https://github.com"
+          }
+        ],
+        "id": "quick_sites",
+        "label": {
+          "en": "Quick sites",
+          "tr": "Hızlı siteler"
+        },
+        "type": "section"
+      },
+      {
+        "bind": "opened",
+        "id": "opened",
+        "label": {
+          "en": "Browser accepted request",
+          "tr": "Tarayıcı isteği kabul etti"
+        },
+        "type": "status"
+      }
+    ],
+    "icon": "globe",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Opens supplied HTTP(S) URLs in the default browser (on Linux using /usr/bin/xdg-open); the destination receives a normal browser request.",
+      "tr": "Verilen HTTP(S) adreslerini varsayılan tarayıcıda açar (Linux'ta /usr/bin/xdg-open ile); hedefe normal tarayıcı isteği gönderilir."
+    }
+  }
+}

@@ -1,0 +1,110 @@
+{
+  "id": "com.rchub.screenshot",
+  "name": {
+    "en": "Screenshot",
+    "tr": "Ekran Önizlemesi"
+  },
+  "description": {
+    "en": "Capture an optimized primary-screen image.",
+    "tr": "Birincil ekranın iyileştirilmiş görüntüsünü alın."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "screenshot.read",
+      "id": "capture",
+      "input": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "height": {
+            "maximum": 4096,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "image": {
+            "type": "image",
+            "maxLength": 800000
+          },
+          "width": {
+            "maximum": 4096,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "image",
+          "width",
+          "height"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "height": {
+      "maximum": 4096,
+      "minimum": 1,
+      "type": "integer"
+    },
+    "image": {
+      "type": "image",
+      "maxLength": 800000
+    },
+    "width": {
+      "maximum": 4096,
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "ui": {
+    "color": "pink",
+    "controls": [
+      {
+        "action": "capture",
+        "icon": "camera",
+        "id": "capture",
+        "label": {
+          "en": "Capture primary screen",
+          "tr": "Birincil ekranı yakala"
+        },
+        "type": "button"
+      },
+      {
+        "bind": "image",
+        "id": "image",
+        "label": {
+          "en": "Optimized image · tap to view",
+          "tr": "Optimize edilmiş görüntü · görüntülemek için dokun"
+        },
+        "type": "image"
+      }
+    ],
+    "icon": "camera",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "image-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Captures the primary screen as an optimized JPEG and returns the image to the requesting client.",
+      "tr": "Birincil ekranı iyileştirilmiş JPEG olarak yakalar ve görüntüyü isteyen istemciye iletir."
+    }
+  }
+}

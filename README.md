@@ -27,17 +27,23 @@ surfaces are declarative, while native windows belong to the extension, never ho
 authentication/consent. Custom/temp storage is developer-owned; optional host-scoped
 store has exact scope/CAS/retention rules, not OS isolation.
 
-**2026-10-24 local-only sync:** reviewed public-safe SDK/schema/fixtures and examples
-are included in the explicitly authorized local developer-kit commit. Push, tag,
-release and publication remain pending separate approval; none was performed.
-Host evidence is bounded Windows/injected-transport/headless testing, not live
-UI/auth/socket-loopback acceptance or product completion. Linux acceptance deferred.
+**Publication (2026-11-02):** twelve official Windows x64 native packages at version
+1.0.0 are published in [plugins/official-native](plugins/official-native/README.md)
+with their exact artifact SHA-256 values, and a compatible host serves them through
+its authenticated V2 catalog. Legacy V1 packages, identities and grants are
+unchanged. ABI2 remains experimental; host evidence is bounded
+Windows/injected-transport/headless testing, not live UI/auth/socket-loopback
+acceptance or product completion. Linux packages are not published.
 
 ## Included V1 plugins
 
 Audio, System, Browser, Power, Keyboard, Media, Clipboard, Apps, Display, Screenshot, Speech and Effects live in [plugins/official](plugins/official). Each directory includes a manifest, readable Wasm proxy source and a portable `.rchub-plugin.json` package.
 
 These are development reference packages for a compatible RCHub host. Native capabilities currently target Windows; provider availability depends on the host/runtime and hardware. Apps controls observed processes/windows, Screenshot returns a bounded optimized image, and Effects plays a beep. They do not reproduce every legacy control. Source availability does not certify safety or production readiness.
+
+## Published native packages (Windows x64)
+
+Twelve MIT native applications at version 1.0.0 live in [plugins/official-native](plugins/official-native/README.md). Each directory is a complete package root with the canonical descriptor, hash-bound executable, authoring source, runtime sources and lockfile; the exact artifact SHA-256 values are listed there. They are distributed as a catalog: a compatible host serves them through the authorized `GET /api/plugins/v2/catalog` and hash-bound artifact routes, and the GitHub-URL resolver does not accept a monorepo subdirectory. Native code is unsandboxed and V1 grants do not transfer.
 
 ## Build V1 packages
 

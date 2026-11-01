@@ -1,66 +1,115 @@
 # RCHub Eklenti Geliştirici Rehberi
 
-## V1 veya native ABI2 seçimi (2026-10-24)
+## Native uygulama geliştirme ve GitHub'dan kurulum
 
-İki ayrı DEV yolu var. **V1 Wasm desteklenir; geçiş zorunlu değildir.** Mevcut
-resmi paket/kimlik/hash/izinler değişmedi. Aşağıdaki V1 bölümleri native uygulamanın
-sınırlarını değil taşınabilir Wasm paketlerini anlatır.
+Hedeflenen yeni model public GitHub depo URL'sinden kurulan native uygulamadır.
+On iki resmi Windows x64 native paketi (sürüm 1.0.0) bu depodaki
+[`plugins/official-native`](../../plugins/official-native/README.md) altında
+yayınlanmıştır ve uyumlu hostun V2 kataloğundan sunulur; süreçler arası güvenilir
+owner iptali sağlanana kadar production native capability fail-closed kalır. **Eski
+V1 Wasm desteği ve içe aktarım/katalog yolları henüz teknik olarak kaldırılmadı.**
+Aşağıdaki V1 bölümleri tarihsel/uyumluluk bilgisidir; yeni geliştirme önerisi veya
+geçişin tamamlandığı iddiası değildir.
 
-| Gereksinim | Model / karar |
-| --- | --- |
-| Var olan izinli host işlemleri, çağrı başına sınırlı konuk mantığı | V1 Wasm; mevcut `rchub_plugin.py` ve resmi paketler. |
-| Host sağlayıcısı eklemeden yeni PC davranışı, uzun ömürlü durum/olay | Deneysel Integration ABI2; geliştirici hedef-native mantığını yazar. |
-| Telefon/web/PC ortak kontrol paneli | İki modelde de bildirimsel; ABI2 daha küçük ayrı denetim kümesi kullanır, tüm V1 alanlarını kopyalamayın. |
-| Eklentiye ait PC penceresi, özel/geçici dosya verisi | Normal kullanıcı yetkileriyle yalıtılmamış native ABI2. Pencereyi host auth/izin UI'sı gibi sunmayın. |
-| Üretim native çalıştırma veya Linux kabulü | Bu snapshot ile teslim/doğrulama iddiası yok; test/target adı yeterli değil. |
+1. [ABI2 sözleşmesine](../../contracts/plugins/v2/README.md) göre framed IPC,
+   handshake ve bildirilmiş eylem, olay ve kontrolleri uygulayın. Kendinize ait ID,
+   sürüm, incelenebilir kaynak, lisans, EN/TR risk ve veri açıklamaları ile
+   `native.unsandboxed` izni tanımlayın. Host hedefi için gerçek native executable
+   derleyin. [Örnek](../../plugins/examples/application-v2/README.md) yerel açıklayıcı
+   koddur; yayınlanmış resmi paket değildir.
+2. Executable'ı kendi deponuza normal Git dosyası olarak göreli
+   `execution.artifact.entry` yoluna koyun; doğrulanmış bildirimi depo kökünde
+   **`rchub-app.json`** olarak kaydedin. Artifact SHA-256 commit edilen baytlarla
+   eşleşmeli; bildirim en fazla 64 KiB, artifact en fazla 16 MiB olmalıdır. Artifact
+   symlink, submodule ve Git LFS pointer kabul edilmez.
+3. Yerel CLI şablonu ve binary'yi bağlar/doğrular; derleme, yayın, kurulum veya
+   yetki verme işlemi yapmaz:
 
-Native kod normal kullanıcının dosya/ağ/OS erişimini broker dışında kullanabilir.
-**YALITILMAMIŞ (UNSANDBOXED)** yalnız paket sürümü farkı değildir.
-`native.unsandboxed`, kaynak/hash, süreç sınırı veya kurulum onayı keyfi kodu
-güvenli/yayıncıyı doğrulanmış yapmaz. V1 sınırlı kalır; arbitraryFS/WASI veya native
-izin devri yoktur. Wasm güncellemesini yeni güven sınıfı izni saymak yerine yeni
-uygulama kimliği kullanın.
+   ```powershell
+   python tools/plugins/rchub_app_v2_cli.py prepare --template template.json --artifact app.exe --target windows-x86_64 --entry app.exe --output rchub-app.json
+   python tools/plugins/rchub_app_v2_cli.py verify --manifest rchub-app.json --artifact app.exe --target windows-x86_64 --entry app.exe
+   ```
 
-### Native ABI2 geliştirme akışı
+4. Kaynak, binary, açıklama ve lisansı inceleyin; bildirim ve artifact'i kendi
+   deponuzun varsayılan dalına commit edin ve hazır olduğunuzda public yapın.
+   Buradaki örnek URL yayınlanmış bir paket değildir.
+5. Uyumlu, kimliği doğrulanmış hostun native uygulama alanına public depo
+   kökü `https://github.com/<owner>/<repository>` girin (yalnız biçim örneği).
+   HTTPS GitHub depo kökü, isteğe bağlı `.git` ve son `/` kabul edilir; dal/dosya
+   URL'si kabul edilmez. Resolver varsayılan dal commit'ini sabitler, kök
+   `rchub-app.json` ve artifact'i o Git ağacından okur, hash'leri doğrular ve
+   indirmeyi commit ile manifest kimliğine bağlar. Dalın değişmesi incelenen
+   baytları sessizce değiştirmez. Çözümleme kurulum veya yayıncı doğrulaması değildir.
+6. Depo, commit, hedef, kaynak, lisans, kimlik/hash, izin ve veri davranışını
+   inceleyip mevcut PC veya telefon arayüzünde kurulumu açıkça onaylayın. Aşamalama
+   kodu etkinleştirmez: ayrıca etkinleştirip kontrolleri açın. Güncel kimlik,
+   sahip/cihaz ve izin denetimleri gereklidir. Sonuç bilinmiyorsa yeniden denemeden
+   envanteri uzlaştırın.
 
-Bağımsız [ABI2 sözleşmesi](../../contracts/plugins/v2/README.md), üç şema, ayrı
-import edilebilir Python SDK ve ortak pozitif/negatif örneklere bağlanır.
-[EN/TR derlenebilir örnek](../../plugins/examples/application-v2/README.md) yeni
-`com.example.switchboard` kimliğini kullanır; chat ürünü veya resmi ID'ye özel host
-dalı yoktur. Kurulu Python 3.9+, Windows x64 Rust/linker yeterlidir; derleme/doğrulama
-için özel host kaynağı, Cargo crate veya pip bağımlılığı gerekmez.
+### Yayınlanmış resmi paketler
 
-```powershell
-New-Item -ItemType Directory -Force plugins/examples/application-v2/build | Out-Null
-rustc --edition=2021 plugins/examples/application-v2/native.rs -o plugins/examples/application-v2/build/switchboard.exe
-python -B plugins/examples/application-v2/prepare.py --artifact plugins/examples/application-v2/build/switchboard.exe --out plugins/examples/application-v2/build/import
-python -B -m unittest discover -s tools/plugins -p "test_rchub*.py" -v
-python -B -m unittest discover -s plugins/examples/application-v2 -p "test_example.py" -v
-```
+`plugins/official-native/<name>/` altında on iki tam paket kökü bulunur: kanonik
+`rchub-app.json`, hash'e bağlı `bin/rchub-official-native.exe`, `native-source.json`,
+pakete ait `native-runtime/` kaynakları ve lock dosyası, `LICENSE` ve README. On iki
+paketin tamamı 1.0.0 sürümünde, `windows-x86_64` hedefinde,
+`bin/rchub-official-native.exe` girişinde ve `native.unsandboxed` iznindedir;
+artifact SHA-256 değerleri [paket dizininde](../../plugins/official-native/README.md)
+listelenir.
 
-Tekrarda yeni `--out` seçin. `prepare.py` kurulum CLI'sı değil örnek aracıdır;
-canonical descriptor/identity/base64 üretir, sunucuya bağlanmaz/kod çalıştırmaz.
-Dağıtım öncesi placeholder kaynak URL'sini gerçek incelenebilir kaynakla değiştirin.
-Tek ham x64 executable <=16 MiB, exact hash/göreli entry gerekir; script/interpreter,
-shell/URL indirme/arşiv/hook/bağımlılık kurma yoktur. `.py` peer yalnız protokol test
-betiğidir, kurulabilir native dosya değildir.
+Uyumlu host bunları kendi checkout'ından
+`GET /api/plugins/v2/catalog` ve `GET /api/plugins/v2/artifacts/<id>/<version>/<sha256>`
+yollarıyla sunar. İki yol da yetki ister: mobil/web için hesap oturumu Bearer
+belirteci, masaüstü için zaten kullandığı eşleşmiş cihaz `x-device-id` /
+`x-device-password` başlıkları. Yetkisiz istek `401` ile reddedilir, yanıtlar
+cache'lenmez ve masaüstü katalog eylemi cihaz kimlik bilgilerini gönderemediği sürece
+kapalı kalır. Katalog listesi ve hash'e bağlı indirme; kurulum, etkinleştirme, yayıncı
+doğrulaması veya güvenlik kanıtı değildir; artifact yolu yalnız boyutu ve SHA-256
+değeri katalog bildirimiyle eşleşen baytları sunar.
 
-Kurulum için ayrı sağlanan uyumlu/yetkili DEV host gerekir. PC veya mobil/web
-**native uygulama** içe aktarma alanına descriptor ve artifact base64 yapıştırın;
-V1 JSON paket alanına değil. Kaynak/risk/lisans, exact hedef/hash, native izin ve
-veri davranışını inceleyip telefon veya PC'den açıkça onaylayın; fiziksel PC onayı
-şart değil. UI begin/chunk/commit akışını exact offset onayıyla tamamlar; envanterde
-kurulu sonucu gözleyin. Kurulum kod başlatmaz; **ayrıca Etkinleştir**, Kontrolleri
-açın. Örnek yalnız bellek içi durum değiştirir, pencere eylemini bilinçli reddeder.
-Bu depo host executable veya public kurulum servisi sunmaz. Adımlar kaynakta
-uygulanmış akıştır; görünür/canlı kabul kanıtı değildir.
+Bu depo dağıtım kataloğudur, paket başına depo kökü değildir. GitHub URL çözümleyicisi
+depo kökünde `rchub-app.json` ister; bu monorepo alt dizin URL'leri onunla kurulamaz.
+Katalogdan kurun veya yukarıdaki adımlarla tek paketlik kendi deponuzu yayınlayın.
+Linux paketleri yayınlanmadı. [`plugins/official`](../../plugins/official) altındaki eski V1
+dizinleri değiştirilmedi; ID, hash ve izinleri aynıdır.
 
-Descriptor `schemaVersion:2`; taşıma bütün zarflarda `v:3,version:2`; IPC
-`rchub-app-v2-experimental` hello/welcome `version:2` anlaşması yapar. ABI1'e
-düşürme yok. `ProtocolSession(...,version=2)` ve
-`validate_transport(message,expected_version=2)` kullanın. Şema tek başına adları,
-UI bağlarını, payload/kimlik/anlaşma/yetkiyi doğrulamaz. Tarihsel MockSession ve
-version1 örnekleri yalnız uyumluluk testi olarak kalır.
+**Native kod sandbox dışındadır:** broker dışında normal kullanıcının dosya, ağ ve
+OS kaynaklarına erişebilir. Hash, süreç ayrımı, veri beyanı, kaynak URL'si veya
+onay güvenlik ya da yayıncı doğrulaması sağlamaz. Yalnız güvenilir binary kurun;
+V1 izinleri taşınmaz. Bu DEV açıklaması her istemci/platformun kullanılabilirliğini
+veya canlı UI/kimlik doğrulama kabulünü garanti etmez.
+
+Aşağıdaki ömür/protokol notları deneysel uygulamayı; eski V1 talimatları yalnız
+tarihsel uyumluluk bağlamını anlatır.
+
+### Host release bağlantısı ve resmi katalog
+
+RcHub host checkout'ında native V2 varsayılan/release desktop derlemesine dahildir;
+`plugin-dev-runtime` native V2 için değil eski Wasm geliştirme runtime'ı içindir.
+Desktop'un derleme zamanı `RCHUB_SERVER_ORIGIN` değeri sunucudaki
+`RCHUB_PLUGIN_SERVER_ORIGIN` ile aynı tam HTTPS origin olmalıdır. Eksik veya geçersiz
+production ayarı fail-closed olur; sunucu yalın HTTPS origin veya geliştirmede
+loopback HTTP kabul eder, kimlik bilgisi/path/query/fragment kabul etmez. Uyuşmazlık
+yetki bağlamını engeller.
+
+Hostun resmi native kaynak tanımları `plugins/official/*/native-source.json`
+altındadır; `tools/plugins/build_official_native.py` gerçek hedef baytlarını
+varsayılan olarak `plugins/official-native/<name>/rchub-app.json` ve artifact yoluna
+derler. Sunucu çalışma dizini veya üstündeki `plugins/official-native` dizinini okur;
+`/api/plugins/v2/catalog` ve hash'e bağlı artifact yollarını sunar, eksik/geçersiz
+girdileri atlar. İki yol da güncel yetki ister;
+[Yayınlanmış resmi paketler](#yayınlanmış-resmi-paketler) bölümüne bakın. Bu kardeş
+checkout derlenmiş Windows paketlerini aynı düzende yayınlar; host checkout'ı bu
+incelenmiş baytları doğrudan kullanabilir. Sunmak ve indirmek kurulum, yayıncı
+kimliği veya güvenlik kanıtı değildir.
+
+`ownerInvalidationCovered` yalnız aynı süreçte denetlenmiş değişiklikleri kapsar;
+doğrudan SQL, admin veya diğer süreçlerde anlık invalidation garantisi yoktur. Coverage
+veya owner reader yoksa native readiness ve dispatch fail-closed olur. Production
+adapter süreçler arası güvenilir invalidation bulunmadığından coverage'ı kapatır;
+release derleme bağlantısına rağmen production native capability kullanılamaz. Canlı
+DB/JWT, görünür UI, tam production dağıtımı ve Linux kabulü doğrulanmadı; synthetic,
+injected veya headless bulgular release kabulü değildir.
+
 
 ### Onay, ömür, pencere ve veri
 
@@ -91,9 +140,11 @@ sağlayabilir, yeni sahibe aktarılmaz. Silme/global retention/mesaj ürünü ku
 
 ### Kanıt ve yayın sınırı
 
-ABI2 varlıkları **yerel deneysel DEV** değişikliğidir; üretim yayını değildir.
-Yerel commit açıkça onaylandı; push/tag/release/publication ayrı onay bekler ve
-gerçekleştirilmedi. V1 paketleri clone halini
+ABI2 deneysel DEV entegrasyonu olarak kalır; üretim sürümü değildir. On iki resmi
+Windows x64 paketi 1.0.0 sürümüyle bu depodaki `plugins/official-native` dizininde
+yayınlanmıştır ve hostun yetki isteyen V2 kataloğundan sunulur; süreçler arası
+güvenilir owner iptali sağlanana kadar production native capability fail-closed
+kalır ve Linux paketleri yayınlanmadı. V1 paketleri clone halini
 korur; ayrı V1 select/Speech kaynak/SDK eşleme işi bu ABI2 sync'e gizlice dahil
 edilmedi. Ana agentın 61 bağımsız Windows-isolated installed kontrolü gerçek native
 child/RustLocal/headless çizim kullandı, ancak **synthetic DB ve injected transport**

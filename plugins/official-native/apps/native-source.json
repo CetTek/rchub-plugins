@@ -1,0 +1,422 @@
+{
+  "id": "com.rchub.apps",
+  "name": {
+    "en": "Apps",
+    "tr": "Uygulamalar"
+  },
+  "description": {
+    "en": "List running processes and stop a selected PID.",
+    "tr": "Çalışan işlemleri listeleyin ve seçtiğiniz PID’yi sonlandırın."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "apps.write",
+      "id": "launch",
+      "input": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "capability": "apps.read",
+      "id": "read",
+      "input": {
+        "properties": {
+          "filter": {
+            "enum": [
+              "all",
+              "foreground"
+            ],
+            "maxLength": 10,
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "apps": {
+            "items": {
+              "properties": {
+                "foreground": {
+                  "type": "boolean"
+                },
+                "name": {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                "pid": {
+                  "maximum": 2147483647,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "started_at": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "title": {
+                  "maxLength": 240,
+                  "type": "string"
+                },
+                "window_id": {
+                  "maxLength": 32,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "pid",
+                "name",
+                "title",
+                "window_id",
+                "started_at",
+                "foreground"
+              ],
+              "type": "object"
+            },
+            "maxItems": 64,
+            "type": "array"
+          },
+          "count": {
+            "maximum": 64,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "apps",
+          "count"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "capability": "apps.write",
+      "id": "stop",
+      "input": {
+        "properties": {
+          "action": {
+            "enum": [
+              "stop",
+              "close",
+              "bring_to_front",
+              "minimize",
+              "maximize",
+              "restore"
+            ],
+            "maxLength": 14,
+            "type": "string"
+          },
+          "pid": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "started_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "window_id": {
+            "maxLength": 32,
+            "type": "string"
+          }
+        },
+        "required": [
+          "pid",
+          "action",
+          "started_at"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "accepted": {
+      "type": "boolean"
+    },
+    "apps": {
+      "items": {
+        "properties": {
+          "foreground": {
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "pid": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "started_at": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": {
+            "maxLength": 240,
+            "type": "string"
+          },
+          "window_id": {
+            "maxLength": 32,
+            "type": "string"
+          }
+        },
+        "required": [
+          "pid",
+          "name",
+          "title",
+          "window_id",
+          "started_at",
+          "foreground"
+        ],
+        "type": "object"
+      },
+      "maxItems": 64,
+      "type": "array"
+    },
+    "count": {
+      "maximum": 64,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "ui": {
+    "color": "green",
+    "controls": [
+      {
+        "action": "launch",
+        "argument": "name",
+        "id": "launch",
+        "label": {
+          "en": "Launch installed app",
+          "tr": "Yüklü uygulamayı başlat"
+        },
+        "placeholder": {
+          "en": "Start Menu app name",
+          "tr": "Başlat menüsü uygulama adı"
+        },
+        "type": "input"
+      },
+      {
+        "action": "read",
+        "argument": "filter",
+        "defaultValue": "foreground",
+        "id": "filter",
+        "label": {
+          "en": "Process view",
+          "tr": "İşlem görünümü"
+        },
+        "options": [
+          {
+            "label": {
+              "en": "Applications",
+              "tr": "Uygulamalar"
+            },
+            "value": "foreground"
+          },
+          {
+            "label": {
+              "en": "All processes",
+              "tr": "Tüm işlemler"
+            },
+            "value": "all"
+          }
+        ],
+        "type": "select"
+      },
+      {
+        "bind": "apps",
+        "id": "processes",
+        "itemActions": [
+          {
+            "action": "stop",
+            "args": {
+              "action": "bring_to_front"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Bring to front",
+              "tr": "Öne getir"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "minimize"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Minimize",
+              "tr": "Küçült"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "maximize"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Maximize",
+              "tr": "Büyüt"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "restore"
+            },
+            "argument": "pid",
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Restore",
+              "tr": "Geri yükle"
+            }
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "close"
+            },
+            "argument": "pid",
+            "confirm": {
+              "message": {
+                "en": "Unsaved work may be lost. Continue?",
+                "tr": "Kaydedilmemiş çalışmalar kaybolabilir. Devam edilsin mi?"
+              },
+              "title": {
+                "en": "Close window",
+                "tr": "Pencereyi kapat"
+              }
+            },
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Close window",
+              "tr": "Pencereyi kapat"
+            },
+            "tone": "danger"
+          },
+          {
+            "action": "stop",
+            "args": {
+              "action": "stop"
+            },
+            "argument": "pid",
+            "confirm": {
+              "message": {
+                "en": "Unsaved work may be lost. Continue?",
+                "tr": "Kaydedilmemiş çalışmalar kaybolabilir. Devam edilsin mi?"
+              },
+              "title": {
+                "en": "Stop process",
+                "tr": "İşlemi sonlandır"
+              }
+            },
+            "itemArguments": {
+              "started_at": "started_at",
+              "window_id": "window_id"
+            },
+            "label": {
+              "en": "Stop process",
+              "tr": "İşlemi sonlandır"
+            },
+            "tone": "danger"
+          }
+        ],
+        "itemLabel": "name",
+        "itemValue": "pid",
+        "label": {
+          "en": "Select an application",
+          "tr": "Bir uygulama seçin"
+        },
+        "searchable": true,
+        "type": "list"
+      },
+      {
+        "bind": "count",
+        "id": "count",
+        "label": {
+          "en": "Listed processes (max 64)",
+          "tr": "Listelenen işlemler (en fazla 64)"
+        },
+        "type": "value"
+      }
+    ],
+    "icon": "apps",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "list-item-actions-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Lists processes and window identities; can change windows, stop the selected process, or launch a Start Menu shortcut by name.",
+      "tr": "İşlemleri ve pencere kimliklerini listeler; pencereleri değiştirebilir, seçilen işlemi sonlandırabilir veya Başlat menüsü kısayolunu adıyla açabilir."
+    }
+  }
+}

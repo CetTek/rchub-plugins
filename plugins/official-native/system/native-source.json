@@ -1,0 +1,287 @@
+{
+  "id": "com.rchub.system",
+  "name": {
+    "en": "System",
+    "tr": "Sistem Bilgisi"
+  },
+  "description": {
+    "en": "Check CPU, memory and uptime.",
+    "tr": "CPU, bellek ve çalışma süresini görün."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "system.read",
+      "id": "battery",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "has_battery": {
+            "type": "boolean"
+          },
+          "battery_percent": {
+            "type": "integer",
+            "minimum": -1,
+            "maximum": 100
+          },
+          "charging": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "has_battery",
+          "battery_percent",
+          "charging"
+        ]
+      }
+    },
+    {
+      "capability": "system.read",
+      "id": "read",
+      "input": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "cpu_usage": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "hostname": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "os": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "ram_total_mb": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "ram_usage_percent": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "ram_used_mb": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "uptime_seconds": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "os",
+          "hostname",
+          "cpu_usage",
+          "ram_used_mb",
+          "ram_total_mb",
+          "ram_usage_percent",
+          "uptime_seconds"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "has_battery": {
+      "type": "boolean"
+    },
+    "battery_percent": {
+      "type": "integer",
+      "minimum": -1,
+      "maximum": 100
+    },
+    "charging": {
+      "type": "boolean"
+    },
+    "cpu_usage": {
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "hostname": {
+      "maxLength": 120,
+      "type": "string"
+    },
+    "os": {
+      "maxLength": 120,
+      "type": "string"
+    },
+    "ram_total_mb": {
+      "maximum": 2147483647,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "ram_usage_percent": {
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "ram_used_mb": {
+      "maximum": 2147483647,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "uptime_seconds": {
+      "maximum": 2147483647,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "ui": {
+    "color": "purple",
+    "controls": [
+      {
+        "id": "has_battery",
+        "bind": "has_battery",
+        "type": "value",
+        "label": {
+          "en": "Battery present",
+          "tr": "Pil mevcut"
+        }
+      },
+      {
+        "id": "battery_percent",
+        "bind": "battery_percent",
+        "type": "value",
+        "label": {
+          "en": "Battery % (-1 = unknown)",
+          "tr": "Pil % (-1 = bilinmiyor)"
+        }
+      },
+      {
+        "id": "charging",
+        "bind": "charging",
+        "type": "value",
+        "label": {
+          "en": "Charging",
+          "tr": "Şarj oluyor"
+        }
+      },
+      {
+        "children": [
+          {
+            "appearance": "ring",
+            "bind": "cpu_usage",
+            "id": "cpu_usage",
+            "label": {
+              "en": "CPU",
+              "tr": "CPU"
+            },
+            "max": 100,
+            "min": 0,
+            "type": "progress"
+          },
+          {
+            "appearance": "ring",
+            "bind": "ram_usage_percent",
+            "id": "ram_usage",
+            "label": {
+              "en": "RAM",
+              "tr": "RAM"
+            },
+            "max": 100,
+            "min": 0,
+            "type": "progress"
+          }
+        ],
+        "id": "gauges",
+        "type": "row"
+      },
+      {
+        "children": [
+          {
+            "bind": "ram_used_mb",
+            "id": "ram_used_mb",
+            "label": {
+              "en": "Used memory (MB)",
+              "tr": "Kullanılan bellek (MB)"
+            },
+            "type": "value"
+          },
+          {
+            "bind": "ram_total_mb",
+            "id": "ram_total_mb",
+            "label": {
+              "en": "Total memory (MB)",
+              "tr": "Toplam bellek (MB)"
+            },
+            "type": "value"
+          }
+        ],
+        "id": "memory",
+        "type": "row"
+      },
+      {
+        "children": [
+          {
+            "bind": "os",
+            "id": "os",
+            "label": {
+              "en": "Operating system",
+              "tr": "İşletim sistemi"
+            },
+            "type": "value"
+          },
+          {
+            "bind": "hostname",
+            "id": "hostname",
+            "label": {
+              "en": "Computer",
+              "tr": "Bilgisayar"
+            },
+            "type": "value"
+          }
+        ],
+        "id": "computer",
+        "type": "row"
+      },
+      {
+        "bind": "uptime_seconds",
+        "id": "uptime_seconds",
+        "label": {
+          "en": "Uptime (seconds)",
+          "tr": "Çalışma süresi (saniye)"
+        },
+        "type": "value"
+      }
+    ],
+    "icon": "cpu",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Reads CPU, memory, OS name, hostname, uptime and battery status and returns them to the requesting client.",
+      "tr": "CPU, bellek, işletim sistemi, bilgisayar adı, çalışma süresi ve pil durumunu okur ve isteyen istemciye iletir."
+    }
+  }
+}

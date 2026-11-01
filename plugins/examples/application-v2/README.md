@@ -26,36 +26,50 @@ on another run. `--id org.example.different` exercises a different namespace;
 neither peer nor host needs a plugin-ID special branch. Windows x64 only in this
 helper. Linux build/runtime acceptance intentionally deferred, not implied by the
 schema's linux-x86_64 target.
+The general-purpose [ABI2 CLI](../../../tools/plugins/rchub_app_v2_cli.py) can
+bind any valid descriptor template to an artifact and verify the resulting bytes:
+
+```powershell
+python -B tools/plugins/rchub_app_v2_cli.py prepare --template plugins/examples/application-v2/build/import/manifest.json --artifact plugins/examples/application-v2/build/switchboard.exe --target windows-x86_64 --entry switchboard.exe --output plugins/examples/application-v2/build/prepared.json
+python -B tools/plugins/rchub_app_v2_cli.py verify --manifest plugins/examples/application-v2/build/prepared.json --artifact plugins/examples/application-v2/build/switchboard.exe --target windows-x86_64 --entry switchboard.exe
+```
+
+`prepare` writes a canonical descriptor and prints its identity; `verify` checks
+the supplied target, relative entry and artifact bytes against the descriptor and
+prints the identity. Choose an output distinct from the template and artifact;
+an existing output file may be overwritten. Unlike `prepare.py`, this CLI does
+not generate base64 import data or change the plugin ID. Neither command installs
+or runs the application, and successful verification is not a safety guarantee.
+
 
 Generated source URL is `https://example.invalid/switchboard/source`: placeholder,
 not provenance or a fetch endpoint. Replace with actual reviewable source and
 update EN/TR disclosure before distributing, then recompute identity with the SDK.
 No generated binary or imported package is committed/released by this workflow.
 
-### Import into a compatible ABI2 DEV host
+### Install from your own public repository in a compatible DEV host
 
-There is **no public hosted installer or `rchub_app_v2.py install` command**.
-The public checkout contains developer assets, not the host app. With a separately
-provided compatible authenticated debug desktop (built in its own `desktop`
-directory using `cargo run --locked --offline --features plugin-dev-runtime`),
-use the **native application** import workspace, not the V1 package importer:
+There is no hosted installer or SDK install command in this checkout. To adapt this
+local example, place your reviewed executable at `switchboard.exe` in your own
+repository and use the CLI above with `--output rchub-app.json` at that repository's
+root. Replace the placeholder source/disclosures before preparing the descriptor;
+ensure the root manifest's entry and SHA-256 match the committed binary. Commit both
+regular files to your own default branch and make the repository public when ready.
+This example and its `example.invalid` source remain unpublished illustrative assets;
+the separately built official Windows packages are published in
+[`plugins/official-native`](../../../plugins/official-native/README.md).
 
-1. Paste generated `manifest.json` and the complete `artifact.base64.txt` into
-   its descriptor/base64 fields. The native mobile/web workspace has the same
-   two-input review path; compatible backend/current owner connection required.
-2. Preview/review host unsandboxed warning, source/license, exact identity/hash,
-   target, `native.unsandboxed` and data behavior; approve explicitly on PC/phone.
-3. UI stages begin/chunks/commit with exact ack offsets. Observe inventory installed
-   status. Installation does not run code. Explicitly Activate, then open Controls.
-4. Toggle Enabled to change **in-memory example state only**; watch revisions/events.
-   The extension-window action rejects intentionally; no native UI is created.
-5. Close only your own surface. Another viewer/shared instance may continue.
-   Deactivate explicitly stops the shared instance. Remove does not purge retained
-   scoped/native custom data. Refresh inventory on unknown outcome, never replay writes.
-
-These steps describe source-backed UI behavior; **visible/live-auth/socket
-acceptance was not executed for this public sync**. An unsupported host must fail
-closed, not downgrade ABI revision. Do not install unreviewed binaries to try this.
+In a separately supplied compatible authenticated DEV host, enter your public GitHub
+repository root URL in the native workspace (`https://github.com/<owner>/<repository>`
+is syntax only). The resolver pins the default-branch commit, verifies the root
+manifest and executable hash, and binds the download to that commit and manifest
+identity. Review repository, commit, source, license, target, hash, native permission
+and data behavior, then explicitly approve on PC or phone. Installation stages bytes
+without running code; activate separately, open Controls, and observe inventory.
+The toggle changes only in-memory state; the window action rejects intentionally.
+On an unknown result reconcile inventory before retrying. No live UI/authentication
+acceptance or production release is implied. Manual import and V1 support have not
+yet been technically removed; they are not the new recommended authoring path.
 
 ### Source roles and limits
 
@@ -85,8 +99,8 @@ belong to your extension, never host consent/authentication. See the complete
 ## Türkçe: geliştirme, derleme ve kurulum
 
 Bu örnek yerel DEV içindir; üretim sürümü/yayın veya chat ürünü değildir.
-V1 Wasm desteklenir; taşıma zorunluluğu yoktur. Yeni kimlik
-`com.example.switchboard`; `--id org.example.different` farklı ad alanı üretir.
+V1 desteği henüz teknik olarak kaldırılmadı; bu yeni geliştirme önerisi değildir.
+Yeni kimlik `com.example.switchboard`; `--id org.example.different` farklı ad alanı üretir.
 Hostta kimliğe özel dal eklenmez. Kod MIT; özel host kaynağı/kullanıcı verisi içermez.
 
 Windows x64 üzerinde kurulu Python 3.9+, `rustc` ve çalışan linker gerekir.
@@ -96,20 +110,31 @@ indirilmez. `prepare.py`, yeni `--out` klasörüne doğrulanmış `manifest.json
 Helper yalnız Windows x64 hedefler; Linux kabul testi ertelenmiştir.
 `example.invalid` gerçek kaynak değildir; dağıtmadan önce gerçek kaynak adresi ve
 EN/TR açıklamayı değiştirip kimliği SDK ile yeniden hesaplayın. Bu işlem yayın yapmaz.
+[ABI2 CLI](../../../tools/plugins/rchub_app_v2_cli.py) için yukarıdaki `prepare`
+ve `verify` komutları depo kökünden çalıştırılır: `prepare` şablonu hedef, göreli
+giriş yolu ve artifact baytlarına bağlayıp canonical manifest yazar; `verify` aynı
+hedef, yol ve baytları manifest ile karşılaştırır. İkisi de kimliği yazdırır.
+Çıktı şablon ve artifact dosyalarından farklı olmalıdır; mevcut çıktı dosyasının
+üzerine yazılabilir. Bu CLI, `prepare.py` gibi base64 üretmez veya kimliği
+değiştirmez; uygulamayı kurmaz ya da çalıştırmaz. Doğrulama güvenlik garantisi değildir.
 
-Public depo host uygulamasını veya kurulum CLI'sını sağlamaz. Ayrı sağlanan uyumlu
-ABI2 debug hostu, kendi `desktop` klasöründe
-`cargo run --locked --offline --features plugin-dev-runtime` ile başlatılabilir.
-Yetkili güncel cihaz/sahip bağlantısı gerekir. **Yerel uygulama** içe aktarma
-alanına manifest ve base64 baytları yapıştırın; V1 `.rchub-plugin.json` alanına değil.
-Uyumlu mobil/web paneli de iki girdili inceleme akışını kullanır. Önizlemede kaynak,
-lisans, hash/hedef, `native.unsandboxed`, veri davranışı ve host risk uyarısını
-inceleyip PC veya telefondan açıkça onaylayın. Kurulum begin/chunk/commit yapar,
-kod başlatmaz; envanteri gözleyip ayrıca Etkinleştir ve Kontrolleri açın.
-Anahtar yalnız bellek içi örnek durumu değiştirir; pencere eylemi bilinçli reddedilir.
-Yüzeyi kapatmak yalnız kendi izleyicinizi kapatır; ortak süreç diğer yetkili
-izleyiciler için devam edebilir. Devre dışı bırak ortak süreci durdurur. Bilinmeyen
-sonuçta envanteri yenileyin, yazmayı otomatik tekrarlamayın.
+
+Bu checkout host uygulaması veya kurulum CLI'sı sağlamaz. Örneği uyarlarken kendi
+deponuza `switchboard.exe` dosyasını koyup yukarıdaki CLI ile depo köküne
+`rchub-app.json` üretin. Önce placeholder kaynak/açıklamaları değiştirin; entry ve
+SHA-256 commit edilen binary ile eşleşsin. İki normal dosyayı kendi varsayılan
+dalınıza commit edip hazır olduğunuzda depoyu public yapın. Bu örnek yayınlanmış
+depo veya resmi native paket iddiası değildir.
+
+Ayrı sağlanan uyumlu, kimliği doğrulanmış DEV hostunun native alanına public GitHub
+depo kökü URL'sini girin (`https://github.com/<owner>/<repository>` yalnız biçimdir).
+Resolver varsayılan dal commit'ini sabitler, kök bildirim ve artifact hash'ini
+doğrular, indirmeyi commit ve manifest kimliğine bağlar. Depo, commit, kaynak,
+lisans, hedef, hash, native izin ve veri davranışını inceleyip PC veya telefondan
+açıkça onaylayın. Kurulum kodu başlatmaz; ayrıca etkinleştirip kontrolleri açın,
+envanteri gözleyin. Bilinmeyen sonuçta tekrar denemeden envanteri uzlaştırın.
+Canlı UI/auth kabulü veya üretim yayını iddia edilmez; elle içe aktarım ve V1
+desteği henüz teknik olarak kaldırılmamıştır.
 
 `native.rs` sınırlı canonical host girdisi için küçük alan okuyucu kullanır;
 genel JSON güvenlik doğrulayıcısı değildir. Gerçek uygulamada katı parser/çerçeve,

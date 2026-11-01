@@ -1,0 +1,135 @@
+{
+  "id": "com.rchub.display",
+  "name": {
+    "en": "Display",
+    "tr": "Ekran Parlaklığı"
+  },
+  "description": {
+    "en": "Adjust primary-monitor brightness with DDC/CI support.",
+    "tr": "DDC/CI destekli birincil monitörün parlaklığını ayarlayın."
+  },
+  "license": "MIT",
+  "targets": [
+    "windows"
+  ],
+  "actions": [
+    {
+      "capability": "display.read",
+      "id": "read",
+      "input": {
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "brightness": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "brightness",
+          "available"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "capability": "display.write",
+      "id": "set",
+      "input": {
+        "properties": {
+          "brightness": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "brightness"
+        ],
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "brightness": {
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "brightness",
+          "available"
+        ],
+        "type": "object"
+      }
+    }
+  ],
+  "state": {
+    "available": {
+      "type": "boolean"
+    },
+    "brightness": {
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    }
+  },
+  "ui": {
+    "color": "orange",
+    "controls": [
+      {
+        "bind": "available",
+        "id": "available",
+        "label": {
+          "en": "Primary monitor supports DDC/CI",
+          "tr": "Birincil monitör DDC/CI destekliyor"
+        },
+        "type": "status"
+      },
+      {
+        "action": "set",
+        "argument": "brightness",
+        "bind": "brightness",
+        "icon": "sun",
+        "id": "brightness",
+        "label": {
+          "en": "Brightness (supported DDC/CI monitor)",
+          "tr": "Parlaklık (destekli DDC/CI monitör)"
+        },
+        "max": 100,
+        "min": 0,
+        "step": 1,
+        "type": "slider"
+      }
+    ],
+    "icon": "sun",
+    "version": 1
+  },
+  "sourceFormat": "rchub-official-native-source-1",
+  "version": "1.0.0",
+  "requiredFeatures": [
+    "native-process-v1",
+    "surfaces-v1",
+    "surface-metadata-v1"
+  ],
+  "disclosure": {
+    "nativeRisk": {
+      "en": "This native executable is not sandboxed. It runs as your current PC user and can access that user’s files, network, devices and applications.",
+      "tr": "Bu yerel çalıştırılabilir dosya sandbox içinde değildir. Mevcut PC kullanıcınız olarak çalışır; bu kullanıcının dosyalarına, ağına, aygıtlarına ve uygulamalarına erişebilir."
+    },
+    "dataBehavior": {
+      "en": "Reads and adjusts primary-display brightness through DDC/CI or WMI.",
+      "tr": "Birincil ekran parlaklığını DDC/CI veya WMI üzerinden okur ve ayarlar."
+    }
+  }
+}
