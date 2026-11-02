@@ -16,8 +16,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMAS = ROOT / 'contracts/plugins/v2'
-MAX_FRAME = 65536
-MAX_TRANSPORT = 196608
+MAX_FRAME = 1048576
+MAX_TRANSPORT = MAX_FRAME + 4096
+MAX_INVOKE_PAYLOAD = MAX_FRAME - 4096
 MAX_ARTIFACT = 16 * 1024 * 1024
 MAX_DEPTH = 32
 MAX_IDS = 256
@@ -26,7 +27,7 @@ STORE_VALUE_BYTES = 8192
 STORE_KEYS = 128
 STORE_TOTAL_BYTES = 262144
 PROTOCOL = 'rchub-app-v2-experimental'
-FEATURES = frozenset({'native-process-v1', 'events-v1', 'surfaces-v1', 'scoped-store-v1'})
+FEATURES = frozenset({'native-process-v1', 'events-v1', 'surfaces-v1', 'scoped-store-v1', 'image-v1', 'string-8192-v1', 'list-item-actions-v1', 'surface-metadata-v1'})
 RESERVED = {'constructor', 'prototype', '__proto__'}
 
 
@@ -131,7 +132,7 @@ def _check(schema: dict, value: object, root: dict) -> None:
 
 
 def _validate_file(name: str, value: object) -> None:
-    bound = MAX_TRANSPORT if name == 'transport.schema.json' else MAX_FRAME
+    bound = 65536 if name == 'application.schema.json' else MAX_TRANSPORT if name == 'transport.schema.json' else MAX_FRAME
     require(len(canonical(value)) <= bound, 'Document byte limit')
     schema = json.loads((SCHEMAS / name).read_text(encoding='utf-8'))
     _check(schema, value, schema)
@@ -158,6 +159,22 @@ def validate_manifest(manifest: dict, supported=FEATURES) -> None:
             not source.username and not source.password, 'Invalid source disclosure URL')
     _record(manifest['state'])
     features = set(manifest['requiredFeatures'])
+    def feature_fields(field):
+        if field['type'] == 'image':
+            require('image-v1' in features, 'Image feature required')
+        if field['type'] == 'string' and field['maxLength'] > 4096:
+            require('string-8192-v1' in features, 'Extended string feature required')
+        if field['type'] == 'string' and 'enum' in field:
+            require('surface-metadata-v1' in features and all(len(v) <= field['maxLength'] for v in field['enum']), 'Invalid enum feature or values')
+        for child in field.get('properties', {}).values():
+            feature_fields(child)
+        if field['type'] == 'array':
+            feature_fields(field['items'])
+    feature_fields(manifest['state'])
+    for action in manifest['actions'].values():
+        feature_fields(action['input']); feature_fields(action['output'])
+    for event in manifest['events'].values():
+        feature_fields(event)
     require(features <= set(supported), 'Unsupported required feature')
     require('native-process-v1' in features, 'Native feature required')
     if manifest['events']:
@@ -182,6 +199,8 @@ def validate_manifest(manifest: dict, supported=FEATURES) -> None:
         _record(record)
     ids = set()
     for surface in manifest['surfaces']:
+        if 'icon' in surface or 'color' in surface:
+            require('surface-metadata-v1' in features, 'Surface metadata feature required')
         require(surface['id'] not in ids, 'Duplicate surface ID')
         ids.add(surface['id'])
         actions = surface['actions'] if surface['kind'] == 'declarative' else [surface['action']]
@@ -205,9 +224,11 @@ def _controls(manifest: dict, surface: dict) -> None:
         for control in nodes:
             key, kind = control['id'], control['type']
             require(key not in flat and key not in RESERVED and len(flat) < 128, 'Duplicate/control limit')
+            if kind == 'tabs' or any(k in control for k in ('icon', 'tone', 'confirm', 'appearance', 'inputMode', 'placeholder', 'searchable')):
+                require('surface-metadata-v1' in manifest['requiredFeatures'], 'Surface metadata feature required')
             flat[key] = control
-            if kind in ('section', 'row', 'column'):
-                require(set(control) <= {'id', 'type', 'label', 'children'}, 'Layout metadata')
+            if kind in ('section', 'row', 'column', 'tabs'):
+                require(set(control) <= {'id', 'type', 'label', 'icon', 'tone', 'children'}, 'Layout metadata')
                 walk(control.get('children', []), depth + 1)
             else:
                 require('children' not in control, 'Leaf children')
@@ -215,7 +236,7 @@ def _controls(manifest: dict, surface: dict) -> None:
     state = manifest['state']['properties']
     for c in flat.values():
         kind = c['type']
-        if kind in ('section', 'row', 'column'):
+        if kind in ('section', 'row', 'column', 'tabs'):
             continue
         action = manifest['actions'].get(c.get('action'))
         bound = state.get(c.get('bind'))
@@ -226,12 +247,20 @@ def _controls(manifest: dict, surface: dict) -> None:
         if action:
             require(kind in ('button', 'toggle', 'slider', 'input', 'select', 'list'), 'Action on display-only control')
         require('value' not in c or kind == 'button', 'Static value on nonbutton')
+        require('appearance' not in c or kind == 'progress', 'Appearance on nonprogress')
+        require('searchable' not in c or kind == 'list', 'Search on nonlist')
+        require('placeholder' not in c or kind == 'input', 'Placeholder on noninput')
+        require('confirm' not in c or action is not None, 'Confirm without action')
+        if 'inputMode' in c:
+            require(kind == 'input' and arg is not None and (arg['type'] == 'integer' if c['inputMode'] == 'numeric' else arg['type'] == 'string'), 'Input mode mismatch')
         if kind in ('button', 'toggle', 'slider', 'input', 'select'):
             require(action is not None, 'Interactive action required')
-        if kind in ('value', 'status', 'toggle', 'slider', 'progress', 'list'):
+        if kind in ('value', 'status', 'toggle', 'slider', 'progress', 'list', 'image'):
             require(bound is not None, 'Observed binding required')
+        if kind == 'image':
+            require('image-v1' in manifest['requiredFeatures'] and bound['type'] == 'image' and set(c) <= {'id', 'type', 'label', 'bind', 'icon', 'tone'}, 'Invalid image control')
         if kind in ('text', 'value', 'status') and bound:
-            require(bound['type'] not in ('object', 'array'), 'Scalar display required')
+            require(bound['type'] not in ('object', 'array', 'image'), 'Scalar display required')
         if any(k in c for k in ('min', 'max', 'step')):
             require(kind in ('slider', 'progress'), 'Numeric metadata on nonnumeric control')
         if kind in ('slider', 'progress'):
@@ -289,8 +318,27 @@ def _controls(manifest: dict, surface: dict) -> None:
             else:
                 require(not any(k in c for k in ('itemLabel', 'itemValue')) and
                         (not action or item == arg), 'Scalar list argument mismatch')
+            if 'itemActions' in c:
+                require('list-item-actions-v1' in manifest['requiredFeatures'] and item['type'] == 'object' and not action, 'Invalid row actions')
+                fields = item['properties']
+                for row in c['itemActions']:
+                    require(row['action'] in surface['actions'], 'Row action outside surface')
+                    target = manifest['actions'][row['action']]['input']
+                    supplied = set()
+                    for name, value in row.get('args', {}).items():
+                        require(name in target['properties'], 'Unknown row argument'); _payload(target['properties'][name], value); supplied.add(name)
+                    for name, source in row.get('itemArguments', {}).items():
+                        require(name not in supplied and source in item['required'] and name in target['properties'] and fields[source] == target['properties'][name], 'Incompatible row field'); supplied.add(name)
+                    if 'argument' in row:
+                        name = row['argument']
+                        require(name not in supplied and name in target['properties'], 'Duplicate row argument')
+                        if 'value' in row: _payload(target['properties'][name], row['value'])
+                        else: require(c.get('itemValue') in item['required'] and fields[c['itemValue']] == target['properties'][name], 'Incompatible row value')
+                        supplied.add(name)
+                    else: require('value' not in row, 'Row value without argument')
+                    require(set(target['required']) <= supplied, 'Missing row argument')
         else:
-            require(not any(k in c for k in ('itemLabel', 'itemValue')), 'Row metadata on nonlist')
+            require(not any(k in c for k in ('itemLabel', 'itemValue', 'itemActions')), 'Row metadata on nonlist')
         require('step' not in c or kind == 'slider', 'Step on nonslider')
         require('inputBindings' not in c or action is not None, 'Draft bindings without action')
 
@@ -376,6 +424,14 @@ def _payload(schema: dict, payload: dict) -> None:
         require(type(payload) is list and len(payload) <= schema['maxItems'], 'Array payload limit')
         for value in payload:
             _payload(schema['items'], value)
+    elif schema['type'] == 'image':
+        require(type(payload) is str and len(payload) <= schema['maxLength'] and payload.startswith('data:image/jpeg;base64,'), 'Invalid image')
+        encoded = payload[len('data:image/jpeg;base64,'):]
+        try:
+            raw = base64.b64decode(encoded, validate=True)
+        except (ValueError, base64.binascii.Error) as error:
+            raise ValueError('Invalid image base64') from error
+        require(base64.b64encode(raw).decode() == encoded and raw.startswith(b'\xff\xd8') and raw.endswith(b'\xff\xd9') and len(raw) >= 4, 'Invalid JPEG')
     else:
         _check(schema, payload, schema)
 
@@ -724,6 +780,8 @@ def validate_transport(message, expected_version=None):
         }[action]
         optional = {'nextCursor'} if action in ('inventory', 'install.commit', 'remove') else set()
         require(allowed <= extra <= allowed | optional, 'Successful result fields')
+        if action == 'invoke':
+            require(len(canonical(message['payload'])) <= MAX_FRAME, 'Result payload byte limit')
         for entry in message.get('entries', []):
             validate_manifest(entry['manifest'])
             require(entry['package'] == identity(entry['manifest']), 'Inventory identity mismatch')
@@ -752,6 +810,8 @@ def validate_transport(message, expected_version=None):
     if revision2 and kind == 'dispatch' and action == 'surface.close':
         fields |= {'targetOperationId'}
     require(base | fields <= set(message) and set(message) <= base | fields | optional, 'Operation fields')
+    if action == 'invoke':
+        require(len(canonical(message['payload'])) <= MAX_INVOKE_PAYLOAD, 'Invoke payload byte limit')
     if kind == 'dispatch':
         require(message['binding']['deviceId'] != '' and 'requestId' not in message, 'Server-owned dispatch only')
     if action == 'install.begin':

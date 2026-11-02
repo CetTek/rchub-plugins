@@ -26,7 +26,7 @@
       {"type": "object", "additionalProperties": false, "required": ["kind", "state"], "properties": {
         "kind": {"const": "lifecycle"}, "state": {"enum": ["started", "stopped"]}
       }},
-      {"type": "object", "additionalProperties": false, "required": ["kind", "version", "features"], "properties": {"kind": {"enum": ["hello", "welcome"]}, "version": {"enum": [1, 2]}, "features": {"type": "array", "maxItems": 4, "uniqueItems": true, "items": {"enum": ["native-process-v1", "events-v1", "surfaces-v1", "scoped-store-v1"]}}}},
+      {"type":"object","additionalProperties":false,"required":["kind","version","features"],"properties":{"kind":{"enum":["hello","welcome"]},"version":{"enum":[1,2]},"features":{"type":"array","maxItems":8,"uniqueItems":true,"items":{"enum":["native-process-v1","events-v1","surfaces-v1","scoped-store-v1","image-v1","string-8192-v1","list-item-actions-v1","surface-metadata-v1"]}}}},
       {"type": "object", "additionalProperties": false, "required": ["kind", "requestId"], "properties": {"kind": {"const": "cancel"}, "requestId": {"$ref": "#/$defs/token"}}},
       {"type": "object", "additionalProperties": false, "required": ["kind", "surfaceId", "revision", "values"], "properties": {"kind": {"const": "state"}, "surfaceId": {"$ref": "#/$defs/token"}, "revision": {"type": "integer", "minimum": 1}, "values": {"type": "object", "maxProperties": 32}}},
       {"type": "object", "additionalProperties": false, "required": ["kind", "reason"], "properties": {"kind": {"const": "shutdown"}, "reason": {"enum": ["deactivate", "removed", "updated", "context-lost", "host-exit"]}}}

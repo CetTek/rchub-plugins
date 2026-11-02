@@ -45,6 +45,21 @@ class ApplicationV2Tests(unittest.TestCase):
         self.assertNotIn('capability', self.manifest['actions']['vendor.fixture.apply'])
         self.assertEqual(self.manifest['surfaces'][0]['clients'], ['pc', 'mobile', 'web'])
 
+    def test_extended_payload_features_and_jpeg_bounds(self):
+        manifest = copy.deepcopy(self.manifest)
+        manifest['state']['properties']['image'] = {'type': 'image', 'maxLength': 800000}
+        manifest['state']['properties']['clipboard'] = {'type': 'string', 'maxLength': 8192}
+        with self.assertRaises(ValueError): sdk.validate_manifest(manifest)
+        manifest['requiredFeatures'] += ['image-v1', 'string-8192-v1']
+        sdk.validate_manifest(manifest)
+        with self.assertRaises(ValueError): sdk.validate_manifest(manifest, supported=sdk.FEATURES - {'image-v1'})
+        image = 'data:image/jpeg;base64,' + base64.b64encode(b'\xff\xd8hello\xff\xd9').decode()
+        sdk._payload(manifest['state']['properties']['image'], image)
+        sdk._payload(manifest['state']['properties']['clipboard'], 'x' * 8192)
+        for value in ('data:image/png;base64,/9j/2Q==', 'data:image/jpeg;base64,AAAA', image + '!', image * 40000):
+            with self.assertRaises(ValueError): sdk._payload(manifest['state']['properties']['image'], value)
+        with self.assertRaises(ValueError): sdk._payload(manifest['state']['properties']['clipboard'], 'x' * 8193)
+
     def test_manifest_version_features_and_closed_keys_fail_closed(self):
         for change in [{'schemaVersion': 1}, {'schemaVersion': True}, {'schemaVersion': 3},
                        {'unknown': True}, {'requiredFeatures': ['shell-v1']},
@@ -171,6 +186,32 @@ class ApplicationV2Tests(unittest.TestCase):
         large['body']['payload']['value'] += 'x'
         with self.assertRaises(ValueError):
             sdk.encode_frame(large)
+
+    def test_transport_envelope_and_invoke_boundaries(self):
+        package = sdk.identity(self.manifest)
+        event = {'v': 3, 'version': 2, 'kind': 'event', 'operationId': 'o' * 64,
+                 'epoch': 'e' * 64, 'package': package,
+                 'message': self.frame({'kind': 'event', 'subscriptionId': 's' * 64,
+                                        'name': 'vendor.fixture.changed', 'payload': {'value': ''}}, 'plugin')}
+        payload = event['message']['body']['payload']
+        payload['value'] = 'x' * (sdk.MAX_FRAME - len(sdk.canonical(event['message'])))
+        self.assertEqual(len(sdk.canonical(event['message'])), sdk.MAX_FRAME)
+        for route in ({'operationId': 'o' * 64, 'epoch': 'e' * 64},
+                      {'requestId': 'r' * 64, 'deviceId': 'd' * 64}):
+            routed = {k: v for k, v in event.items() if k not in ('operationId', 'epoch')} | route
+            self.assertEqual(sdk.decode_transport(sdk.encode_transport(routed)), routed)
+        payload['value'] += 'x'
+        with self.assertRaises(ValueError): sdk.validate_transport(event)
+        request = {'v': 3, 'version': 2, 'kind': 'request', 'requestId': 'req1',
+                   'deviceId': 'device1', 'action': 'invoke', 'package': package,
+                   'instanceId': 'i' * 64, 'contextId': 'c' * 64,
+                   'name': 'vendor.fixture.apply', 'payload': {'value': ''}}
+        request['payload']['value'] = 'x' * (sdk.MAX_INVOKE_PAYLOAD - len(sdk.canonical(request['payload'])))
+        sdk.validate_transport(request)
+        frame = self.frame(self.request(payload=request['payload']), instanceId='i' * 64, contextId='c' * 64)
+        self.assertLessEqual(len(sdk.canonical(frame)), sdk.MAX_FRAME)
+        request['payload']['value'] += 'x'
+        with self.assertRaises(ValueError): sdk.validate_transport(request)
 
     def test_strict_json_negative_corpus_and_poisoned_stream(self):
         raw_cases = [b'{} trailing', b'{"a":1,"a":2}', b'{"a":NaN}', b'{"a":Infinity}',
@@ -338,9 +379,16 @@ class ApplicationV2Tests(unittest.TestCase):
         self.assertFalse(self.session.pending)
         self.assertFalse(self.session.subscriptions)
 
-    def test_existing_twelve_v1_packages_unchanged_and_reject_v2(self):
+    def test_legacy_packages_reject_native_contract(self):
         packages = sorted((sdk.ROOT / 'plugins/official').glob('*/*.rchub-plugin.json'))
-        self.assertEqual(len(packages), 12)
+        self.assertTrue(
+            {path.parent.name for path in packages}
+            >= {
+                'apps', 'audio', 'browser', 'clipboard', 'display', 'effects',
+                'keyboard', 'media', 'power', 'screenshot', 'speech', 'system',
+            },
+            'all twelve legacy packages must stay present',
+        )
         for path in packages:
             raw = path.read_bytes()
             bundle = json.loads(raw)

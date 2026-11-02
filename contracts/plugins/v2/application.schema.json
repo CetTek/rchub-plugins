@@ -14,7 +14,7 @@
     "license": {"type": "string", "minLength": 1, "maxLength": 40},
     "permissions": {"type": "array", "minItems": 1, "maxItems": 1, "uniqueItems": true, "items": {"const": "native.unsandboxed"}},
     "disclosure": {"type": "object", "additionalProperties": false, "required": ["nativeRisk", "dataBehavior"], "properties": {"nativeRisk": {"$ref": "#/$defs/label"}, "dataBehavior": {"$ref": "#/$defs/label"}}},
-    "requiredFeatures": {"type": "array", "maxItems": 4, "uniqueItems": true, "items": {"enum": ["native-process-v1", "events-v1", "surfaces-v1", "scoped-store-v1"]}},
+    "requiredFeatures": {"type":"array","maxItems":8,"uniqueItems":true,"items":{"enum":["native-process-v1","events-v1","surfaces-v1","scoped-store-v1","image-v1","string-8192-v1","list-item-actions-v1","surface-metadata-v1"]}},
     "execution": {
       "type": "object", "additionalProperties": false,
       "required": ["kind", "trust", "artifact"],
@@ -49,7 +49,8 @@
       "oneOf": [
         {"type": "object", "additionalProperties": false, "required": ["type"], "properties": {"type": {"const": "boolean"}}},
         {"type": "object", "additionalProperties": false, "required": ["type", "minimum", "maximum"], "properties": {"type": {"const": "integer"}, "minimum": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, "maximum": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}}},
-        {"type": "object", "additionalProperties": false, "required": ["type", "maxLength"], "properties": {"type": {"const": "string"}, "maxLength": {"type": "integer", "minimum": 1, "maximum": 4096}}},
+        {"type":"object","additionalProperties":false,"required":["type","maxLength"],"properties":{"type":{"const":"string"},"maxLength":{"type":"integer","minimum":1,"maximum":8192},"enum":{"type":"array","minItems":1,"maxItems":64,"uniqueItems":true,"items":{"type":"string","maxLength":8192}}}},
+        {"type": "object", "additionalProperties": false, "required": ["type", "maxLength"], "properties": {"type": {"const": "image"}, "maxLength": {"type": "integer", "minimum": 1, "maximum": 800000}}},
         {"$ref": "#/$defs/record"},
         {"type": "object", "additionalProperties": false, "required": ["type", "maxItems", "items"], "properties": {"type": {"const": "array"}, "maxItems": {"type": "integer", "minimum": 1, "maximum": 64}, "items": {"$ref": "#/$defs/field"}}}
       ]
@@ -74,6 +75,7 @@
           "actions": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"$ref": "#/$defs/name"}},
            "events": {"type": "array", "maxItems": 32, "uniqueItems": true, "items": {"$ref": "#/$defs/name"}},
            "label": {"$ref": "#/$defs/label"},
+           "icon":{"$ref":"#/$defs/icon"}, "color":{"enum":["blue","green","orange","purple","pink","teal","gray"]},
            "controls": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/control"}}
         }},
         {"type": "object", "additionalProperties": false, "required": ["id", "kind", "action", "trust"], "properties": {
@@ -82,12 +84,18 @@
         }}
       ]
      },
+    "scalar": {"oneOf":[{"type":"string","maxLength":8192},{"type":"integer"},{"type":"boolean"}]},
+    "icon":{"enum":["volume","power","cpu","apps","camera","keyboard","clipboard","globe","message","smile","puzzle","sun","play","info"]},
+    "tone":{"enum":["default","primary","danger","muted"]},
+    "confirm":{"type":"object","additionalProperties":false,"required":["title","message"],"properties":{"title":{"$ref":"#/$defs/label"},"message":{"$ref":"#/$defs/label"}}},
     "control": {
       "type": "object", "additionalProperties": false, "required": ["id", "type"],
       "properties": {
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
-        "type": {"enum": ["section", "row", "column", "text", "value", "status", "button", "toggle", "slider", "input", "select", "list", "progress"]},
+        "type": {"enum": ["section", "row", "column", "tabs", "text", "value", "status", "button", "toggle", "slider", "input", "select", "list", "progress", "image"]},
         "label": {"$ref": "#/$defs/label"},
+        "icon":{"$ref":"#/$defs/icon"}, "tone":{"$ref":"#/$defs/tone"}, "confirm":{"$ref":"#/$defs/confirm"},
+        "appearance":{"enum":["linear","ring"]}, "inputMode":{"enum":["text","numeric","url"]}, "placeholder":{"$ref":"#/$defs/label"}, "searchable":{"type":"boolean"},
         "children": {"type": "array", "maxItems": 128, "items": {"$ref": "#/$defs/control"}},
         "action": {"$ref": "#/$defs/name"},
         "bind": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
@@ -99,7 +107,8 @@
         "inputBindings": {"type": "object", "maxProperties": 32, "propertyNames": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"}, "additionalProperties": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"}},
         "options": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"type": "object", "additionalProperties": false, "required": ["label", "value"], "properties": {"label": {"$ref": "#/$defs/label"}, "value": {"oneOf": [{"type": "string", "maxLength": 4096}, {"type": "integer"}, {"type": "boolean"}]}}}},
         "itemLabel": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
-        "itemValue": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"}
+        "itemValue": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
+        "itemActions": {"type":"array","minItems":1,"maxItems":8,"items":{"type":"object","additionalProperties":false,"required":["label","action"],"properties":{"label":{"$ref":"#/$defs/label"},"action":{"$ref":"#/$defs/name"},"argument":{"type":"string","pattern":"^[a-z][a-z0-9_]{0,39}$"},"value":{"$ref":"#/$defs/scalar"},"args":{"type":"object","maxProperties":32,"propertyNames":{"type":"string","pattern":"^[a-z][a-z0-9_]{0,39}$"},"additionalProperties":{"$ref":"#/$defs/scalar"}},"itemArguments":{"type":"object","maxProperties":32,"propertyNames":{"type":"string","pattern":"^[a-z][a-z0-9_]{0,39}$"},"additionalProperties":{"type":"string","pattern":"^[a-z][a-z0-9_]{0,39}$"}},"icon":{"$ref":"#/$defs/icon"},"tone":{"$ref":"#/$defs/tone"},"confirm":{"$ref":"#/$defs/confirm"}}}}
       }
     }
   }

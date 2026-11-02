@@ -116,6 +116,8 @@ use `plugin-dev:event` / `plugin-dev:local-event`. One JSON envelope <=196608
 canonical UTF-8 bytes, **no IPC length prefix**. Capabilities explicitly advertise
 `{v:3,kind:"capabilities",epoch,protocol:"rchub-app-v2-experimental",version:2,features:[...]}`.
 Compatibility advert is not permission. Unsupported/missing/mixed revision fails closed.
+ABI2 hosts additionally advertise the host-only capability `owner-revocation-ack-v1`
+(not a manifest feature); native readiness and dispatch require it.
 
 Client requests own `requestId,deviceId,action`; server owns
 `operationId,epoch,deadline,binding:{serverOrigin,deviceId,ownerUserId}` and
@@ -152,6 +154,30 @@ logout/session expiry/disconnect closes only its own pending work/watches, not
 another viewer or shared process. No 30-second lease or viewer-lifetime process.
 Current same-process owner-mutation coverage does not imply immediate detection
 of direct SQL/admin/other-process changes; no new polling policy is promised.
+
+### Revocation proof: PC -> server
+
+After each accepted owner-context revision the PC stops every bound instance and
+returns a dedicated Socket.IO **`plugin-dev:revocation-ack`** message:
+
+```json
+{"v":3,"kind":"revocation-ack","version":2,"deviceId":"device1",
+ "epoch":"epoch1","authorityRevision":2,"stopped":true,
+ "instances":["instance1"]}
+```
+
+`stopped` is true only when termination was verified (the owned child was reaped),
+never merely because a kill/job request was issued. `instances` lists the verified
+stopped instance IDs; a failed stop reports `stopped:false` and no success IDs.
+The server records an ack only for the current canonical device/epoch and exact
+current `authorityRevision`; stale, duplicate or foreign acks are rejected and each
+new revision clears the previous proof. Dispatch, readiness and watches require
+`stopped:true` for the exact current revision; a missing, late or failed ack fails
+closed, and `stopped:false` also drops derived watches/observations. Canonical
+transport loss still invalidates local authority. `stopped`/`instances` are additive
+fields on the existing envelope, so a peer that never negotiates
+`owner-revocation-ack-v1` is unsupported for this owner-scoped path rather than
+silently trusted.
 
 ABI2 surface.close caller supplies surface selector, never `targetOperationId`.
 Server resolves **that requester's exact successful open operation** and includes

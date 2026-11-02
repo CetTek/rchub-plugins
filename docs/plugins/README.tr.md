@@ -5,11 +5,11 @@
 Hedeflenen yeni model public GitHub depo URL'sinden kurulan native uygulamadır.
 On iki resmi Windows x64 native paketi (sürüm 1.0.0) bu depodaki
 [`plugins/official-native`](../../plugins/official-native/README.md) altında
-yayınlanmıştır ve uyumlu hostun V2 kataloğundan sunulur; süreçler arası güvenilir
-owner iptali sağlanana kadar production native capability fail-closed kalır. **Eski
-V1 Wasm desteği ve içe aktarım/katalog yolları henüz teknik olarak kaldırılmadı.**
-Aşağıdaki V1 bölümleri tarihsel/uyumluluk bilgisidir; yeni geliştirme önerisi veya
-geçişin tamamlandığı iddiası değildir.
+yayınlanmıştır ve uyumlu hostun V2 kataloğundan sunulur; production native capability
+sözleşmede tanımlı `owner-revocation-ack-v1` kanıtını gerektirir, aksi halde fail-closed
+kalır. **Host, eski V1 executable/pilot eklenti yığınını kaldırdı**; V1 Wasm referans
+paketleri, SDK ve sözleşme bu depoda kalır ve aşağıdaki V1 bölümleri
+tarihsel/uyumluluk bilgisidir; yeni geliştirme önerisi değildir.
 
 1. [ABI2 sözleşmesine](../../contracts/plugins/v2/README.md) göre framed IPC,
    handshake ve bildirilmiş eylem, olay ve kontrolleri uygulayın. Kendinize ait ID,
@@ -106,13 +106,17 @@ checkout derlenmiş Windows paketlerini aynı düzende yayınlar; host checkout'
 incelenmiş baytları doğrudan kullanabilir. Sunmak ve indirmek kurulum, yayıncı
 kimliği veya güvenlik kanıtı değildir.
 
-`ownerInvalidationCovered` yalnız aynı süreçte denetlenmiş değişiklikleri kapsar;
-doğrudan SQL, admin veya diğer süreçlerde anlık invalidation garantisi yoktur. Coverage
-veya owner reader yoksa native readiness ve dispatch fail-closed olur. Production
-adapter süreçler arası güvenilir invalidation bulunmadığından coverage'ı kapatır;
-release derleme bağlantısına rağmen production native capability kullanılamaz. Canlı
-DB/JWT, görünür UI, tam production dağıtımı ve Linux kabulü doğrulanmadı; synthetic,
-injected veya headless bulgular release kabulü değildir.
+Native yetki, süreç-yerel bir coverage bayrağı yerine her owner-control revizyonu için
+kanıtlanır: kabul edilen her revizyonda PC bağlı tüm instance'ları durdurur, sahipli
+çocuk sürecin gerçekten toplandığını doğrular ve `plugin-dev:revocation-ack` mesajını
+`deviceId`, `epoch`, `authorityRevision`, `stopped` ve durdurulan `instances` ile
+döndürür. Readiness, dispatch ve watch'lar tam güncel revizyon için `stopped:true`
+taşıyan eşleşen ack ister; eksik, bayat veya başarısız ack - ve kendi ack'i olmayan her
+yeni revizyon - fail-closed olur ve türetilmiş gözlemleri düşürür. Doğrulanamayan
+öldürmeler `stopped:false` bildirir ve host not-live kalır. Doğrudan SQL, admin veya
+başka sunucu süreciyle yapılan değişiklikler yalnız sonraki yetki okumasında fark
+edilir, polling ile değil. Canlı DB/JWT, görünür UI, tam production dağıtımı ve Linux
+kabulü doğrulanmadı; synthetic, injected veya headless bulgular release kabulü değildir.
 
 
 ### Onay, ömür, pencere ve veri

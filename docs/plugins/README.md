@@ -5,11 +5,12 @@
 The new model is a native application installed from its public GitHub repository
 URL. Twelve official Windows x64 native packages (version 1.0.0) are published in
 [`plugins/official-native`](../../plugins/official-native/README.md) and served by a
-compatible host's V2 catalog; production native capability remains fail-closed until
-reliable cross-process owner revocation exists. **Legacy V1 Wasm support and its
-import/catalog paths have not yet been technically removed.** The V1 sections later
-in this document are historical/compatibility material, not the recommended new
-authoring path or a completed-migration claim.
+compatible host's V2 catalog; production native capability requires the negotiated
+`owner-revocation-ack-v1` proof described in the contract and otherwise fails closed.
+**The host removed its legacy V1 executable/pilot plugin stack**; the V1 Wasm
+reference packages, SDK and contract remain in this checkout and the V1 sections
+later in this document are historical/compatibility material, not the recommended
+new authoring path.
 
 1. Implement your native application against the [ABI2 contract](../../contracts/plugins/v2/README.md),
    including framed IPC, handshake and declared actions, events and controls.
@@ -109,13 +110,18 @@ publishes the built Windows packages in the same layout, so a host checkout can 
 those reviewed bytes directly. Serving and downloading remain distinct from
 installation, publisher identity and safety.
 
-`ownerInvalidationCovered` covers audited same-process mutations only, not immediate
-invalidation for direct SQL, admin changes or other server processes. Missing coverage
-or an owner reader fails native readiness and dispatch closed. The production adapter
-deliberately disables coverage because cross-process invalidation is not reliable, so
-native capability is unavailable in production despite release build wiring. Live
-DB/JWT, visible UI, full production deployment and Linux acceptance remain unverified;
-synthetic, injected or headless evidence does not prove release acceptance.
+Native authority is proven per owner-control revision instead of by a process-local
+coverage flag: for every accepted owner-context revision the PC stops every bound
+instance, verifies the owned child was reaped and returns `plugin-dev:revocation-ack`
+with `deviceId`, `epoch`, `authorityRevision`, `stopped` and the stopped `instances`.
+Readiness, dispatch and watches require a matching ack with `stopped:true` for the
+exact current revision; a missing, stale or failed ack - and any new revision without
+its own ack - fails closed and drops derived observations. Unverifiable kills report
+`stopped:false` and leave the host not-live. Changes made through direct SQL, admin or
+another server process are still noticed only on the next authority read, not by
+polling. Live DB/JWT, visible UI, full production deployment and Linux acceptance
+remain unverified; synthetic, injected or headless evidence does not prove release
+acceptance.
 
 ### Consent, lifetime, windows and storage
 
