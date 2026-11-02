@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - Contract sync with the host (2026-11-02): `contracts/plugins/v2/*.schema.json` and `tools/plugins/rchub_app_v2.py` now match the host's canonical files. Wire `v:3` gains the `revocation-ack` kind with `stopped`/`instances`, the host-only capability `owner-revocation-ack-v1` (nine transport features), eight manifest `requiredFeatures` (`image-v1`, `string-8192-v1`, `list-item-actions-v1`, `surface-metadata-v1` added), and the newer declarative surface vocabulary (`tabs`, `image`, `icon`, `tone`, `confirm`, `appearance`, `inputMode`, `placeholder`, `searchable`, `itemActions`) with a 8192-byte string bound and 800000-byte image bound. Docs state that native readiness and dispatch need a matching ack with `stopped:true` for the exact epoch/revision instead of the retired `ownerInvalidationCovered` flag; the host removed its legacy V1 executable/pilot stack while these V1 WASM reference packages stay published here. SDK/package suite: 57 tests pass.
 
