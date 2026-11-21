@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- Added a packaged SVG plugin icon; requires an app version with icon support.
+
 ## Unreleased
 
 - Added regression coverage for rejecting lock requests while a shutdown or restart is pending, without running power commands.

@@ -21,10 +21,11 @@ def main():
     subprocess.run(["cargo", "build", "--release", "--target", host, "--target-dir", str(target_dir), "--manifest-path", str(HERE / "Cargo.toml")], check=True)
     executable = "rchub-power-plugin.exe"
     entrypoint = "bin/" + executable
-    manifest = {"id": "rchub.power", "name": "Power Options", "localizedNames": {"tr": "Güç Seçenekleri", "en": "Power Options"}, "version": "0.2.1", "protocol": 2, "entrypoints": {"windows-x86_64": entrypoint}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
+    manifest = {"id": "rchub.power", "name": "Power Options", "localizedNames": {"tr": "Güç Seçenekleri", "en": "Power Options"}, "version": "0.2.2", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {"windows-x86_64": entrypoint}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
     destination = HERE / "power-plugin-windows-x86_64.zip"
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))
+        archive.write(HERE / "ui" / "icon.svg", "ui/icon.svg")
         archive.write(target_dir / host / "release" / executable, entrypoint)
         for surface in ("desktop", "android"):
             archive.write(HERE / "ui" / "index.html", f"ui/{surface}/index.html")

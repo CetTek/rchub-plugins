@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- Added a packaged SVG plugin icon; requires an app version with icon support.
+
 ## 0.2.2
 
 - Support up to 256 KiB of UTF-8 clipboard text using bounded chunk transfers; incomplete writes never reach the computer clipboard.

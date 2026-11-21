@@ -24,10 +24,11 @@ def main():
     executable = "rchub-system-info-plugin.exe" if system == "Windows" else "rchub-system-info-plugin"
     key = "windows-x86_64" if system == "Windows" else "linux-x86_64"
     entrypoint = "bin/" + executable
-    manifest = {"id": "rchub.system-info", "name": "System Info", "localizedNames": {"tr": "Sistem Bilgisi", "en": "System Info"}, "version": "0.2.0", "protocol": 2, "entrypoints": {key: entrypoint}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
+    manifest = {"id": "rchub.system-info", "name": "System Info", "localizedNames": {"tr": "Sistem Bilgisi", "en": "System Info"}, "version": "0.2.1", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {key: entrypoint}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
     destination = HERE / ("system-info-plugin-" + key + ".zip")
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))
+        archive.write(HERE / "ui" / "icon.svg", "ui/icon.svg")
         archive.write(target_dir / host / "release" / executable, entrypoint)
         for surface in ("desktop", "android"):
             archive.write(HERE / "ui" / "index.html", f"ui/{surface}/index.html")

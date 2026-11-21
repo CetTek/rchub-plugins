@@ -28,7 +28,8 @@ def main():
         "id": "rchub.web-browser",
         "name": "Web Browser",
         "localizedNames": {"tr": "Web Tarayıcı", "en": "Web Browser"},
-        "version": "0.1.0",
+        "version": "0.1.1",
+        "icon": "ui/icon.svg",
         "protocol": 2,
         "entrypoints": {key: entrypoint},
         "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"},
@@ -36,6 +37,7 @@ def main():
     destination = HERE / ("web-browser-plugin-" + key + ".zip")
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))
+        archive.write(HERE / "ui" / "icon.svg", "ui/icon.svg")
         archive.write(target_dir / host / "release" / executable, entrypoint)
         for surface in ("desktop", "android"):
             archive.write(HERE / "ui" / "index.html", f"ui/{surface}/index.html")

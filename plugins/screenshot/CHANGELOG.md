@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Added a packaged SVG plugin icon; requires an app version with icon support.
+
 ## 0.1.2
 
 - The captured image is now a tappable button that opens a full-screen viewer (dark backdrop, close button, Esc, backdrop tap and Back close it; focus is trapped and returned).
