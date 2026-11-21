@@ -1,6 +1,6 @@
 # RCHub Plugins
 
-Official plugins for [RCHub](https://github.com/emi-ran/RcHub), the remote PC control app. The desktop app downloads them from this repository's releases through a signed catalog, installs the ones that are missing and keeps them up to date.
+Official plugins for RCHub, the remote PC control app. The desktop app downloads them from this repository's releases through a signed catalog, installs the ones that are missing and keeps them up to date.
 
 | Plugin | Id | What it does |
 | --- | --- | --- |

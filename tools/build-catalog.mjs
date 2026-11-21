@@ -28,7 +28,12 @@ const distIndex = args.indexOf('--dist');
 const dist = resolve(root, distIndex >= 0 ? args[distIndex + 1] : 'dist');
 mkdirSync(dist, { recursive: true });
 
-const run = (cmd, argv, options = {}) => execFileSync(cmd, argv, { stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8', ...options });
+const run = (cmd, argv, options = {}) => execFileSync(cmd, argv, {
+  stdio: ['ignore', 'pipe', 'inherit'],
+  encoding: 'utf8',
+  env: { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' },
+  ...options,
+});
 const sha256 = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const python = process.platform === 'win32' ? 'python' : 'python3';
 
