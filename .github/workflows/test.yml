@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
       - name: Catalog tool self-test
-        run: node --test tools
+        run: node --test tools/catalog-core.test.mjs
       - name: Build every plugin
         shell: bash
         run: |
