@@ -1,0 +1,10 @@
+[package]
+name = "rchub-screenshot-plugin"
+version = "0.1.2"
+edition = "2021"
+
+[dependencies]
+base64 = "0.22"
+image = { version = "0.24", default-features = false, features = ["jpeg"] }
+screenshots = "0.8"
+serde_json = "1"

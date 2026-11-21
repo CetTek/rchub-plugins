@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Screenshot</title>
+  <style>
+    :root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#ececef;background:#1e1e20;color-scheme:dark}*{box-sizing:border-box}body{margin:0;padding:clamp(20px,5vw,48px)}main{max-width:900px;margin:auto;animation:enter .2s ease-out}header{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #3b3b40;padding-bottom:22px;flex-wrap:wrap}h1{font-size:clamp(24px,5vw,32px);margin:0 0 6px}p{margin:0;color:#b6b6bf;line-height:1.5}button{font:inherit;background:#1683f8;color:white;border:0;border-radius:8px;min-height:44px;padding:0 18px;cursor:pointer;transition:background .16s,transform .16s}button:hover{background:#419aff}button:active{transform:scale(.97)}button:focus-visible{outline:2px solid #80bdff;outline-offset:3px}button:disabled{opacity:.6;cursor:wait}.status{margin:20px 0}.error{color:#ff9d9d}.preview{background:#29292d;border:1px solid #414149;border-radius:10px;overflow:hidden}.preview img{display:block;width:100%;height:auto}.meta{padding:12px 16px;font-size:.9rem}.thumb{display:block;position:relative;width:100%;padding:0;border-radius:0;min-height:0;background:none;cursor:zoom-in;line-height:0}.thumb:hover{background:none}.thumb:active{transform:none}.thumb:focus-visible{outline:2px solid #6b82f5;outline-offset:-2px}.hint{position:absolute;right:10px;bottom:10px;line-height:1.2;font-size:.8rem;padding:6px 10px;border-radius:999px;background:rgba(20,20,24,.78);color:#ececef;border:1px solid #4259e6}.viewer{position:fixed;inset:0;z-index:10;background:rgba(10,10,13,.94);display:flex;flex-direction:column;animation:fade .16s ease-out}.viewer[hidden]{display:none}.vbar{display:flex;align-items:center;gap:8px;padding:10px 12px;flex:none}.vbar .sp{flex:1}.vbar button{min-width:44px;padding:0 12px;background:#29292d;border:1px solid #414149}.vbar button:hover{background:#34343a;border-color:#4259e6}.vbar button:focus-visible{outline:2px solid #6b82f5}.vbar .close{background:#4259e6;border-color:#4259e6}.vbar .close:hover{background:#5a70ee}.zoomlabel{min-width:52px;text-align:center;font-size:.9rem;color:#b6b6bf;font-variant-numeric:tabular-nums}.vport{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;cursor:grab;display:flex;align-items:center;justify-content:center}.vport.panning{cursor:grabbing}.vport img{max-width:100%;max-height:100%;display:block;transform-origin:50% 50%;user-select:none;-webkit-user-drag:none;will-change:transform}.vport.anim img{transition:transform .18s ease-out}@keyframes fade{from{opacity:0}to{opacity:1}}@media(max-width:480px){.vbar button{width:auto}}@media(prefers-reduced-motion:reduce){.viewer{animation:none}.vport.anim img{transition:none}}@media(forced-colors:active){.thumb:focus-visible,.vbar button:focus-visible{outline:2px solid Highlight}}@keyframes enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(max-width:480px){header{align-items:flex-start;flex-direction:column}button{width:100%}}@media(prefers-reduced-motion:reduce){main{animation:none}button{transition:none}}@media(forced-colors:active){button:focus-visible{outline:2px solid Highlight}button:disabled{opacity:1}}
+  </style>
+</head>
+<body>
+<main>
+  <header><div><h1 data-i18n="heading">Screenshot</h1><p data-i18n="intro">Capture a reduced image of the computer's primary display.</p></div><button id="capture" type="button" data-i18n="capture">Capture</button></header>
+  <p id="status" class="status" role="status" aria-live="polite" data-i18n="initial">Select Capture to take a screenshot.</p>
+  <section id="preview" class="preview" hidden aria-label="Latest screenshot" data-i18n-aria="previewLabel"><button id="open" class="thumb" type="button" aria-haspopup="dialog" aria-label="Open screenshot full screen" data-i18n-aria="openLabel"><img id="image" alt="Latest capture of the computer's primary display" data-i18n-alt="imageAlt"><span class="hint" aria-hidden="true" data-i18n="openHint">Tap to enlarge</span></button><p id="meta" class="meta"></p></section>
+</main>
+<div id="viewer" class="viewer" role="dialog" aria-modal="true" aria-label="Screenshot viewer" data-i18n-aria="viewerLabel" hidden>
+  <div class="vbar">
+    <button id="zout" type="button" aria-label="Zoom out" data-i18n-aria="zoomOut">&minus;</button>
+    <span id="zlabel" class="zoomlabel" aria-live="polite">100%</span>
+    <button id="zin" type="button" aria-label="Zoom in" data-i18n-aria="zoomIn">+</button>
+    <button id="zreset" type="button" data-i18n="reset">Reset</button>
+    <span class="sp"></span>
+    <button id="vclose" type="button" class="close" aria-label="Close" data-i18n-aria="close">&#x2715;</button>
+  </div>
+  <div id="vport" class="vport"><img id="vimg" alt="" draggable="false"></div>
+</div>
+<script>
+document.documentElement.lang = window.RCHub && window.RCHub.locale === 'tr' ? 'tr' : 'en';
+const locale = document.documentElement.lang;
+const COPY = {
+  en: {
+    title: 'Screenshot', heading: 'Screenshot', intro: "Capture a reduced image of the computer's primary display.",
+    openLabel: 'Open screenshot full screen', openHint: 'Tap to enlarge', viewerLabel: 'Screenshot viewer', zoomIn: 'Zoom in', zoomOut: 'Zoom out', reset: 'Reset', close: 'Close',
+    capture: 'Capture', initial: 'Select Capture to take a screenshot.', capturing: 'Capturing\u2026',
+    previewLabel: 'Latest screenshot', imageAlt: "Latest capture of the computer's primary display",
+    captured: 'Screenshot captured. It may contain sensitive information.',
+    dimensions: '{width} \u00d7 {height} pixels (display: {originalWidth} \u00d7 {originalHeight})',
+    invalidResponse: 'Invalid screenshot response.', captureFailed: 'Unable to capture screenshot: {detail}',
+    bridgeUnavailable: 'Plugin bridge is unavailable.', 'error.invalid_params': 'The request parameters were not valid.',
+    'error.method_not_found': 'This operation is not supported.', 'error.captureGeneric': 'The display could not be captured.',
+    'error.noDisplay': 'No primary display is available.', 'error.tooLarge': 'The screenshot could not be encoded within the size limit.',
+    'error.enumerate': 'The displays could not be listed.', 'error.capture': 'The display could not be captured.',
+    'error.encode': 'The screenshot could not be encoded.', 'error.generic': 'Unknown error.'
+  },
+  tr: {
+    title: 'Ekran Görüntüsü', heading: 'Ekran Görüntüsü', intro: 'Bilgisayarın birincil ekranının küçültülmüş bir görüntüsünü yakalayın.',
+    openLabel: 'Ekran görüntüsünü tam ekran aç', openHint: 'Büyütmek için dokunun', viewerLabel: 'Ekran görüntüsü görüntüleyici', zoomIn: 'Yakınlaştır', zoomOut: 'Uzaklaştır', reset: 'Sıfırla', close: 'Kapat',
+    capture: 'Yakala', initial: 'Ekran görüntüsü almak için Yakala\u2019yı seçin.', capturing: 'Yakalanıyor\u2026',
+    previewLabel: 'Son ekran görüntüsü', imageAlt: 'Bilgisayarın birincil ekranının son görüntüsü',
+    captured: 'Ekran görüntüsü yakalandı. Hassas bilgiler içerebilir.',
+    dimensions: '{width} \u00d7 {height} piksel (ekran: {originalWidth} \u00d7 {originalHeight})',
+    invalidResponse: 'Geçersiz ekran görüntüsü yanıtı.', captureFailed: 'Ekran görüntüsü alınamadı: {detail}',
+    bridgeUnavailable: 'Eklenti köprüsü kullanılamıyor.', 'error.invalid_params': 'İstek parametreleri geçersiz.',
+    'error.method_not_found': 'İstenen işlem desteklenmiyor.', 'error.captureGeneric': 'Ekran görüntüsü alınamadı.',
+    'error.noDisplay': 'Birincil ekran bulunamadı.', 'error.tooLarge': 'Ekran görüntüsü boyut sınırına sığdırılamadı.',
+    'error.enumerate': 'Ekranlar listelenemedi.', 'error.capture': 'Ekran yakalanamadı.',
+    'error.encode': 'Ekran görüntüsü kodlanamadı.', 'error.generic': 'İşlem tamamlanamadı.', failedDetail: 'İşlem tamamlanamadı: {detail}'
+  }
+};
+const t = (key, vars) => {
+  let value = COPY[locale][key] || COPY.en[key] || key;
+  if (typeof value !== 'string') value = '';
+  if (vars) value = value.replace(/\{(\w+)\}/g, (match, name) => name in vars ? String(vars[name]) : match);
+  return value;
+};
+const nf = new Intl.NumberFormat(locale);
+const n = value => Number.isFinite(value) ? nf.format(value) : '?';
+function localize() {
+  document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-alt]').forEach(element => { element.setAttribute('alt', t(element.dataset.i18nAlt)); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(element => { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
+  document.title = t('title');
+}
+function rawError(error) { return error && typeof error.message === 'string' ? error.message : String(error); }
+function describe(error) {
+  const raw = rawError(error);
+  const match = /^([a-z][a-z0-9_]*):\s*([\s\S]*)$/.exec(raw);
+  const code = match ? match[1] : '';
+  const detail = match ? match[2] : raw;
+  if (code === 'capture_failed') {
+    if (locale !== 'tr') return detail || t('error.captureGeneric');
+    const known = [
+      ['No primary display', 'error.noDisplay'],
+      ['size limit', 'error.tooLarge'],
+      ['enumerate displays', 'error.enumerate'],
+      ['capture display', 'error.capture'],
+      ['encode screenshot', 'error.encode']
+    ];
+    const found = known.find(entry => detail.includes(entry[0]));
+    return found ? t(found[1]) : t('error.captureGeneric');
+  }
+  const key = code ? 'error.' + code : '';
+  if (key && COPY.en[key]) return t(key);
+  if (error && error.localized) return raw;
+  return locale === 'tr' ? (detail ? t('failedDetail', {detail}) : t('error.generic')) : (detail || t('error.generic'));
+}
+localize();
+
+const button = document.getElementById('capture');
+const status = document.getElementById('status');
+const preview = document.getElementById('preview');
+const image = document.getElementById('image');
+const meta = document.getElementById('meta');
+button.addEventListener('click', async () => {
+  button.disabled = true;
+  status.classList.remove('error');
+  status.textContent = t('capturing');
+  try {
+    if (!window.RCHub || typeof window.RCHub.request !== 'function') {
+      const error = new Error(t('bridgeUnavailable'));
+      error.localized = true;
+      throw error;
+    }
+    const result = await window.RCHub.request('screenshot.capture', {});
+    if (!result || result.mime !== 'image/jpeg' || typeof result.base64 !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(result.base64)) {
+      const error = new Error(t('invalidResponse'));
+      error.localized = true;
+      throw error;
+    }
+    image.src = `data:image/jpeg;base64,${result.base64}`;
+    meta.textContent = t('dimensions', {
+      width: n(result.width),
+      height: n(result.height),
+      originalWidth: n(result.original_width),
+      originalHeight: n(result.original_height)
+    });
+    preview.hidden = false;
+    status.textContent = t('captured');
+  } catch (error) {
+    status.classList.add('error');
+    status.textContent = t('captureFailed', {detail: describe(error)});
+  } finally { button.disabled = false; }
+});
+
+// Full-screen viewer: zoom (pinch/wheel/double-tap/buttons), pan, reset. Plain DOM, no dependencies.
+const openBtn = document.getElementById('open');
+const viewer = document.getElementById('viewer');
+const vport = document.getElementById('vport');
+const vimg = document.getElementById('vimg');
+const zlabel = document.getElementById('zlabel');
+const MAX_SCALE = 8;
+let sc = 1, tx = 0, ty = 0, isOpen = false, pushed = false, lastTap = 0;
+const ptrs = new Map();
+let gesture = null;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+function limits(s) {
+  const mx = Math.max(0, (vimg.offsetWidth * s - vport.clientWidth) / 2);
+  const my = Math.max(0, (vimg.offsetHeight * s - vport.clientHeight) / 2);
+  return [mx, my];
+}
+function apply(animate) {
+  const [mx, my] = limits(sc);
+  tx = clamp(tx, -mx, mx); ty = clamp(ty, -my, my);
+  vport.classList.toggle('anim', !!animate);
+  vimg.style.transform = `translate(${tx}px,${ty}px) scale(${sc})`;
+  zlabel.textContent = Math.round(sc * 100) + '%';
+  vport.style.cursor = sc > 1 ? '' : 'default';
+}
+function resetView(animate) { sc = 1; tx = 0; ty = 0; apply(animate); }
+// Zoom to ns keeping viewport point (cx, cy) (relative to viewport centre) fixed.
+function zoomAt(ns, cx, cy, animate) {
+  ns = clamp(ns, 1, MAX_SCALE);
+  const k = ns / sc;
+  tx = cx - (cx - tx) * k; ty = cy - (cy - ty) * k;
+  sc = ns;
+  if (sc === 1) { tx = 0; ty = 0; }
+  apply(animate);
+}
+const centre = e => { const r = vport.getBoundingClientRect(); return [e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2]; };
+const step = f => zoomAt(sc * f, 0, 0, true);
+function toggleZoom(e) {
+  if (sc > 1) { resetView(true); return; }
+  const [cx, cy] = centre(e);
+  zoomAt(2.5, cx, cy, true);
+}
+function openViewer() {
+  if (isOpen || !image.src) return;
+  isOpen = true;
+  vimg.src = image.src;
+  vimg.alt = image.alt;
+  viewer.hidden = false;
+  document.body.style.overflow = 'hidden';
+  resetView(false);
+  try { history.pushState({rchubViewer: 1}, ''); pushed = true; } catch (e) { pushed = false; }
+  document.getElementById('vclose').focus();
+}
+function closeViewer(fromPop) {
+  if (!isOpen) return;
+  isOpen = false;
+  viewer.hidden = true;
+  document.body.style.overflow = '';
+  ptrs.clear(); gesture = null;
+  if (pushed && !fromPop) { try { history.back(); } catch (e) {} }
+  pushed = false;
+  openBtn.focus();
+}
+openBtn.addEventListener('click', openViewer);
+window.addEventListener('popstate', () => { if (isOpen) closeViewer(true); });
+document.getElementById('vclose').addEventListener('click', () => closeViewer());
+document.getElementById('zin').addEventListener('click', () => step(1.5));
+document.getElementById('zout').addEventListener('click', () => step(1 / 1.5));
+document.getElementById('zreset').addEventListener('click', () => resetView(true));
+viewer.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); closeViewer(); return; }
+  if (e.key === '+' || e.key === '=') { step(1.5); return; }
+  if (e.key === '-') { step(1 / 1.5); return; }
+  if (e.key === '0') { resetView(true); return; }
+  if (e.key === 'Tab') { // focus trap
+    const f = [...viewer.querySelectorAll('button')];
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+vport.addEventListener('wheel', e => {
+  e.preventDefault();
+  const [cx, cy] = centre(e);
+  zoomAt(sc * Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)), cx, cy, false);
+}, {passive: false});
+vport.addEventListener('dblclick', e => { if (e.target === vimg) toggleZoom(e); });
+function pinchState() {
+  const [a, b] = [...ptrs.values()];
+  return {dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2};
+}
+vport.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  try { vport.setPointerCapture(e.pointerId); } catch (err) {}
+  ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (ptrs.size === 1) gesture = {moved: false, sx: e.clientX, sy: e.clientY, onImg: e.target === vimg, pinch: null};
+  else if (gesture) { gesture.pinch = pinchState(); gesture.moved = true; }
+  if (sc > 1) vport.classList.add('panning');
+});
+vport.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId);
+  if (!p || !gesture) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (Math.hypot(e.clientX - gesture.sx, e.clientY - gesture.sy) > 6) gesture.moved = true;
+  if (ptrs.size >= 2 && gesture.pinch) {
+    const now = pinchState(), r = vport.getBoundingClientRect();
+    const cx = now.mx - r.left - r.width / 2, cy = now.my - r.top - r.height / 2;
+    tx += now.mx - gesture.pinch.mx; ty += now.my - gesture.pinch.my;
+    zoomAt(sc * now.dist / gesture.pinch.dist, cx, cy, false);
+    gesture.pinch = now;
+  } else if (sc > 1) { tx += dx; ty += dy; apply(false); }
+});
+function endPointer(e) {
+  if (!ptrs.has(e.pointerId)) return;
+  const wasTap = gesture && !gesture.moved && ptrs.size === 1 && e.type === 'pointerup';
+  const onImg = gesture && gesture.onImg;
+  ptrs.delete(e.pointerId);
+  vport.classList.remove('panning');
+  if (gesture) gesture.pinch = null;
+  if (ptrs.size === 0) gesture = null;
+  if (!wasTap) return;
+  if (!onImg) { closeViewer(); return; } // tap/click on backdrop
+  if (e.pointerType === 'touch') { // double-tap to zoom
+    const now = Date.now();
+    if (now - lastTap < 300) { lastTap = 0; toggleZoom(e); } else lastTap = now;
+  }
+}
+vport.addEventListener('pointerup', endPointer);
+vport.addEventListener('pointercancel', endPointer);
+window.addEventListener('resize', () => { if (isOpen) apply(false); });
+</script>
+</body>
+</html>

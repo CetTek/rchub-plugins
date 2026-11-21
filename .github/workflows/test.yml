@@ -1,0 +1,26 @@
+name: test
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Catalog tool self-test
+        run: node --test tools
+      - name: Build every plugin
+        shell: bash
+        run: |
+          for dir in plugins/*/; do
+            echo "== $dir"
+            (cd "$dir" && python package.py)
+          done

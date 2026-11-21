@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Power Options</title>
+<style>
+:root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#ececef;background:#1e1e20;color-scheme:dark}*{box-sizing:border-box}body{margin:0;padding:clamp(20px,5vw,48px)}main{max-width:760px;margin:auto}header{border-bottom:1px solid #3b3b40;padding-bottom:22px}h1{font-size:clamp(24px,5vw,32px);margin:0 0 6px}h2{font-size:20px;margin:0 0 10px}p{color:#b6b6bf;line-height:1.5;margin:0}.actions{display:grid;gap:12px;margin-top:24px}.action{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;background:#29292d;border:1px solid #414149;border-radius:10px;padding:18px}.action strong{display:block;margin-bottom:5px}.action p{font-size:14px}.controls{margin-top:14px}.delay{display:flex;align-items:center;gap:10px;font-size:14px;color:#d4d4dc}.field{display:inline-flex;align-items:stretch}input[type=number],select{font:inherit;color:inherit;background:#1e1e20;border:1px solid #55555d;min-height:40px;padding:0 10px}input[type=number]{width:112px;border-radius:8px 0 0 8px}input[type=number]::-webkit-inner-spin-button{opacity:1}select{border-left:0;border-radius:0 8px 8px 0}input[type=number]:focus-visible,select:focus-visible{outline:2px solid #80bdff;outline-offset:1px}.check{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:#d4d4dc}input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:#1683f8}input[type=checkbox]:disabled{opacity:.45;cursor:not-allowed}input[type=checkbox]:focus-visible{outline:2px solid #80bdff;outline-offset:3px}.hint{margin-top:8px;font-size:13px;color:#9c9ca6}.panel{margin-top:24px;background:#29292d;border:1px solid #414149;border-radius:10px;padding:18px}.pending-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.pending-head h2{margin:0}#pending-status{margin-top:10px;font-size:14px;color:#d4d4dc}button{font:inherit;color:white;background:#1683f8;border:0;border-radius:8px;min-height:44px;padding:0 18px;cursor:pointer;transition:background .16s,transform .16s}button:hover{background:#419aff}button:active{transform:scale(.97)}button:focus-visible{outline:2px solid #80bdff;outline-offset:3px}button:disabled{opacity:.6;cursor:wait}.secondary{background:#45454d}.secondary:hover{background:#5a5a63}.danger{background:#b93636}.danger:hover{background:#d64b4b}.status{margin-top:20px;min-height:1.5em}.error{color:#ffaaaa}dialog{width:min(460px,calc(100% - 32px));border:1px solid #52525b;border-radius:12px;background:#29292d;color:#ececef;padding:24px}dialog::backdrop{background:#000a}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}#dialog-note{white-space:pre-line}@media(max-width:420px){.action{align-items:flex-start;flex-direction:column}.action button{width:100%}}@media(prefers-reduced-motion:reduce){button{transition:none}}@media(forced-colors:active){button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid Highlight}button:disabled{opacity:1}}
+/* Allow translated content and controls to fit without clipping at narrow widths. */
+.action>div{flex:1 1 0;min-width:0}.action>button{flex:0 0 auto;max-width:100%}
+.action,.panel,.status,dialog{overflow-wrap:anywhere}.delay{flex-wrap:wrap}.field{min-width:0;max-width:100%}.field input[type=number]{min-width:0;max-width:112px}.field select{min-width:0;max-width:100%}
+.check{align-items:flex-start}.check input{flex:none}
+button{height:auto;padding:10px 18px;line-height:1.3;white-space:normal;overflow-wrap:anywhere}
+.pending-head>*{min-width:0;max-width:100%}
+.status{white-space:pre-line}
+dialog{max-width:calc(100% - 32px);max-height:calc(100% - 32px);overflow:auto}
+.dialog-actions{flex-wrap:wrap}.dialog-actions button{max-width:100%}
+@media(max-width:600px){.action{flex-direction:column}.action>div,.action>button{width:100%}.pending-head{align-items:stretch;flex-direction:column}.pending-head button{width:100%}.dialog-actions{flex-direction:column}.dialog-actions button{width:100%}}
+/* Compact power controls; preserve the existing form and dialog semantics. */
+main{max-width:680px}header{padding-bottom:18px}h1{font-size:28px}.actions{margin-top:20px}.action{position:relative;border-radius:12px;padding:16px 18px;align-items:flex-start}.action>div{min-width:0}.action strong{margin-bottom:3px}.action-icon{float:left;width:20px;height:20px;margin:1px 12px 30px 0;color:#b6b6bf;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.action>button{min-width:120px}.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}.delay{gap:8px}.field input[type=number]{width:72px}.check{margin:0;font-size:13px;align-items:center}.hint{clear:both;line-height:1.4}.panel{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:center;margin-top:16px;padding:14px 18px;border-radius:12px}.pending-head{display:contents}.pending-head h2{font-size:15px;grid-column:1;grid-row:1}.pending-head button{grid-column:2;grid-row:1 / span 2}#pending-status{grid-column:1;grid-row:2;margin:0}.status{margin-top:12px}button{transition:background 120ms,transform 120ms}button:disabled{cursor:not-allowed}@media(max-width:600px){.action>button{width:100%}.panel{grid-template-columns:minmax(0,1fr)}.pending-head button{grid-column:1;grid-row:3;width:100%;margin-top:8px}}@media(prefers-reduced-motion:reduce){button{transition:none}}
+/* Confirmation dialog motion: discrete transitions cover showModal(), close() and Esc. Closing is quicker than opening. */
+dialog{opacity:0;transform:translateY(8px) scale(.98);transition:opacity 120ms ease-in,transform 120ms ease-in,overlay 120ms ease-in allow-discrete,display 120ms ease-in allow-discrete}
+dialog[open]{opacity:1;transform:none;transition-duration:180ms;transition-timing-function:ease-out}
+@starting-style{dialog[open]{opacity:0;transform:translateY(8px) scale(.98)}}
+dialog::backdrop{opacity:0;transition:opacity 120ms ease-in,overlay 120ms ease-in allow-discrete,display 120ms ease-in allow-discrete}
+dialog[open]::backdrop{opacity:1;transition-duration:180ms;transition-timing-function:ease-out}
+@starting-style{dialog[open]::backdrop{opacity:0}}
+@media(prefers-reduced-motion:reduce){dialog,dialog::backdrop{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<header><h1 data-i18n="heading">Power Options</h1><p data-i18n="intro">Control the Windows computer running this plugin. Nothing runs until you confirm an action.</p></header>
+<div class="actions">
+<section class="action">
+<div>
+<svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+<strong id="lock-title" data-i18n="lock">Lock</strong>
+<p data-i18n="lockIntro">Lock the current Windows session.</p>
+<div class="controls">
+<div class="delay"><label id="lock-delay-label" for="delay-lock" data-i18n="delay">Delay</label>
+<span class="field"><input id="delay-lock" type="number" min="0" step="1" value="0" inputmode="numeric" aria-labelledby="lock-title lock-delay-label" aria-describedby="lock-hint lock-error"><select id="unit-lock" aria-label="Lock delay unit" data-i18n-aria="lockUnit"><option value="1" selected data-i18n="seconds">seconds</option><option value="60" data-i18n="minutes">minutes</option></select></span>
+</div>
+</div>
+<p class="hint" id="lock-hint"></p>
+<p class="hint error" id="lock-error" hidden></p>
+</div>
+<button type="button" class="secondary" data-action="lock" data-i18n="lockAction">Lock</button>
+</section>
+<section class="action">
+<div>
+<svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 0-2 5"/></svg>
+<strong id="restart-title" data-i18n="restart">Restart</strong>
+<p data-i18n="restartIntro">Restart the computer.</p>
+<div class="controls">
+<div class="delay"><label id="restart-delay-label" for="delay-restart" data-i18n="delay">Delay</label>
+<span class="field"><input id="delay-restart" type="number" min="0" step="1" value="0" inputmode="numeric" aria-labelledby="restart-title restart-delay-label" aria-describedby="restart-hint restart-error"><select id="unit-restart" aria-label="Restart delay unit" data-i18n-aria="restartUnit"><option value="1" selected data-i18n="seconds">seconds</option><option value="60" data-i18n="minutes">minutes</option></select></span>
+</div>
+<label class="check"><input type="checkbox" id="force-restart"> <span data-i18n="force">Force applications to close</span></label>
+</div>
+<p class="hint" id="restart-hint" hidden data-i18n="forceAuto">Windows applies force automatically when the delay is greater than zero, even if Force is unchecked.</p>
+<p class="hint error" id="restart-error" hidden></p>
+</div>
+<button type="button" data-action="restart" data-i18n="restartAction">Restart</button>
+</section>
+<section class="action">
+<div>
+<svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9"/><path d="M7 5.5a8 8 0 1 0 10 0"/></svg>
+<strong id="shutdown-title" data-i18n="shutdown">Shut down</strong>
+<p data-i18n="shutdownIntro">Turn off the computer.</p>
+<div class="controls">
+<div class="delay"><label id="shutdown-delay-label" for="delay-shutdown" data-i18n="delay">Delay</label>
+<span class="field"><input id="delay-shutdown" type="number" min="0" step="1" value="0" inputmode="numeric" aria-labelledby="shutdown-title shutdown-delay-label" aria-describedby="shutdown-hint shutdown-error"><select id="unit-shutdown" aria-label="Shut down delay unit" data-i18n-aria="shutdownUnit"><option value="1" selected data-i18n="seconds">seconds</option><option value="60" data-i18n="minutes">minutes</option></select></span>
+</div>
+<label class="check"><input type="checkbox" id="force-shutdown"> <span data-i18n="force">Force applications to close</span></label>
+</div>
+<p class="hint" id="shutdown-hint" hidden data-i18n="forceAuto">Windows applies force automatically when the delay is greater than zero, even if Force is unchecked.</p>
+<p class="hint error" id="shutdown-error" hidden></p>
+</div>
+<button type="button" class="danger" data-action="shutdown" data-i18n="shutdownAction">Shut down</button>
+</section>
+</div>
+<section class="panel" aria-labelledby="pending-title">
+<div class="pending-head"><h2 id="pending-title" data-i18n="pendingTitle">Pending operation</h2><button type="button" class="secondary" id="cancel-pending" disabled data-i18n="cancelPending">Cancel pending operation</button></div>
+<p id="pending-status" data-i18n="noPending">No operation scheduled.</p>
+</section>
+<p class="status" id="status" role="status" aria-live="polite"></p>
+</main>
+<dialog id="confirmation" aria-labelledby="dialog-title" aria-describedby="dialog-summary dialog-note">
+<h2 id="dialog-title"></h2>
+<p id="dialog-summary"></p>
+<p class="hint" id="dialog-note" hidden></p>
+<div class="dialog-actions"><button type="button" class="secondary" id="cancel" data-i18n="cancel">Cancel</button><button type="button" class="danger" id="confirm"></button></div>
+</dialog>
+<script>
+document.documentElement.lang = window.RCHub && window.RCHub.locale === 'tr' ? 'tr' : 'en';
+const locale = document.documentElement.lang;
+const COPY = {
+  en: {
+    title: 'Power Options', heading: 'Power Options', intro: 'Control the Windows computer running this plugin. Nothing runs until you confirm an action.',
+    lock: 'Lock', restart: 'Restart', shutdown: 'Shut down',
+    lockIntro: 'Lock the current Windows session.', restartIntro: 'Restart the computer. Applications are closed only when Force is selected or a delay is set.', shutdownIntro: 'Turn off the computer. Applications are closed only when Force is selected or a delay is set.',
+    delay: 'Delay', seconds: 'seconds', minutes: 'minutes', lockUnit: 'Lock delay unit', restartUnit: 'Restart delay unit', shutdownUnit: 'Shut down delay unit',
+    force: 'Force applications to close', forceAuto: 'Windows applies force automatically when the delay is greater than zero, even if Force is unchecked.',
+    lockAction: 'Lock', restartAction: 'Restart', shutdownAction: 'Shut down',
+    pendingTitle: 'Pending operation', cancelPending: 'Cancel pending operation', noPending: 'No operation scheduled.', cancel: 'Cancel',
+    lockHint: 'Lock delays are timed by this plugin. If the plugin stops or is disabled before the delay ends, the lock is cancelled. Maximum {max} seconds ({hours} hours).',
+    delayWhole: 'Delay must be a whole number of seconds or minutes.', maxDelay: 'The maximum delay for {label} is {max} seconds.',
+    lockNoun: 'lock', restartNoun: 'restart', shutdownNoun: 'shutdown',
+    immediately: 'immediately', inDelay: 'in {duration}',
+    dialogNow: '{label} this computer now?', dialogLater: '{label} this computer later?',
+    lockSummary: 'The current Windows session will be locked {when}.',
+    actionSummary: '{label} {when}. Applications may close and unsaved work may be lost.',
+    noteForceAuto: 'Windows applies force automatically for delayed shutdowns and restarts, so forced close is in effect even if Force is unchecked.',
+    noteForce: 'Applications will be closed without warning and unsaved work may be lost.',
+    noteNoForce: 'Force is not selected. Applications are not requested to close forcibly.',
+    noteLockTimer: 'This delay is handled by the plugin. If the plugin stops or is disabled before the delay ends, the lock is cancelled.',
+    confirmLockNow: 'Lock computer', confirmLockLater: 'Schedule lock',
+    confirmRestartNow: 'Restart computer', confirmRestartLater: 'Schedule restart',
+    confirmShutdownNow: 'Shut down computer', confirmShutdownLater: 'Schedule shutdown',
+    scheduling: 'Scheduling operation\u2026', sendingRequest: 'Sending request\u2026',
+    scheduled: '{label} scheduled {when}. The final result cannot be confirmed here.',
+    started: 'Operation started. The final result cannot be confirmed here.',
+    requestFailed: 'Request error: {detail}\nThe operation may still have started; do not retry automatically.',
+    cancelling: 'Cancelling pending operation\u2026', cancelled: 'Pending operation cancelled.', nothingToCancel: 'No pending operation to cancel.', cancelFailed: 'Cancel failed: {detail}',
+    pendingLine: '{label} pending \u2014 {duration} remaining.{lockNote}', lockNote: ' The timer runs only while this plugin is running.',
+    pendingUnavailable: 'Pending status is unavailable.',
+    unitDayOne: 'day', unitDayOther: 'days', unitHourOne: 'hour', unitHourOther: 'hours', unitMinuteOne: 'minute', unitMinuteOther: 'minutes', unitSecondOne: 'second', unitSecondOther: 'seconds',
+    bridgeUnavailable: 'Plugin bridge is unavailable.', 'error.operation_failed': 'The operation could not be started or cancelled.',
+    'error.operation_conflict': 'A shutdown or restart is already pending; cancel it first.', 'error.invalid_params': 'The request parameters were not valid.',
+    'error.method_not_found': 'This operation is not supported.', 'error.generic': 'Unknown error.'
+  },
+  tr: {
+    title: 'Güç Seçenekleri', heading: 'Güç Seçenekleri', intro: 'Bu eklentiyi çalıştıran Windows bilgisayarını kontrol edin. Bir işlemi onaylayana kadar hiçbir şey çalışmaz.',
+    lock: 'Kilitle', restart: 'Yeniden başlat', shutdown: 'Kapat',
+    lockIntro: 'Geçerli Windows oturumunu kilitleyin.', restartIntro: 'Bilgisayar yeniden başlatılır. Uygulamalar yalnızca Zorla seçiliyse ya da gecikme ayarlıysa kapatılır.', shutdownIntro: 'Bilgisayar kapatılır. Uygulamalar yalnızca Zorla seçiliyse ya da gecikme ayarlıysa kapatılır.',
+    delay: 'Gecikme', seconds: 'saniye', minutes: 'dakika', lockUnit: 'Kilitleme gecikme birimi', restartUnit: 'Yeniden başlatma gecikme birimi', shutdownUnit: 'Kapatma gecikme birimi',
+    force: 'Uygulamaları kapatmaya zorla', forceAuto: 'Gecikme sıfırdan büyükse Windows, Zorla seçili olmasa bile uygulamaları kapatmaya zorlar.',
+    lockAction: 'Kilitle', restartAction: 'Yeniden başlat', shutdownAction: 'Bilgisayarı kapat',
+    pendingTitle: 'Bekleyen işlem', cancelPending: 'Bekleyen işlemi iptal et', noPending: 'Zamanlanmış işlem yok.', cancel: 'Vazgeç',
+    lockHint: 'Kilitleme gecikmesi bu eklenti tarafından yönetilir. Gecikme bitmeden eklenti durursa veya devre dışı bırakılırsa kilitleme iptal edilir. En fazla {max} saniye ({hours} saat).',
+    delayWhole: 'Gecikme tam sayı saniye veya dakika olmalıdır.', maxDelay: 'En fazla gecikme {max} saniyedir.',
+    lockNoun: 'kilitleme', restartNoun: 'yeniden başlatma', shutdownNoun: 'kapatma',
+    immediately: 'hemen', inDelay: '{duration} içinde',
+    dialogNow: '{label} işlemi şimdi yapılsın mı?', dialogLater: '{label} işlemi daha sonra yapılsın mı?',
+    lockSummary: 'Geçerli Windows oturumu {when} kilitlenecek.',
+    actionSummary: '{label} işlemi {when} uygulanacak. Uygulamalar kapanabilir ve kaydedilmemiş çalışmalar kaybolabilir.',
+    noteForceAuto: 'Gecikmeli kapatma ve yeniden başlatmalarda Windows zorlamayı kendisi uygular; bu nedenle Zorla seçili olmasa da zorla kapatma etkindir.',
+    noteForce: 'Uygulamalar uyarı verilmeden kapatılacak ve kaydedilmemiş çalışmalar kaybolabilir.',
+    noteNoForce: 'Zorla seçili değil. Uygulamaların zorla kapatılması istenmez.',
+    noteLockTimer: 'Bu gecikme eklenti tarafından yönetilir. Gecikme bitmeden eklenti durursa veya devre dışı bırakılırsa kilitleme iptal edilir.',
+    confirmLockNow: 'Bilgisayarı kilitle', confirmLockLater: 'Kilitlemeyi zamanla',
+    confirmRestartNow: 'Bilgisayarı yeniden başlat', confirmRestartLater: 'Yeniden başlatmayı zamanla',
+    confirmShutdownNow: 'Bilgisayarı kapat', confirmShutdownLater: 'Kapatmayı zamanla',
+    scheduling: 'İşlem zamanlanıyor\u2026', sendingRequest: 'İstek gönderiliyor\u2026',
+    scheduled: '{label} işlemi {when} zamanlandı. Kesin sonuç burada doğrulanamaz.',
+    started: 'İşlem başlatıldı. Kesin sonuç burada doğrulanamaz.',
+    requestFailed: 'İstek hatası: {detail}\nİşlem yine de başlamış olabilir; otomatik olarak yeniden denemeyin.',
+    cancelling: 'Bekleyen işlem iptal ediliyor\u2026', cancelled: 'Bekleyen işlem iptal edildi.', nothingToCancel: 'İptal edilecek bekleyen işlem yok.', cancelFailed: 'İptal başarısız: {detail}',
+    pendingLine: '{label} bekliyor \u2014 {duration} kaldı.{lockNote}', lockNote: ' Zamanlayıcı yalnızca eklenti çalışırken işler.',
+    pendingUnavailable: 'Bekleyen durum kullanılamıyor.',
+    unitDayOne: 'gün', unitDayOther: 'gün', unitHourOne: 'saat', unitHourOther: 'saat', unitMinuteOne: 'dakika', unitMinuteOther: 'dakika', unitSecondOne: 'saniye', unitSecondOther: 'saniye',
+    bridgeUnavailable: 'Eklenti köprüsü kullanılamıyor.', 'error.operation_failed': 'İşlem başlatılamadı veya iptal edilemedi.',
+    'error.operation_conflict': 'Zaten bekleyen bir kapatma veya yeniden başlatma var; önce onu iptal edin.', 'error.invalid_params': 'İstek parametreleri geçersiz.',
+    'error.method_not_found': 'İstenen işlem desteklenmiyor.', 'error.generic': 'İşlem tamamlanamadı.', failedDetail: 'İşlem tamamlanamadı: {detail}'
+  }
+};
+const t = (key, vars) => {
+  let value = COPY[locale][key] || COPY.en[key] || key;
+  if (typeof value !== 'string') value = '';
+  if (vars) value = value.replace(/\{(\w+)\}/g, (match, name) => name in vars ? String(vars[name]) : match);
+  return value;
+};
+const nf = new Intl.NumberFormat(locale);
+const n = value => nf.format(value);
+function localize() {
+  document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(element => { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
+  document.title = t('title');
+}
+function rawError(error) { return error && typeof error.message === 'string' ? error.message : String(error); }
+function describe(error) {
+  const raw = rawError(error);
+  const match = /^([a-z][a-z0-9_]*):\s*([\s\S]*)$/.exec(raw);
+  const key = match ? 'error.' + match[1] : '';
+  if (key && COPY.en[key]) return t(key);
+  if (error && error.localized) return raw;
+  return locale === 'tr' ? (raw ? t('failedDetail', {detail: raw}) : t('error.generic')) : (raw || t('error.generic'));
+}
+localize();
+
+const MAX_DELAY = {lock: 86400, restart: 315360000, shutdown: 315360000};
+const dialog = document.getElementById('confirmation');
+const status = document.getElementById('status');
+const pendingStatus = document.getElementById('pending-status');
+const cancelPendingButton = document.getElementById('cancel-pending');
+const confirmButton = document.getElementById('confirm');
+const dialogNote = document.getElementById('dialog-note');
+const actionButtons = Array.from(document.querySelectorAll('[data-action]'));
+let selected = null;
+let busy = false;
+let pendingBusy = false;
+let pending = null;
+let pendingDeadline = 0;
+
+document.getElementById('lock-hint').textContent = t('lockHint', {max: n(86400), hours: n(24)});
+
+function hasBridge() {
+  return window.RCHub && typeof window.RCHub.request === 'function';
+}
+
+function updateControls() {
+  actionButtons.forEach(button => { button.disabled = busy || pendingBusy; });
+  cancelPendingButton.disabled = busy || pendingBusy || !pending;
+}
+
+function unitSeconds(action) {
+  return Number(document.getElementById(`unit-${action}`).value);
+}
+
+function syncMax(action) {
+  const input = document.getElementById(`delay-${action}`);
+  input.max = String(Math.floor(MAX_DELAY[action] / unitSeconds(action)));
+}
+
+function readConfig(action) {
+  const raw = document.getElementById(`delay-${action}`).value.trim();
+  if (!/^\d+$/.test(raw)) return {error: t('delayWhole')};
+  const seconds = Number(raw) * unitSeconds(action);
+  if (!Number.isSafeInteger(seconds) || seconds > MAX_DELAY[action]) {
+    return {error: t('maxDelay', {label: t(action + 'Noun'), max: n(MAX_DELAY[action])})};
+  }
+  const forceInput = document.getElementById(`force-${action}`);
+  return {action, delaySeconds: seconds, force: forceInput ? forceInput.checked : false};
+}
+
+function syncForceHint(action) {
+  if (action === 'lock') return;
+  const config = readConfig(action);
+  const hint = document.getElementById(`${action}-hint`);
+  hint.hidden = Boolean(config.error) || !(config.delaySeconds > 0);
+}
+
+function unit(count, key) {
+  const suffix = locale === 'tr' ? 'Other' : (count === 1 ? 'One' : 'Other');
+  return `${n(count)} ${t('unit' + key + suffix)}`;
+}
+
+function formatDuration(totalSeconds) {
+  if (totalSeconds <= 0) return `0 ${t('unitSecondOther')}`;
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return [[days, 'Day'], [hours, 'Hour'], [minutes, 'Minute'], [seconds, 'Second']]
+    .filter(([count]) => count > 0)
+    .map(([count, key]) => unit(count, key)).join(' ');
+}
+
+function describeDelay(delaySeconds) {
+  return delaySeconds === 0 ? t('immediately') : t('inDelay', {duration: formatDuration(delaySeconds)});
+}
+
+function buildDialog(config) {
+  const label = t(config.action);
+  document.getElementById('dialog-title').textContent = config.delaySeconds === 0
+    ? t('dialogNow', {label})
+    : t('dialogLater', {label});
+  const summary = config.action === 'lock'
+    ? t('lockSummary', {when: describeDelay(config.delaySeconds)})
+    : t('actionSummary', {label, when: describeDelay(config.delaySeconds)});
+  document.getElementById('dialog-summary').textContent = summary;
+  const notes = [];
+  if (config.action !== 'lock' && config.delaySeconds > 0) {
+    notes.push(t('noteForceAuto'));
+  } else if (config.action !== 'lock' && config.force) {
+    notes.push(t('noteForce'));
+  } else if (config.action !== 'lock') {
+    notes.push(t('noteNoForce'));
+  }
+  if (config.action === 'lock' && config.delaySeconds > 0) {
+    notes.push(t('noteLockTimer'));
+  }
+  dialogNote.textContent = notes.join('\n\n');
+  dialogNote.hidden = notes.length === 0;
+  if (config.action === 'lock') confirmButton.textContent = t(config.delaySeconds === 0 ? 'confirmLockNow' : 'confirmLockLater');
+  else if (config.action === 'restart') confirmButton.textContent = t(config.delaySeconds === 0 ? 'confirmRestartNow' : 'confirmRestartLater');
+  else confirmButton.textContent = t(config.delaySeconds === 0 ? 'confirmShutdownNow' : 'confirmShutdownLater');
+}
+
+actionButtons.forEach(button => button.addEventListener('click', () => {
+  if (busy) return;
+  const config = readConfig(button.dataset.action);
+  if (config.error) {
+    const input = document.getElementById(`delay-${button.dataset.action}`);
+    const error = document.getElementById(`${button.dataset.action}-error`);
+    error.textContent = config.error;
+    error.hidden = false;
+    input.setAttribute('aria-invalid', 'true');
+    input.focus();
+    return;
+  }
+  selected = config;
+  status.classList.remove('error');
+  buildDialog(config);
+  dialog.showModal();
+  document.getElementById('cancel').focus();
+}));
+
+['restart', 'shutdown'].forEach(action => {
+  document.getElementById(`delay-${action}`).addEventListener('input', () => syncForceHint(action));
+  document.getElementById(`unit-${action}`).addEventListener('change', () => {
+    syncMax(action);
+    syncForceHint(action);
+  });
+  document.getElementById(`force-${action}`).addEventListener('change', () => syncForceHint(action));
+});
+document.getElementById('unit-lock').addEventListener('change', () => syncMax('lock'));
+['lock', 'restart', 'shutdown'].forEach(action => {
+  const input = document.getElementById(`delay-${action}`);
+  const error = document.getElementById(`${action}-error`);
+  const clearError = () => {
+    input.removeAttribute('aria-invalid');
+    error.hidden = true;
+    error.textContent = '';
+  };
+  input.addEventListener('input', clearError);
+  document.getElementById(`unit-${action}`).addEventListener('change', clearError);
+});
+['lock', 'restart', 'shutdown'].forEach(syncMax);
+
+document.getElementById('cancel').addEventListener('click', () => dialog.close());
+dialog.addEventListener('close', () => { selected = null; });
+
+function describeExecute(result) {
+  if (result && result.status === 'scheduled') {
+    return t('scheduled', {label: t(result.action), when: describeDelay(Number(result.delaySeconds) || 0)});
+  }
+  return t('started');
+}
+
+confirmButton.addEventListener('click', async () => {
+  if (!selected || busy) return;
+  const config = selected;
+  busy = true;
+  dialog.close();
+  updateControls();
+  status.classList.remove('error');
+  status.textContent = config.delaySeconds > 0 ? t('scheduling') : t('sendingRequest');
+  try {
+    if (!hasBridge()) {
+      const error = new Error(t('bridgeUnavailable'));
+      error.localized = true;
+      throw error;
+    }
+    const result = await window.RCHub.request('power.execute', {
+      action: config.action,
+      confirmed: true,
+      delaySeconds: config.delaySeconds,
+      force: config.force,
+    });
+    status.textContent = describeExecute(result);
+    await refreshStatus();
+  } catch (error) {
+    status.classList.add('error');
+    status.textContent = t('requestFailed', {detail: describe(error)});
+  } finally {
+    busy = false;
+    updateControls();
+  }
+});
+
+cancelPendingButton.addEventListener('click', async () => {
+  if (busy || pendingBusy) return;
+  pendingBusy = true;
+  updateControls();
+  status.classList.remove('error');
+  status.textContent = t('cancelling');
+  try {
+    if (!hasBridge()) {
+      const error = new Error(t('bridgeUnavailable'));
+      error.localized = true;
+      throw error;
+    }
+    const result = await window.RCHub.request('power.cancel', {});
+    status.textContent = result && result.cancelled ? t('cancelled') : t('nothingToCancel');
+    await refreshStatus();
+  } catch (error) {
+    status.classList.add('error');
+    status.textContent = t('cancelFailed', {detail: describe(error)});
+  } finally {
+    pendingBusy = false;
+    updateControls();
+  }
+});
+
+function renderPending() {
+  if (!pending) {
+    pendingStatus.textContent = t('noPending');
+  } else {
+    const remaining = Math.max(0, Math.ceil((pendingDeadline - Date.now()) / 1000));
+    const lockNote = pending.action === 'lock' ? t('lockNote') : '';
+    pendingStatus.textContent = t('pendingLine', {label: t(pending.action), duration: formatDuration(remaining), lockNote});
+  }
+  updateControls();
+}
+
+async function refreshStatus() {
+  if (!hasBridge()) return;
+  try {
+    const result = await window.RCHub.request('power.status', {});
+    if (result && typeof result.pending === 'boolean') {
+      pending = result.pending ? result : null;
+      pendingDeadline = pending ? Date.now() + Math.max(0, Number(pending.remainingSeconds) || 0) * 1000 : 0;
+      renderPending();
+    }
+  } catch (error) {
+    if (!pending) pendingStatus.textContent = t('pendingUnavailable');
+  }
+}
+
+setInterval(() => {
+  if (!pending) return;
+  const remaining = Math.ceil((pendingDeadline - Date.now()) / 1000);
+  if (remaining <= 0) {
+    pending = null;
+    pendingDeadline = 0;
+    renderPending();
+    refreshStatus();
+  } else {
+    renderPending();
+  }
+}, 1000);
+setInterval(refreshStatus, 10000);
+
+updateControls();
+renderPending();
+refreshStatus();
+</script>
+</body>
+</html>

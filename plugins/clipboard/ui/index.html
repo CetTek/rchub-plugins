@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clipboard</title>
+<style>
+:root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#ececef;background:#1e1e20;color-scheme:dark}*{box-sizing:border-box}body{margin:0;padding:clamp(20px,5vw,48px)}main{max-width:760px;margin:auto;animation:enter .25s ease-out}h1{font-size:clamp(24px,5vw,32px);margin:0 0 6px}p{color:#b6b6bf;line-height:1.5}label{display:block;font-weight:600;margin:28px 0 8px}textarea{width:100%;min-height:220px;resize:vertical;font:inherit;line-height:1.5;color:inherit;background:#29292d;border:1px solid #55555d;border-radius:8px;padding:14px;transition:border-color .16s}textarea:focus-visible{outline:2px solid #80bdff;outline-offset:1px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}button{font:inherit;background:#1683f8;color:white;border:0;border-radius:8px;min-height:44px;padding:0 18px;cursor:pointer;transition:background .16s,transform .16s}button.secondary{background:#414148}button:hover{background:#419aff}button.secondary:hover{background:#575760}button:active{transform:scale(.98)}button:focus-visible{outline:2px solid #80bdff;outline-offset:3px}button:disabled{opacity:.6;cursor:wait}.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:.9rem}.status{min-height:1.5em}.error{color:#ffaaaa}@keyframes enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}@media(forced-colors:active){textarea:focus-visible,button:focus-visible{outline:2px solid Highlight}button:disabled{opacity:1}}
+</style>
+</head>
+<body><main>
+<h1 data-i18n="heading">Clipboard</h1><p data-i18n="intro">Read or replace the computer's clipboard text. Nothing is transferred until you choose an action.</p>
+<label for="text" data-i18n="textLabel">Text</label><textarea id="text" spellcheck="false" aria-describedby="limit"></textarea>
+<div class="meta"><span id="limit"></span><span id="count"></span></div>
+<div class="actions"><button id="read" class="secondary" type="button" data-i18n="readAction">Read from computer</button><button id="copy" class="secondary" type="button" hidden aria-label="Copy text to this device's clipboard" data-i18n-aria="copyLabel"><span data-i18n="copyAction">Copy</span></button><button id="write" type="button" data-i18n="writeAction">Write to computer</button></div>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+</main><script>
+document.documentElement.lang = window.RCHub && window.RCHub.locale === 'tr' ? 'tr' : 'en';
+const locale = document.documentElement.lang;
+const COPY = {
+  en: {
+    title: 'Clipboard', heading: 'Clipboard',
+    intro: "Read or replace the computer's clipboard text. Nothing is transferred until you choose an action.",
+    textLabel: 'Text', readAction: 'Read from computer', copyAction: 'Copy', copyLabel: "Copy text to this device's clipboard", writeAction: 'Write to computer',
+    limit: 'Maximum {max} UTF-8 bytes. NUL characters are not supported.', count: '{bytes} / {max} bytes',
+    working: 'Working\u2026', readSuccess: 'Read from the computer clipboard.', readCopied: 'Read from the computer clipboard. Copied to this device\u2019s clipboard.',
+    readCopyFailed: 'Read from the computer clipboard. Copying to this device failed \u2014 use Copy.',
+    copyFailed: 'Copy failed: {detail}', writeSuccess: 'Computer clipboard updated.', writeFailed: 'Write failed: {detail}',
+    readFailed: 'Read failed: {detail}', noText: 'There is no text to copy.', copied: 'Copied to this device\u2019s clipboard.',
+    tooLarge: 'Text must be at most {max} UTF-8 bytes and cannot contain NUL.', bridgeUnavailable: 'Plugin bridge is unavailable.',
+    'error.too_large': 'The text exceeds the {max} UTF-8 byte limit.', 'error.clipboard_unavailable': 'The clipboard could not be accessed.',
+    'error.clipboard_write_failed': 'The text could not be written to this device\u2019s clipboard.', 'error.invalid_params': 'The request parameters were not valid.',
+    'error.transfer_limit': 'Too many transfers are active. Try again later.', 'error.transfer_unavailable': 'A transfer could not be started.',
+    'error.method_not_found': 'This operation is not supported.', 'error.invalid_response': 'The computer returned an unexpected clipboard response.', 'error.generic': 'Unknown error.'
+  },
+  tr: {
+    title: 'Pano', heading: 'Pano',
+    intro: 'Bilgisayarın pano metnini okuyun veya değiştirin. Bir işlem seçene kadar hiçbir şey aktarılmaz.',
+    textLabel: 'Metin', readAction: 'Bilgisayardan oku', copyAction: 'Kopyala', copyLabel: 'Metni bu cihazın panosuna kopyala', writeAction: 'Bilgisayara yaz',
+    limit: 'En fazla {max} UTF-8 bayt. NUL karakterleri desteklenmez.', count: '{bytes} / {max} bayt',
+    working: 'Çalışıyor\u2026', readSuccess: 'Bilgisayarın panosundan okundu.', readCopied: 'Bilgisayarın panosundan okundu. Bu cihazın panosuna kopyalandı.',
+    readCopyFailed: 'Bilgisayarın panosundan okundu. Bu cihaza kopyalama başarısız oldu \u2014 Kopyala\u2019yı kullanın.',
+    copyFailed: 'Kopyalama başarısız: {detail}', writeSuccess: 'Bilgisayarın panosu güncellendi.', writeFailed: 'Yazma başarısız: {detail}',
+    readFailed: 'Okuma başarısız: {detail}', noText: 'Kopyalanacak metin yok.', copied: 'Bu cihazın panosuna kopyalandı.',
+    tooLarge: 'Metin en fazla {max} UTF-8 bayt olabilir ve NUL içeremez.', bridgeUnavailable: 'Eklenti köprüsü kullanılamıyor.',
+    'error.too_large': 'Metin {max} UTF-8 bayt sınırını aşıyor.', 'error.clipboard_unavailable': 'Panoya erişilemedi.',
+    'error.clipboard_write_failed': 'Metin bu cihazın panosuna yazılamadı.', 'error.invalid_params': 'İstek parametreleri geçersiz.',
+    'error.transfer_limit': 'Çok fazla aktarım etkin. Daha sonra tekrar deneyin.', 'error.transfer_unavailable': 'Aktarım başlatılamadı.',
+    'error.method_not_found': 'İstenen işlem desteklenmiyor.', 'error.invalid_response': 'Bilgisayar beklenmeyen bir pano yanıtı döndürdü.', 'error.generic': 'İşlem tamamlanamadı.', failedDetail: 'İşlem tamamlanamadı: {detail}'
+  }
+};
+const MAX_BYTES = 256 * 1024, CHUNK_BYTES = 4096;
+const t = (key, vars) => {
+  let value = COPY[locale][key] || COPY.en[key] || key;
+  if (typeof value !== 'string') value = '';
+  if (vars) value = value.replace(/\{(\w+)\}/g, (match, name) => name in vars ? String(vars[name]) : match);
+  return value;
+};
+const nf = new Intl.NumberFormat(locale);
+const n = value => nf.format(value);
+function localize() {
+  document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(element => { element.setAttribute('aria-label', t(element.dataset.i18nAria)); });
+  document.title = t('title');
+  document.getElementById('limit').textContent = t('limit', {max: n(MAX_BYTES)});
+}
+function rawError(error) { return error && typeof error.message === 'string' ? error.message : String(error); }
+function describe(error) {
+  const raw = rawError(error);
+  const match = /^([a-z][a-z0-9_]*)(?::\s*[\s\S]*)?$/.exec(raw);
+  const key = match ? 'error.' + match[1] : '';
+  if (key && COPY.en[key]) return t(key, {max: n(MAX_BYTES)});
+  if (error && error.localized) return raw;
+  return locale === 'tr' ? (raw ? t('failedDetail', {detail: raw}) : t('error.generic')) : (raw || t('error.generic'));
+}
+localize();
+
+const text = document.getElementById('text'), count = document.getElementById('count'), status = document.getElementById('status');
+const read = document.getElementById('read'), copy = document.getElementById('copy'), write = document.getElementById('write');
+const buttons = [read, copy, write];
+const canCopyToDevice = Boolean(window.RCHubNative && typeof window.RCHubNative.receive === 'function');
+const byteLength = value => new TextEncoder().encode(value).length;
+function updateCount() { count.textContent = t('count', {bytes: n(byteLength(text.value)), max: n(MAX_BYTES)}); }
+function setStatus(message, isError) { status.classList.toggle('error', Boolean(isError)); status.textContent = message; }
+function setBusy(busy) { buttons.forEach(button => { button.disabled = busy; }); text.readOnly = busy; text.setAttribute('aria-busy', String(busy)); }
+function validate(value) {
+  if (byteLength(value) > MAX_BYTES || value.includes('\0')) return t('tooLarge', {max: n(MAX_BYTES)});
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = value.charCodeAt(++i);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) return t('tooLarge', {max: n(MAX_BYTES)});
+    } else if (code >= 0xdc00 && code <= 0xdfff) return t('tooLarge', {max: n(MAX_BYTES)});
+  }
+  return null;
+}
+async function call(method, params) {
+  if (!window.RCHub || typeof window.RCHub.request !== 'function') {
+    const error = new Error(t('bridgeUnavailable'));
+    error.localized = true;
+    throw error;
+  }
+  return window.RCHub.request(method, params);
+}
+function chunks(value) {
+  const parts = []; let part = '', size = 0;
+  for (const character of value) {
+    const bytes = byteLength(character);
+    if (size + bytes > CHUNK_BYTES) { parts.push(part); part = ''; size = 0; }
+    part += character; size += bytes;
+  }
+  if (part) parts.push(part);
+  return parts;
+}
+async function transferWrite(prefix, value) {
+  const {transfer} = await call(prefix + '.begin', {length: byteLength(value)});
+  let offset = 0;
+  try {
+    for (const part of chunks(value)) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      await call(prefix + '.chunk', {transfer, offset, text: part});
+      offset += byteLength(part);
+    }
+    await call(prefix + '.commit', {transfer});
+  } finally { try { await call(prefix === 'clipboard.write' ? 'clipboard.cancel' : 'client.clipboard.cancel', {transfer}); } catch {} }
+}
+async function copyToDevice(value) {
+  const problem = validate(value);
+  if (problem) { const error = new Error(problem); error.localized = true; throw error; }
+  await transferWrite('client.clipboard', value);
+}
+async function readFromComputer() {
+  const {transfer, length} = await call('clipboard.read.begin', {});
+  if (typeof transfer !== 'string' || !Number.isInteger(length) || length < 0 || length > MAX_BYTES) throw new Error('invalid_response');
+  let value = '', offset = 0;
+  try {
+    do {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const result = await call('clipboard.read.chunk', {transfer, offset});
+      if (!result || typeof result.text !== 'string' || typeof result.done !== 'boolean') throw new Error('invalid_response');
+      const size = byteLength(result.text);
+      if (size > CHUNK_BYTES || offset + size > length || (!result.done && !size) || result.text.includes('\0')) throw new Error('invalid_response');
+      value += result.text; offset += size;
+      if (result.done) { if (offset !== length) throw new Error('invalid_response'); break; }
+    } while (true);
+    return value;
+  } finally { try { await call('clipboard.cancel', {transfer}); } catch {} }
+}
+text.addEventListener('input', () => { copy.hidden = true; updateCount(); });
+read.addEventListener('click', async () => {
+  copy.hidden = true; setBusy(true); setStatus(t('working'));
+  try {
+    const value = await readFromComputer();
+    text.value = value;
+    updateCount();
+    if (canCopyToDevice && text.value.length > 0) {
+      copy.hidden = false;
+      try {
+        await copyToDevice(text.value);
+        setStatus(t('readCopied'));
+      } catch {
+        setStatus(t('readCopyFailed'));
+      }
+    } else {
+      setStatus(t('readSuccess'));
+    }
+  } catch (error) {
+    setStatus(t('readFailed', {detail: describe(error)}), true);
+  } finally { setBusy(false); }
+});
+copy.addEventListener('click', async () => {
+  if (text.value.length === 0) { setStatus(t('noText'), true); return; }
+  const problem = validate(text.value);
+  if (problem) { setStatus(problem, true); return; }
+  setBusy(true); setStatus(t('working'));
+  try {
+    await copyToDevice(text.value);
+    setStatus(t('copied'));
+  } catch (error) {
+    setStatus(t('copyFailed', {detail: describe(error)}), true);
+  } finally { setBusy(false); }
+});
+write.addEventListener('click', async () => {
+  const problem = validate(text.value);
+  if (problem) { setStatus(problem, true); return; }
+  setBusy(true); setStatus(t('working'));
+  try {
+    await transferWrite('clipboard.write', text.value);
+    setStatus(t('writeSuccess'));
+  } catch (error) {
+    setStatus(t('writeFailed', {detail: describe(error)}), true);
+  } finally { setBusy(false); }
+});
+updateCount();
+</script></body></html>

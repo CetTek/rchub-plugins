@@ -1,0 +1,27 @@
+name: release
+on:
+  push:
+    branches: [main]
+    paths: ['plugins/**', 'tools/**', '.github/workflows/release.yml']
+  workflow_dispatch:
+concurrency:
+  group: release
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Build, publish new plugin versions and the signed catalog
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLUGIN_SIGNING_KEY: ${{ secrets.PLUGIN_SIGNING_KEY }}
+        run: node tools/build-catalog.mjs --dist dist --publish

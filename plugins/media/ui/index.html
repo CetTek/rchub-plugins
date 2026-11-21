@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Media Controls</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#ececef;background:#1e1e20;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;padding:clamp(20px,5vw,48px)}
+main{max-width:600px;margin:auto}
+h1{margin:0 0 8px}
+h2{margin:0 0 16px;font-size:1.1rem}
+p{color:#b6b6bf;line-height:1.5}
+.panel{background:#29292d;border:1px solid #414148;border-radius:12px;padding:20px;margin-top:20px}
+.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+button{font:inherit;background:#1683f8;color:white;border:0;border-radius:8px;min-height:44px;padding:0 16px;cursor:pointer;transition:background-color .15s ease,transform .05s ease}
+button:hover:not(:disabled){background:#2f92ff}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled,input:disabled{opacity:.55;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:2px solid #80bdff;outline-offset:3px}
+label{display:block;margin-bottom:12px}
+input[type=range]{width:100%;accent-color:#1683f8;min-height:32px}
+input[type=range]:disabled{opacity:.55}
+.error{color:#ff9e9e}
+.track{display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.artwork{flex:0 0 auto;width:72px;height:72px;border-radius:10px;background:#1e1e20;border:1px solid #414148;display:grid;place-items:center;overflow:hidden;color:#b6b6bf;font-size:30px;line-height:1}
+.artwork img{width:100%;height:100%;object-fit:cover;display:block}
+.artwork img[hidden]{display:none}
+.meta{min-width:0}
+.track-title{margin:0;font-size:1.05rem;font-weight:600;color:#ececef;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track-sub{margin:4px 0 0;color:#b6b6bf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playback-state{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:.9rem}
+.dot{width:8px;height:8px;border-radius:50%;background:#7a7a85;flex:0 0 auto}
+.dot.on{background:#1683f8}
+.seek-row{display:flex;align-items:center;gap:12px}
+.seek-row input[type=range]{flex:1;width:auto;min-width:0}
+.time{font-variant-numeric:tabular-nums;color:#b6b6bf;font-size:.85rem;min-width:3.2em}
+.time.end{text-align:right}
+.hint{margin:10px 0 0;font-size:.9rem;min-height:1.35em}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (forced-colors:active){button:focus-visible,input:focus-visible{outline:2px solid Highlight}button:disabled{opacity:1}}
+</style>
+</head>
+<body><main>
+<h1 data-i18n="heading">Media Controls</h1><p data-i18n="intro">Control playback and the computer's default output volume.</p>
+
+<section class="panel" aria-labelledby="playback-heading">
+  <h2 id="playback-heading" data-i18n="nowPlaying">Now playing</h2>
+  <div class="track">
+    <div class="artwork">
+      <img id="artwork" alt="" hidden>
+      <span id="artwork-fallback" aria-hidden="true">&#9835;</span>
+    </div>
+    <div class="meta">
+      <p class="track-title" id="track-title" data-i18n="noMedia">No active media</p>
+      <p class="track-sub" id="track-sub" data-i18n="noMediaHint">Play something in an app to control it here.</p>
+      <p class="playback-state"><span class="dot" id="playback-dot" aria-hidden="true"></span><span id="playback-state" data-i18n="idle">Idle</span></p>
+    </div>
+  </div>
+  <div class="seek-row">
+    <span class="time" id="position-time">0:00</span>
+    <label class="sr-only" for="seek" data-i18n="seekLabel">Playback position</label>
+    <input id="seek" type="range" min="0" max="0" step="1000" value="0" disabled>
+    <span class="time end" id="duration-time">0:00</span>
+  </div>
+  <div class="buttons">
+    <button id="previous" type="button" data-i18n="previous">Previous</button>
+    <button id="playpause" type="button" data-i18n="playPause">Play / pause</button>
+    <button id="next" type="button" data-i18n="next">Next</button>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="volume-heading">
+  <h2 id="volume-heading" data-i18n="volume">Volume</h2>
+  <label for="volume"><span data-i18n="outputVolume">Output volume:</span> <span id="level" data-i18n="unavailable">Unavailable</span></label>
+  <input id="volume" type="range" min="0" max="100" step="1" value="0" disabled>
+  <p class="hint" id="volume-state" role="status" aria-live="polite" data-i18n="loadingVolume">Loading volume&hellip;</p>
+  <div class="buttons">
+    <button id="mute" type="button" disabled data-i18n="toggleMute">Toggle mute</button>
+    <button id="refresh" type="button" data-i18n="refreshVolume">Refresh volume</button>
+  </div>
+  <p class="hint" id="muted"></p>
+</section>
+
+<p class="hint" id="status" role="status" aria-live="polite"></p>
+</main><script>
+document.documentElement.lang = window.RCHub && window.RCHub.locale === 'tr' ? 'tr' : 'en';
+const locale = document.documentElement.lang;
+const COPY = {
+  en: {
+    title: 'Media Controls', heading: 'Media Controls', intro: "Control playback and the computer's default output volume.",
+    nowPlaying: 'Now playing', noMedia: 'No active media', noMediaHint: 'Play something in an app to control it here.', idle: 'Idle',
+    previous: 'Previous', playPause: 'Play / pause', next: 'Next', seekLabel: 'Playback position', seekValue: '{position} of {duration}',
+    volume: 'Volume', outputVolume: 'Output volume:', unavailable: 'Unavailable', loadingVolume: 'Loading volume\u2026',
+    toggleMute: 'Toggle mute', refreshVolume: 'Refresh volume',
+    muted: 'Muted', notMuted: 'Not muted', unknownMedia: 'Unknown media', playing: 'Playing', paused: 'Paused',
+    seekedTo: 'Seeked to {time}.', seekFailed: 'Seek failed: {detail}', mediaStatusUnavailable: 'Media status unavailable: {detail}',
+    volumeReady: 'Volume ready.', sending: 'Sending {level}\u2026', willApply: 'Will apply {level}\u2026', applying: 'Applying {level}\u2026', applied: 'Applied {level}.',
+    volumeUpdateFailed: 'Volume update failed: {detail}', mutedStatus: 'Muted.', unmutedStatus: 'Unmuted.', muteFailed: 'Mute failed: {detail}',
+    transportSent: '{label} sent. Playback depends on the active app.', transportFailed: '{label} failed: {detail}',
+    invalidVolume: 'Invalid volume response.', volumeUnavailable: 'Volume unavailable: {detail}',
+    bridgeUnavailable: 'Plugin bridge is unavailable.', 'error.platform_error': 'The system media service could not complete the request.',
+    'error.invalid_params': 'The request parameters were not valid.', 'error.method_not_found': 'This operation is not supported.',
+    'error.generic': 'Unknown error.'
+  },
+  tr: {
+    title: 'Medya Kontrolleri', heading: 'Medya Kontrolleri', intro: 'Oynatmayı ve bilgisayarın varsayılan çıkış sesini kontrol edin.',
+    nowPlaying: 'Şu anda oynatılıyor', noMedia: 'Etkin medya yok', noMediaHint: 'Buradan kontrol etmek için bir uygulamada bir şey oynatın.', idle: 'Boşta',
+    previous: 'Önceki parça', playPause: 'Oynat / duraklat', next: 'Sonraki parça', seekLabel: 'Oynatma konumu', seekValue: '{position} / {duration}',
+    volume: 'Ses', outputVolume: 'Çıkış sesi:', unavailable: 'Kullanılamıyor', loadingVolume: 'Ses yükleniyor\u2026',
+    toggleMute: 'Sesi aç/kapat', refreshVolume: 'Sesi yenile',
+    muted: 'Sessiz', notMuted: 'Ses açık', unknownMedia: 'Bilinmeyen medya', playing: 'Oynatılıyor', paused: 'Duraklatıldı',
+    seekedTo: 'Şuraya atlandı: {time}.', seekFailed: 'Atlama başarısız: {detail}', mediaStatusUnavailable: 'Medya durumu kullanılamıyor: {detail}',
+    volumeReady: 'Ses hazır.', sending: 'Gönderiliyor: {level}\u2026', willApply: 'Uygulanacak: {level}\u2026', applying: 'Uygulanıyor: {level}\u2026', applied: 'Uygulandı: {level}.',
+    volumeUpdateFailed: 'Ses güncellenemedi: {detail}', mutedStatus: 'Ses kapatıldı.', unmutedStatus: 'Ses açıldı.', muteFailed: 'Ses değiştirilemedi: {detail}',
+    transportSent: '{label} gönderildi. Oynatma, etkin uygulamaya bağlıdır.', transportFailed: '{label} başarısız: {detail}',
+    invalidVolume: 'Geçersiz ses yanıtı.', volumeUnavailable: 'Ses kullanılamıyor: {detail}',
+    bridgeUnavailable: 'Eklenti köprüsü kullanılamıyor.', 'error.platform_error': 'Sistem medya hizmeti isteği tamamlayamadı.',
+    'error.invalid_params': 'İstek parametreleri geçersiz.', 'error.method_not_found': 'İstenen işlem desteklenmiyor.',
+    'error.generic': 'İşlem tamamlanamadı.', failedDetail: 'İşlem tamamlanamadı: {detail}'
+  }
+};
+const t = (key, vars) => {
+  let value = COPY[locale][key] || COPY.en[key] || key;
+  if (typeof value !== 'string') value = '';
+  if (vars) value = value.replace(/\{(\w+)\}/g, (match, name) => name in vars ? String(vars[name]) : match);
+  return value;
+};
+const percent = new Intl.NumberFormat(locale, {style: 'percent', maximumFractionDigits: 0});
+const pct = value => percent.format(value / 100);
+function localize() {
+  document.querySelectorAll('[data-i18n]').forEach(element => { element.textContent = t(element.dataset.i18n); });
+  document.title = t('title');
+}
+function rawError(error) { return error && typeof error.message === 'string' ? error.message : String(error); }
+function describe(error) {
+  const raw = rawError(error);
+  const match = /^([a-z][a-z0-9_]*):\s*([\s\S]*)$/.exec(raw);
+  const key = match ? 'error.' + match[1] : '';
+  if (key && COPY.en[key]) return t(key);
+  if (error && error.localized) return raw;
+  return locale === 'tr' ? (raw ? t('failedDetail', {detail: raw}) : t('error.generic')) : (raw || t('error.generic'));
+}
+localize();
+
+const POLL_INTERVAL = 1000;
+const VOLUME_DEBOUNCE = 500;
+
+const seek = document.getElementById('seek');
+const positionTime = document.getElementById('position-time');
+const durationTime = document.getElementById('duration-time');
+const trackTitle = document.getElementById('track-title');
+const trackSub = document.getElementById('track-sub');
+const artworkImg = document.getElementById('artwork');
+const artworkFallback = document.getElementById('artwork-fallback');
+const playbackState = document.getElementById('playback-state');
+const playbackDot = document.getElementById('playback-dot');
+
+const volumeInput = document.getElementById('volume');
+const levelLabel = document.getElementById('level');
+const mutedLabel = document.getElementById('muted');
+const muteButton = document.getElementById('mute');
+const refreshButton = document.getElementById('refresh');
+const volumeState = document.getElementById('volume-state');
+const statusBar = document.getElementById('status');
+const previousButton = document.getElementById('previous');
+const playPauseButton = document.getElementById('playpause');
+const nextButton = document.getElementById('next');
+
+let pollTimer = 0;
+let statusInFlight = false;
+let lastStatus = null;
+let seeking = false;
+let seekInFlight = false;
+let queuedSeek = null;
+let mediaBusy = false;
+
+let volumeTimer = 0;
+let volumeInFlight = false;
+let volumeQueued = null;
+let volumeAvailable = false;
+let muteBusy = false;
+
+let statusClearTimer = 0;
+
+function request(method, params = {}) {
+  if (!window.RCHub || typeof window.RCHub.request !== 'function') {
+    const error = new Error(t('bridgeUnavailable'));
+    error.localized = true;
+    return Promise.reject(error);
+  }
+  return window.RCHub.request(method, params);
+}
+
+function flashStatus(message, isError = false) {
+  statusBar.textContent = message;
+  statusBar.classList.toggle('error', isError);
+  clearTimeout(statusClearTimer);
+  if (message) statusClearTimer = setTimeout(() => { statusBar.textContent = ''; statusBar.classList.remove('error'); }, 6000);
+}
+
+function formatTime(milliseconds) {
+  const total = Number.isFinite(milliseconds) && milliseconds > 0 ? Math.floor(milliseconds / 1000) : 0;
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const twoDigits = value => String(value).padStart(2, '0');
+  return hours > 0 ? `${hours}:${twoDigits(minutes)}:${twoDigits(seconds)}` : `${minutes}:${twoDigits(seconds)}`;
+}
+
+function updateTimes(position, duration) {
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const safePosition = Number.isFinite(position) && position > 0 ? Math.min(position, safeDuration || position) : 0;
+  positionTime.textContent = formatTime(safePosition);
+  durationTime.textContent = formatTime(safeDuration);
+  seek.setAttribute('aria-valuetext', t('seekValue', {position: formatTime(safePosition), duration: formatTime(safeDuration)}));
+}
+
+function setPlaybackState(playing, text) {
+  playbackState.textContent = text;
+  playbackDot.classList.toggle('on', playing === true);
+}
+
+function setArtwork(url) {
+  if (typeof url === 'string' && url.startsWith('data:image/')) {
+    if (artworkImg.getAttribute('src') !== url) artworkImg.src = url;
+    artworkImg.hidden = false;
+    artworkFallback.hidden = true;
+  } else {
+    artworkImg.hidden = true;
+    artworkImg.removeAttribute('src');
+    artworkFallback.hidden = false;
+  }
+}
+
+function renderIdle() {
+  lastStatus = null;
+  trackTitle.textContent = t('noMedia');
+  trackSub.textContent = t('noMediaHint');
+  setPlaybackState(false, t('idle'));
+  setArtwork(null);
+  if (!seeking) {
+    seek.max = '0';
+    seek.value = '0';
+    seek.disabled = true;
+    updateTimes(0, 0);
+  }
+}
+
+function renderPlayback(status) {
+  if (!status || status.available !== true) {
+    renderIdle();
+    return;
+  }
+  lastStatus = status;
+  trackTitle.textContent = status.title || t('unknownMedia');
+  const subtitle = [status.artist, status.album].filter(Boolean).join(' \u00b7 ');
+  trackSub.textContent = subtitle;
+  setPlaybackState(status.playing === true, status.playing === true ? t('playing') : t('paused'));
+  setArtwork(status.artworkDataUrl);
+
+  const duration = Number.isFinite(status.durationMs) && status.durationMs > 0 ? status.durationMs : 0;
+  const canSeek = status.canSeek === true && duration > 0;
+  const rawPosition = Number.isFinite(status.positionMs) ? status.positionMs : 0;
+  const position = duration > 0 ? Math.min(Math.max(rawPosition, 0), duration) : Math.max(rawPosition, 0);
+
+  seek.disabled = !canSeek || seekInFlight;
+  if (!seeking) {
+    seek.max = String(Math.max(0, Math.round(duration)));
+    seek.value = String(Math.round(position));
+    updateTimes(position, duration);
+  }
+}
+
+function schedulePoll(delay) {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(poll, delay);
+}
+
+function poll() {
+  pollTimer = 0;
+  if (document.visibilityState !== 'visible' || statusInFlight) return;
+  statusInFlight = true;
+  request('media.status', {}).then(status => {
+    renderPlayback(status);
+    if (statusBar.classList.contains('error')) flashStatus('');
+  }).catch(error => {
+    renderIdle();
+    flashStatus(t('mediaStatusUnavailable', {detail: describe(error)}), true);
+  }).finally(() => {
+    statusInFlight = false;
+    if (document.visibilityState === 'visible') schedulePoll(POLL_INTERVAL);
+  });
+}
+
+function refreshPlaybackSoon() {
+  if (!statusInFlight) schedulePoll(250);
+}
+
+function commitSeek() {
+  if (!seeking) return;
+  seeking = false;
+  const position = Number(seek.value);
+  if (!Number.isFinite(position)) return;
+  queueSeek(Math.round(position));
+}
+
+function queueSeek(position) {
+  if (seekInFlight) {
+    queuedSeek = position;
+    return;
+  }
+  seekInFlight = true;
+  seek.disabled = true;
+  request('media.seek', { positionMs: position }).then(result => {
+    const applied = result && Number.isFinite(result.positionMs) ? result.positionMs : position;
+    updateTimes(applied, Number(seek.max));
+    flashStatus(t('seekedTo', {time: formatTime(applied)}));
+  }).catch(error => {
+    flashStatus(t('seekFailed', {detail: describe(error)}), true);
+  }).finally(() => {
+    seekInFlight = false;
+    seek.disabled = lastStatus ? !(lastStatus.canSeek === true && lastStatus.durationMs > 0) : true;
+    refreshPlaybackSoon();
+    if (queuedSeek !== null) {
+      const next = queuedSeek;
+      queuedSeek = null;
+      queueSeek(next);
+    }
+  });
+}
+
+function updateTransportButtons() {
+  previousButton.disabled = mediaBusy;
+  playPauseButton.disabled = mediaBusy;
+  nextButton.disabled = mediaBusy;
+}
+
+function sendTransport(method, labelKey) {
+  if (mediaBusy) return;
+  mediaBusy = true;
+  updateTransportButtons();
+  request(method, {}).then(() => {
+    flashStatus(t('transportSent', {label: t(labelKey)}));
+    refreshPlaybackSoon();
+  }).catch(error => {
+    flashStatus(t('transportFailed', {label: t(labelKey), detail: describe(error)}), true);
+  }).finally(() => {
+    mediaBusy = false;
+    updateTransportButtons();
+  });
+}
+
+function setVolumeState(message, isError = false) {
+  volumeState.textContent = message;
+  volumeState.classList.toggle('error', isError);
+}
+
+function applyVolumeResult(result) {
+  if (!result || !Number.isInteger(result.level) || result.level < 0 || result.level > 100 || typeof result.muted !== 'boolean') {
+    throw new Error(t('invalidVolume'));
+  }
+  volumeAvailable = true;
+  volumeInput.disabled = false;
+  muteButton.disabled = muteBusy;
+  levelLabel.textContent = pct(result.level);
+  volumeInput.setAttribute('aria-valuetext', pct(result.level));
+  mutedLabel.textContent = result.muted ? t('muted') : t('notMuted');
+  if (volumeTimer === 0 && volumeQueued === null && !muteBusy) {
+    volumeInput.value = String(result.level);
+  }
+}
+
+function loadVolume() {
+  request('volume.get', {}).then(result => {
+    applyVolumeResult(result);
+    setVolumeState(t('volumeReady'));
+  }).catch(error => {
+    volumeAvailable = false;
+    volumeInput.disabled = true;
+    muteButton.disabled = true;
+    levelLabel.textContent = t('unavailable');
+    mutedLabel.textContent = '';
+    setVolumeState(t('volumeUnavailable', {detail: describe(error)}), true);
+  });
+}
+
+function applyVolume(value) {
+  if (!volumeAvailable) return;
+  if (volumeInFlight) {
+    volumeQueued = value;
+    setVolumeState(t('sending', {level: pct(value)}));
+    return;
+  }
+  volumeInFlight = true;
+  setVolumeState(t('applying', {level: pct(value)}));
+  request('volume.set', { level: value }).then(result => {
+    applyVolumeResult(result);
+    setVolumeState(t('applied', {level: pct(result.level)}));
+  }).catch(error => {
+    setVolumeState(t('volumeUpdateFailed', {detail: describe(error)}), true);
+  }).finally(() => {
+    volumeInFlight = false;
+    if (volumeQueued !== null) {
+      const next = volumeQueued;
+      volumeQueued = null;
+      applyVolume(next);
+    }
+  });
+}
+
+function scheduleVolume(value) {
+  clearTimeout(volumeTimer);
+  volumeTimer = setTimeout(() => {
+    volumeTimer = 0;
+    applyVolume(value);
+  }, VOLUME_DEBOUNCE);
+}
+
+function flushVolume() {
+  if (volumeTimer === 0) return;
+  clearTimeout(volumeTimer);
+  volumeTimer = 0;
+  applyVolume(Number(volumeInput.value));
+}
+
+function toggleMute() {
+  if (muteBusy || !volumeAvailable) return;
+  muteBusy = true;
+  muteButton.disabled = true;
+  request('volume.toggle_mute', {}).then(result => {
+    applyVolumeResult(result);
+    setVolumeState(result.muted ? t('mutedStatus') : t('unmutedStatus'));
+  }).catch(error => {
+    setVolumeState(t('muteFailed', {detail: describe(error)}), true);
+  }).finally(() => {
+    muteBusy = false;
+    muteButton.disabled = !volumeAvailable;
+  });
+}
+
+seek.addEventListener('pointerdown', () => { seeking = true; });
+seek.addEventListener('input', () => {
+  seeking = true;
+  updateTimes(Number(seek.value), Number(seek.max));
+});
+seek.addEventListener('change', commitSeek);
+seek.addEventListener('pointerup', commitSeek);
+seek.addEventListener('pointercancel', commitSeek);
+seek.addEventListener('blur', commitSeek);
+
+volumeInput.addEventListener('input', () => {
+  const value = Number(volumeInput.value);
+  levelLabel.textContent = pct(value);
+  volumeInput.setAttribute('aria-valuetext', pct(value));
+  setVolumeState(t('willApply', {level: pct(value)}));
+  scheduleVolume(value);
+});
+volumeInput.addEventListener('change', flushVolume);
+volumeInput.addEventListener('pointerup', flushVolume);
+volumeInput.addEventListener('blur', flushVolume);
+
+previousButton.addEventListener('click', () => sendTransport('media.previous', 'previous'));
+playPauseButton.addEventListener('click', () => sendTransport('media.play_pause', 'playPause'));
+nextButton.addEventListener('click', () => sendTransport('media.next', 'next'));
+muteButton.addEventListener('click', toggleMute);
+refreshButton.addEventListener('click', loadVolume);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    poll();
+  } else {
+    clearTimeout(pollTimer);
+    pollTimer = 0;
+    clearTimeout(volumeTimer);
+    volumeTimer = 0;
+  }
+});
+
+poll();
+loadVolume();
+</script></body></html>

@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Web Browser</title>
+<style>
+:root{
+  --canvas:#14161A;
+  --surface:#1B1E24;
+  --surface-raised:#22262E;
+  --surface-hover:#282D36;
+  --surface-sunken:#101216;
+  --border:#2A2F37;
+  --border-strong:#3C434E;
+  --text:#ECEEF1;
+  --muted:#9AA1AB;
+  --faint:#8B939D;
+  --accent:#4F6BFF;
+  --accent-fill:#4259E6;
+  --accent-fill-hover:#4D68F2;
+  --accent-fill-press:#3E54D8;
+  --accent-soft:rgba(79,107,255,.16);
+  --accent-border:rgba(79,107,255,.44);
+  --accent-text:#9DB0FF;
+  --danger:#FF6B4A;
+  --danger-soft:rgba(255,107,74,.14);
+  --focus:#9DB0FF;
+  --focus-soft:rgba(157,176,255,.32);
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:20px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:dark;
+  font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
+  color:var(--text);
+  background:var(--canvas);
+  -webkit-text-size-adjust:100%;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;min-height:100vh;background:var(--canvas)}
+main{width:100%;max-width:640px;margin:0 auto;padding:clamp(16px,4vw,40px);display:flex;flex-direction:column;gap:16px}
+h1,h2,p{margin:0}
+.topbar{display:flex;align-items:center;gap:14px;min-width:0}
+.mark{width:48px;height:48px;flex:none;display:grid;place-items:center;border-radius:var(--r-lg);background:var(--accent-soft);border:1px solid var(--accent-border);color:var(--accent-text)}
+.mark svg{width:24px;height:24px}
+.titles{min-width:0}
+h1{font-size:clamp(20px,3.2vw,24px);line-height:1.2;font-weight:700;letter-spacing:-.4px}
+.scope{margin-top:3px;font-size:11px;line-height:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:clamp(14px,3vw,20px)}
+form{margin:0}
+.entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+input[type="text"]{
+  width:100%;height:48px;padding:0 14px;font:inherit;font-size:15px;color:var(--text);
+  background:var(--surface-sunken);border:1px solid var(--border);border-radius:var(--r-md);
+  transition:border-color .15s var(--ease),background-color .15s var(--ease),box-shadow .15s var(--ease);
+}
+input[type="text"]::placeholder{color:var(--faint);opacity:1}
+input[type="text"]:hover{border-color:var(--border-strong)}
+input[type="text"]:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 3px var(--focus-soft)}
+.open-button{
+  min-width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:0 18px;font:inherit;font-size:15px;font-weight:600;color:#fff;background:var(--accent-fill);
+  border:1px solid var(--accent-border);border-radius:var(--r-md);cursor:pointer;
+  transition:background-color .15s var(--ease),border-color .15s var(--ease),opacity .15s var(--ease);
+}
+.open-button:hover:not(:disabled){background:var(--accent-fill-hover)}
+.open-button:active:not(:disabled){background:var(--accent-fill-press)}
+.open-button:disabled{cursor:progress;opacity:.6}
+.open-button svg{width:18px;height:18px;flex:none}
+.hint{margin-top:12px;font-size:13.5px;line-height:20px;color:var(--muted)}
+.status{margin-top:0;max-height:0;overflow:hidden;box-sizing:border-box;padding:0 12px;font-size:13.5px;line-height:20px;color:var(--muted);border-radius:var(--r-md);background:var(--surface-sunken);border:1px solid transparent;opacity:0;transform:translateY(6px);pointer-events:none;transition:opacity 150ms cubic-bezier(.4,0,1,1),transform 150ms cubic-bezier(.4,0,1,1),max-height 150ms cubic-bezier(.4,0,1,1),margin-top 150ms cubic-bezier(.4,0,1,1),padding 150ms cubic-bezier(.4,0,1,1),background-color 150ms,border-color 150ms,color 150ms}
+.status:not(.show){border-color:transparent!important}
+.status.show{margin-top:12px;max-height:120px;padding:10px 12px;border-color:var(--border);opacity:1;transform:none;transition-duration:220ms;transition-timing-function:cubic-bezier(0,0,.2,1)}
+.status[data-state="pending"]{color:var(--accent-text);border-color:var(--accent-border);background:var(--accent-soft)}
+.status[data-state="success"]{color:var(--accent-text)}
+.status[data-state="error"]{color:var(--danger);border-color:rgba(255,107,74,.44);background:var(--danger-soft)}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;min-height:24px}
+h2{font-size:11px;line-height:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--faint)}
+.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.site,.recent-item{
+  display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 12px;width:100%;
+  font:inherit;font-size:15px;font-weight:600;color:var(--text);text-align:left;
+  background:var(--surface-raised);border:1px solid var(--border);border-radius:var(--r-md);cursor:pointer;
+  transition:background-color .15s var(--ease),border-color .15s var(--ease);
+}
+.site:hover:not(:disabled),.recent-item:hover:not(:disabled){background:var(--surface-hover);border-color:var(--border-strong)}
+.site:active:not(:disabled),.recent-item:active:not(:disabled){background:var(--surface-sunken)}
+.site:disabled,.recent-item:disabled{cursor:progress;opacity:.6}
+.site-icon{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:var(--r-sm);background:var(--surface-sunken);border:1px solid var(--border)}
+.site-icon svg{width:18px;height:18px;display:block}
+.site-label{min-width:0;overflow-wrap:anywhere}
+.recent-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.recent-item{font-weight:500;font-size:14px}
+.recent-item svg{width:16px;height:16px;flex:none;color:var(--faint)}
+.recent-url{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.text-button{min-height:44px;margin:-10px -8px;padding:0 8px;font:inherit;font-size:13px;font-weight:600;color:var(--accent-text);background:none;border:0;border-radius:var(--r-sm);cursor:pointer;transition:color .15s var(--ease),background-color .15s var(--ease)}
+.text-button:hover{background:var(--accent-soft)}
+.visually-hidden,.open-text{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+input[type="text"]:focus-visible{outline:none}
+.open-button:focus-visible,.site:focus-visible,.recent-item:focus-visible,.text-button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (max-width:480px){
+  .entry{grid-template-columns:1fr}
+  .open-button{width:100%}
+  .open-text{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto;white-space:normal}
+}
+@media (max-width:360px){
+  .quick-grid{grid-template-columns:1fr}
+}
+@media (forced-colors:active){
+  input[type="text"],.site,.recent-item,.open-button,.site-icon,.card,.status{border:1px solid ButtonText}
+  .open-button{forced-color-adjust:none;background:ButtonFace;color:ButtonText}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<main>
+  <header class="topbar">
+    <span class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M3 12h18M12 3c2.6 2.4 4 5.6 4 9s-1.4 6.6-4 9c-2.6-2.4-4-5.6-4-9s1.4-6.6 4-9z"></path>
+      </svg>
+    </span>
+    <div class="titles">
+      <h1 id="title">Web Browser</h1>
+      <p class="scope" id="scope">Default browser</p>
+    </div>
+  </header>
+
+  <section class="card" aria-labelledby="title">
+  <form id="open-form" novalidate>
+    <label class="visually-hidden" for="url" id="url-label">URL</label>
+    <div class="entry">
+      <input id="url" name="url" type="text" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="2048" placeholder="Enter URL (e.g. google.com)" aria-describedby="hint">
+      <button class="open-button" id="open" type="button" aria-label="Open" title="Open">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 4h6v6"></path>
+          <path d="M20 4l-9 9"></path>
+          <path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path>
+        </svg>
+        <span class="open-text" id="open-text">Open</span>
+      </button>
+    </div>
+    <p class="hint" id="hint">The URL will open in the paired computer's default browser.</p>
+  </form>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card" aria-labelledby="quick-title">
+    <div class="section-head"><h2 id="quick-title">Quick sites</h2></div>
+    <div class="quick-grid">
+      <button class="site" type="button" data-url="https://www.google.com/">
+        <span class="site-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"></path>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"></path>
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"></path>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.3-.4-3.5z"></path>
+          </svg>
+        </span>
+        <span class="site-label">Google</span>
+      </button>
+      <button class="site" type="button" data-url="https://www.youtube.com/">
+        <span class="site-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path fill="#FF0000" d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8z"></path>
+            <path fill="#fff" d="M9.6 15.6V8.4l6.2 3.6z"></path>
+          </svg>
+        </span>
+        <span class="site-label">YouTube</span>
+      </button>
+      <button class="site" type="button" data-url="https://x.com/">
+        <span class="site-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path fill="#ececef" d="M18.9 2H22l-6.8 7.8L23 22h-6.3l-4.9-6.4L6.2 22H3l7.3-8.3L2.6 2h6.4l4.4 5.8L18.9 2zm-1.1 18h1.7L7.1 3.9H5.3L17.8 20z"></path>
+          </svg>
+        </span>
+        <span class="site-label">X</span>
+      </button>
+      <button class="site" type="button" data-url="https://github.com/">
+        <span class="site-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path fill="#d9d9de" d="M12 .5A11.5 11.5 0 0 0 .5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2.1c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.7 1.2 3.3.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 24 12 11.5 11.5 0 0 0 12 .5z"></path>
+          </svg>
+        </span>
+        <span class="site-label">GitHub</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="card" id="recent-section" aria-labelledby="recent-title" hidden>
+    <div class="section-head">
+      <h2 id="recent-title">Recent</h2>
+      <button class="text-button" id="clear-recent" type="button">Clear</button>
+    </div>
+    <ul class="recent-list" id="recent-list"></ul>
+  </section>
+</main>
+<script>
+const MAX_URL_BYTES = 2048;
+const COPY = {
+  en: {
+    title: 'Web Browser',
+    scope: 'Default browser',
+    urlLabel: 'URL',
+    placeholder: 'Enter URL (e.g. google.com)',
+    open: 'Open',
+    openAria: 'Open URL in the default browser',
+    hint: "The URL will open in the paired computer's default browser.",
+    quick: 'Quick sites',
+    recent: 'Recent',
+    clearRecent: 'Clear',
+    clearRecentAria: 'Clear recent URLs',
+    opening: 'Sending open request…',
+    success: 'The browser was opened on the computer.',
+    empty: 'Enter a URL to open.',
+    tooLong: 'URLs must be {max} bytes or shorter.',
+    visibleCharacters: 'Use a single URL with no spaces, control characters, or non-ASCII characters.',
+    backslash: 'Backslashes are not allowed in URLs.',
+    onlyHttp: 'Only http and https links are supported.',
+    noHost: 'The URL must include a host, such as google.com.',
+    credentials: 'URLs with a username or password are not supported.',
+    badHost: 'The host name is not valid.',
+    badPort: 'The port must be a number from 1 to 65535.',
+    badCharacters: 'The URL contains characters that are not supported.',
+    badPercent: 'The URL contains an invalid percent-encoded sequence.',
+    encodedControl: 'Percent-encoded control characters are not supported.',
+    bridge: 'Plugin bridge is unavailable. Open this surface from RCHub.',
+    invalidUrl: 'The plugin rejected the URL. Check the host and scheme.',
+    invalidParams: 'The plugin rejected the request format.',
+    launchFailed: 'The paired computer could not open its default browser.',
+    unsupportedPlatform: 'The paired computer cannot open a web browser on this platform.',
+    methodNotFound: 'This plugin version does not support the request.',
+    requestFailed: 'The open request failed:'
+  },
+  tr: {
+    title: 'Web Tarayıcı',
+    scope: 'Varsayılan tarayıcı',
+    urlLabel: 'URL',
+    placeholder: 'URL girin (ör. google.com)',
+    open: 'Aç',
+    openAria: 'URL’yi varsayılan tarayıcıda aç',
+    hint: 'URL, eşleştirilmiş bilgisayarın varsayılan tarayıcısında açılır.',
+    quick: 'Hızlı siteler',
+    recent: 'Son açılanlar',
+    clearRecent: 'Temizle',
+    clearRecentAria: 'Son açılan URL’leri temizle',
+    opening: 'Açma isteği gönderiliyor…',
+    success: 'Bilgisayarda tarayıcı açıldı.',
+    empty: 'Açmak için bir URL girin.',
+    tooLong: 'URL en fazla {max} bayt olabilir.',
+    visibleCharacters: 'Boşluk, kontrol karakteri veya ASCII dışı karakter içermeyen tek bir URL kullanın.',
+    backslash: 'URL içinde ters eğik çizgi kullanılamaz.',
+    onlyHttp: 'Yalnızca http ve https bağlantıları desteklenir.',
+    noHost: 'URL bir ana makine içermeli; örneğin google.com.',
+    credentials: 'Kullanıcı adı veya parola içeren URL’ler desteklenmez.',
+    badHost: 'Ana makine adı geçersiz.',
+    badPort: 'Bağlantı noktası 1 ile 65535 arasında bir sayı olmalı.',
+    badCharacters: 'URL desteklenmeyen karakterler içeriyor.',
+    badPercent: 'URL geçersiz bir yüzde kodlaması içeriyor.',
+    encodedControl: 'Yüzde ile kodlanmış kontrol karakterleri desteklenmez.',
+    bridge: 'Eklenti köprüsü kullanılamıyor. Bu yüzeyi RCHub üzerinden açın.',
+    invalidUrl: 'URL eklenti tarafından reddedildi. Ana makineyi ve şemayı kontrol edin.',
+    invalidParams: 'İstek biçimi eklenti tarafından reddedildi.',
+    launchFailed: 'Eşleştirilmiş bilgisayar varsayılan tarayıcısını açamadı.',
+    unsupportedPlatform: 'Eşleştirilmiş bilgisayarda bu platformda web tarayıcısı açılamıyor.',
+    methodNotFound: 'Bu eklenti sürümü isteği desteklemiyor.',
+    requestFailed: 'Açma isteği başarısız:'
+  }
+};
+
+const rawLocale = window.RCHub && typeof window.RCHub.locale === 'string' ? window.RCHub.locale.toLowerCase() : '';
+const locale = rawLocale === 'tr' ? 'tr' : 'en';
+const t = COPY[locale];
+const localeTag = locale === 'tr' ? 'tr-TR' : 'en-US';
+const numberFormat = new Intl.NumberFormat(localeTag, { maximumFractionDigits: 0 });
+const encoder = new TextEncoder();
+const byId = id => document.getElementById(id);
+const form = byId('open-form');
+const input = byId('url');
+const openButton = byId('open');
+const status = byId('status');
+const quickButtons = Array.from(document.querySelectorAll('.site'));
+let busy = false;
+
+const fill = (template, values) => template.replace(/\{(\w+)\}/g, (match, key) => key in values ? values[key] : match);
+
+byId('title').textContent = t.title;
+byId('scope').textContent = t.scope;
+byId('url-label').textContent = t.urlLabel;
+byId('open-text').textContent = t.open;
+byId('hint').textContent = t.hint;
+byId('quick-title').textContent = t.quick;
+byId('recent-title').textContent = t.recent;
+byId('clear-recent').textContent = t.clearRecent;
+byId('clear-recent').setAttribute('aria-label', t.clearRecentAria);
+openButton.setAttribute('aria-label', t.openAria);
+openButton.title = t.openAria;
+input.placeholder = t.placeholder;
+document.title = t.title;
+document.documentElement.lang = locale;
+
+let statusTimer = 0;
+function setStatus(message, state) {
+  clearTimeout(statusTimer);
+  if (!message) { status.classList.remove('show'); return; }
+  status.textContent = message;
+  status.dataset.state = state || '';
+  status.classList.add('show');
+  // A success note is a brief confirmation: it fades out, keeping its text while it does.
+  if (state === 'success') statusTimer = setTimeout(() => status.classList.remove('show'), 5000);
+}
+
+const RECENT_KEY = 'rchub.web-browser.recent';
+const RECENT_MAX = 5;
+const recentSection = byId('recent-section');
+const recentList = byId('recent-list');
+function readRecent() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.filter(u => typeof u === 'string').slice(0, RECENT_MAX) : [];
+  } catch (error) { return []; }
+}
+function writeRecent(list) {
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch (error) { /* storage unavailable */ }
+}
+function renderRecent() {
+  const list = readRecent();
+  recentList.textContent = '';
+  recentSection.hidden = list.length === 0;
+  list.forEach(url => {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'recent-item';
+    button.disabled = busy;
+    button.title = url;
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg><span class="recent-url"></span>';
+    button.querySelector('.recent-url').textContent = url.replace(/^https?:\/\//, '');
+    button.addEventListener('click', () => {
+      if (busy) return;
+      input.value = url;
+      void openUrl(url);
+    });
+    item.appendChild(button);
+    recentList.appendChild(item);
+  });
+}
+function rememberUrl(url) {
+  writeRecent([url, ...readRecent().filter(u => u !== url)].slice(0, RECENT_MAX));
+  renderRecent();
+}
+byId('clear-recent').addEventListener('click', () => { writeRecent([]); renderRecent(); });
+
+function setBusy(value) {
+  busy = value;
+  recentList.querySelectorAll('button').forEach(button => { button.disabled = value; });
+  openButton.disabled = value;
+  openButton.setAttribute('aria-busy', String(value));
+  quickButtons.forEach(button => { button.disabled = value; });
+  form.setAttribute('aria-busy', String(value));
+}
+
+function validatePort(port) {
+  if (!/^\d{1,5}$/.test(port)) return t.badPort;
+  const value = Number(port);
+  return value >= 1 && value <= 65535 ? null : t.badPort;
+}
+
+function validateHost(host) {
+  if (!host) return t.noHost;
+  if (host.length > 253 || host.startsWith('.') || host.endsWith('.')) return t.badHost;
+  if (!host.includes('.') && /^\d+$/.test(host)) return t.badHost;
+  for (const label of host.split('.')) {
+    if (!label || label.length > 63 || label.startsWith('-') || label.endsWith('-') || !/^[A-Za-z0-9-]+$/.test(label)) {
+      return t.badHost;
+    }
+  }
+  return null;
+}
+
+function validateAuthority(authority) {
+  if (!authority) return t.noHost;
+  if (authority.includes('@')) return t.credentials;
+  if (authority.startsWith('[')) {
+    const close = authority.indexOf(']');
+    if (close === -1) return t.badHost;
+    const host = authority.slice(1, close);
+    if (!host || !host.includes(':') || !/^[0-9A-Fa-f:.]+$/.test(host)) return t.badHost;
+    const remainder = authority.slice(close + 1);
+    if (!remainder) return null;
+    if (!remainder.startsWith(':')) return t.badHost;
+    return validatePort(remainder.slice(1));
+  }
+  const colon = authority.indexOf(':');
+  if (colon !== -1 && authority.indexOf(':', colon + 1) !== -1) return t.badHost;
+  const host = colon === -1 ? authority : authority.slice(0, colon);
+  if (colon !== -1) {
+    const portError = validatePort(authority.slice(colon + 1));
+    if (portError) return portError;
+  }
+  return validateHost(host);
+}
+
+function validateTail(tail) {
+  if (/[<>"`{}|^]/.test(tail)) return t.badCharacters;
+  let index = tail.indexOf('%');
+  while (index !== -1) {
+    const hex = tail.slice(index + 1, index + 3);
+    if (!/^[0-9A-Fa-f]{2}$/.test(hex)) return t.badPercent;
+    const decoded = parseInt(hex, 16);
+    if (decoded < 0x20 || decoded === 0x7f) return t.encodedControl;
+    index = tail.indexOf('%', index + 3);
+  }
+  return null;
+}
+
+function normalizeUrl(raw) {
+  const value = String(raw).trim();
+  if (!value) return { error: t.empty };
+  if (!/^[\x21-\x7e]+$/.test(value)) return { error: t.visibleCharacters };
+  if (value.includes('\\')) return { error: t.backslash };
+  if (encoder.encode(value).length > MAX_URL_BYTES) return { error: fill(t.tooLong, { max: numberFormat.format(MAX_URL_BYTES) }) };
+
+  const lower = value.toLowerCase();
+  let candidate;
+  if (lower.startsWith('http://') || lower.startsWith('https://')) {
+    candidate = value;
+  } else {
+    const boundaryMatch = value.search(/[/?#]/);
+    const head = boundaryMatch === -1 ? value : value.slice(0, boundaryMatch);
+    const colon = head.indexOf(':');
+    if (colon !== -1) {
+      const prefix = head.slice(0, colon);
+      const after = value.slice(colon + 1);
+      if (after.startsWith('//')) return { error: t.onlyHttp };
+      const hostShaped = prefix.includes('.') || prefix.toLowerCase() === 'localhost' || value.startsWith('[');
+      if (!hostShaped) return { error: t.onlyHttp };
+    }
+    candidate = 'https://' + value;
+  }
+  if (encoder.encode(candidate).length > MAX_URL_BYTES) return { error: fill(t.tooLong, { max: numberFormat.format(MAX_URL_BYTES) }) };
+
+  const schemeEnd = candidate.indexOf('://');
+  const scheme = candidate.slice(0, schemeEnd).toLowerCase();
+  if (scheme !== 'http' && scheme !== 'https') return { error: t.onlyHttp };
+  const rest = candidate.slice(schemeEnd + 3);
+  const authorityEnd = rest.search(/[/?#]/);
+  const authority = authorityEnd === -1 ? rest : rest.slice(0, authorityEnd);
+  const tail = authorityEnd === -1 ? '' : rest.slice(authorityEnd);
+  const authorityError = validateAuthority(authority);
+  if (authorityError) return { error: authorityError };
+  const tailError = validateTail(tail);
+  if (tailError) return { error: tailError };
+  return { url: scheme + '://' + authority + tail };
+}
+
+function describeError(error) {
+  const raw = error && typeof error.message === 'string' ? error.message : String(error);
+  const separator = raw.indexOf(': ');
+  const code = separator > 0 ? raw.slice(0, separator) : '';
+  if (code === 'invalid_url') return t.invalidUrl;
+  if (code === 'invalid_params') return t.invalidParams;
+  if (code === 'launch_failed') return t.launchFailed;
+  if (code === 'method_not_found') return t.methodNotFound;
+  if (raw.includes('Opening a web browser is supported only on Windows and Linux')) return t.unsupportedPlatform;
+  return `${t.requestFailed} ${raw}`;
+}
+
+async function openUrl(raw) {
+  if (busy) return;
+  const result = normalizeUrl(raw);
+  if (result.error) {
+    setStatus(result.error, 'error');
+    input.focus();
+    return;
+  }
+  if (!window.RCHub || typeof window.RCHub.request !== 'function') {
+    setStatus(t.bridge, 'error');
+    return;
+  }
+  setBusy(true);
+  setStatus(t.opening, 'pending');
+  try {
+    await window.RCHub.request('browser.open', { url: result.url });
+    setStatus(t.success, 'success');
+    rememberUrl(result.url);
+  } catch (error) {
+    setStatus(describeError(error), 'error');
+  } finally {
+    setBusy(false);
+  }
+}
+
+renderRecent();
+
+// The web client runs this page in an iframe sandboxed to scripts only, where form
+// submission is blocked and no submit event fires. Drive the action from click and Enter.
+form.addEventListener('submit', event => event.preventDefault());
+openButton.addEventListener('click', event => {
+  event.preventDefault();
+  void openUrl(input.value);
+});
+input.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    void openUrl(input.value);
+  }
+});
+
+quickButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    if (busy) return;
+    input.value = button.dataset.url;
+    void openUrl(button.dataset.url);
+  });
+});
+</script>
+</body>
+</html>
