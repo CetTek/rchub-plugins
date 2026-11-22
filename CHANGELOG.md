@@ -3,6 +3,7 @@
 Repository-level changes. Each plugin keeps its own CHANGELOG in `plugins/<name>/`.
 
 ## [Unreleased]
+- **Changed:** Plugin UIs share one neutral background palette (web-browser no longer bluish).
 - **Added:** Packaged SVG icons for all six plugins; installation requires desktop app icon support.
 - **Changed:** The repository now holds the plugins for the current RCHub app (`new-app`) instead of the legacy ABI2 reference plugins and Python SDK. The old content, releases and tags were removed.
 - **Added:** Plugins moved here from the app repository with `rchub.*` ids (`rchub.clipboard`, `rchub.media`, `rchub.power`, `rchub.screenshot`, `rchub.system-info`, `rchub.web-browser`).

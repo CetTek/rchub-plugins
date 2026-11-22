@@ -24,7 +24,7 @@ def main():
     executable = "rchub-screenshot-plugin.exe" if system == "Windows" else "rchub-screenshot-plugin"
     key = "windows-x86_64" if system == "Windows" else "linux-x86_64"
     entrypoint = "bin/" + executable
-    manifest = {"id": "rchub.screenshot", "name": "Screenshot", "localizedNames": {"tr": "Ekran Görüntüsü", "en": "Screenshot"}, "version": "0.1.3", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {key: entrypoint}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
+    manifest = {"id": "rchub.screenshot", "name": "Screenshot", "localizedNames": {"tr": "Ekran Görüntüsü", "en": "Screenshot"}, "version": "0.1.4", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {key: entrypoint}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
     destination = HERE / ("screenshot-plugin-" + key + ".zip")
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))

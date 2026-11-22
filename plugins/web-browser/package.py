@@ -28,7 +28,7 @@ def main():
         "id": "rchub.web-browser",
         "name": "Web Browser",
         "localizedNames": {"tr": "Web Tarayıcı", "en": "Web Browser"},
-        "version": "0.1.1",
+        "version": "0.1.2",
         "icon": "ui/icon.svg",
         "protocol": 2,
         "entrypoints": {key: entrypoint},

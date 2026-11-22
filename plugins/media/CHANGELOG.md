@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- UI now uses the shared RCHub neutral background palette.
+
 ## 0.2.2
 
 - Added a packaged SVG plugin icon; requires an app version with icon support.
