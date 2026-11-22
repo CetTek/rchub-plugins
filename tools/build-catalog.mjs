@@ -21,6 +21,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repo = process.env.GITHUB_REPOSITORY || 'CetTek/rchub-plugins';
 const PLATFORM = 'windows-x86_64';
 const MIN_APP_VERSION = '0.1.0';
+const ICON_MIN_APP_VERSION = '0.1.1'; // first app version that accepts the manifest "icon" field
 
 const args = process.argv.slice(2);
 const publish = args.includes('--publish');
@@ -81,7 +82,7 @@ for (const name of readdirSync(join(root, 'plugins')).sort()) {
     url: `https://github.com/${repo}/releases/download/${tag}/${asset}`,
     size: statSync(file).size,
     sha256: sha256(file),
-    minAppVersion: MIN_APP_VERSION,
+    minAppVersion: released.icon ? ICON_MIN_APP_VERSION : MIN_APP_VERSION,
   });
 }
 
