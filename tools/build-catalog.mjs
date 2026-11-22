@@ -3,10 +3,11 @@
 //
 //   node tools/build-catalog.mjs --dist dist [--publish]
 //
-// For each plugins/<name>/ the zip is built by its package.py. The release tag
-// `<id>-v<version>` is immutable: if it already exists its zip is downloaded and
-// cataloged (the catalog must carry the hash of the shipped bytes); otherwise the
-// fresh zip is uploaded as a new release (only with --publish). The signed
+// For each plugins/<name>/ the id and version are read from its package.py. The
+// release tag `<id>-v<version>` is immutable: if it already exists its zip is
+// downloaded and cataloged without building (the catalog must carry the hash of
+// the shipped bytes); otherwise package.py builds it and the fresh zip is uploaded
+// as a new release (only with --publish). The signed
 // catalog is written to <dist>/plugins.json and, with --publish, uploaded to the
 // rolling `catalog` release. The private key comes from PLUGIN_SIGNING_KEY (PEM
 // text) or PLUGIN_SIGNING_KEY_FILE and is never printed.
@@ -47,23 +48,35 @@ function releaseExists(tag) {
   return spawnSync('gh', ['release', 'view', tag, '-R', repo], { stdio: 'ignore' }).status === 0;
 }
 
+// The manifest dict in package.py holds exactly one "id" and one "version" literal.
+function singleMatch(text, regex, label) {
+  const found = [...text.matchAll(regex)];
+  if (found.length !== 1) throw new Error(`${label}: expected exactly one match, found ${found.length}`);
+  return found[0][1];
+}
+
 const entries = [];
 for (const name of readdirSync(join(root, 'plugins')).sort()) {
   const dir = join(root, 'plugins', name);
   if (!statSync(dir).isDirectory() || !existsSync(join(dir, 'package.py'))) continue;
-  console.log(`== ${name}: build`);
-  run(python, ['package.py'], { cwd: dir, stdio: 'inherit' });
-  const built = readdirSync(dir).filter(file => file.endsWith(`-${PLATFORM}.zip`));
-  if (built.length !== 1) throw new Error(`${name}: expected one zip, found ${built.length}`);
-  const manifest = zipManifest(join(dir, built[0]));
-  if (!/^rchub\.[a-z0-9-]+$/.test(manifest.id)) throw new Error(`${name}: unexpected id ${manifest.id}`);
-  const asset = `${manifest.id}-${manifest.version}-${PLATFORM}.zip`;
-  const tag = `${manifest.id}-v${manifest.version}`;
+  const source = readFileSync(join(dir, 'package.py'), 'utf8');
+  const sourceId = singleMatch(source, /"id":\s*"([^"]+)"/g, `${name}: id in package.py`);
+  const sourceVersion = singleMatch(source, /"version":\s*"([^"]+)"/g, `${name}: version in package.py`);
+  if (!/^rchub\.[a-z0-9-]+$/.test(sourceId)) throw new Error(`${name}: unexpected id ${sourceId}`);
+  const asset = `${sourceId}-${sourceVersion}-${PLATFORM}.zip`;
+  const tag = `${sourceId}-v${sourceVersion}`;
   const file = join(dist, asset);
   if (releaseExists(tag)) {
-    console.log(`   ${tag} exists: using the released zip`);
+    // Published versions are immutable: reuse the released zip, no build needed.
+    console.log(`== ${name}: ${tag} exists, using the released zip (build skipped)`);
     run('gh', ['release', 'download', tag, '-R', repo, '--pattern', asset, '--dir', dist, '--clobber']);
   } else {
+    console.log(`== ${name}: build ${tag}`);
+    run(python, ['package.py'], { cwd: dir, stdio: 'inherit' });
+    const built = readdirSync(dir).filter(file => file.endsWith(`-${PLATFORM}.zip`));
+    if (built.length !== 1) throw new Error(`${name}: expected one zip, found ${built.length}`);
+    const manifest = zipManifest(join(dir, built[0]));
+    if (manifest.id !== sourceId || manifest.version !== sourceVersion) throw new Error(`${name}: built zip ${manifest.id}@${manifest.version} does not match package.py ${sourceId}@${sourceVersion}`);
     renameSync(join(dir, built[0]), file);
     if (publish) {
       console.log(`   publishing ${tag}`);
@@ -72,7 +85,7 @@ for (const name of readdirSync(join(root, 'plugins')).sort()) {
     }
   }
   const released = zipManifest(file);
-  if (released.id !== manifest.id || released.version !== manifest.version) throw new Error(`${name}: released zip does not match source`);
+  if (released.id !== sourceId || released.version !== sourceVersion) throw new Error(`${name}: released zip does not match source`);
   entries.push({
     id: released.id,
     name: released.name,

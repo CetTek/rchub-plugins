@@ -15,6 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            plugins/clipboard
+            plugins/media
+            plugins/power
+            plugins/screenshot
+            plugins/system-info
+            plugins/web-browser
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - uses: actions/setup-python@v5

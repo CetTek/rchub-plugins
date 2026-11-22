@@ -31,8 +31,8 @@ Use UTF-8 SVG of at most 4096 bytes with one root `<svg xmlns="http://www.w3.org
 ## How a release works
 
 1. Bump `version` in the plugin's `package.py` (and its CHANGELOG) and merge to `main`.
-2. The `release` workflow builds every plugin on `windows-latest` with `package.py`.
-3. For each plugin it uses the release tag `<id>-v<version>`. If that release already exists the published zip is reused unchanged (a published version is immutable). Otherwise a new release with the zip is created.
+2. The `release` workflow reads each plugin's id and version from `package.py` and builds (with `package.py`, Rust cached) only plugins whose release does not exist yet, on `windows-latest`.
+3. For each plugin it uses the release tag `<id>-v<version>`. If that release already exists the published zip is downloaded and reused unchanged, without building (a published version is immutable). Otherwise a new release with the zip is created.
 4. It then signs `plugins.json` (id, version, url, size, sha256, minimum app version) with the plugin Ed25519 key and replaces it in the rolling `catalog` release:
    `https://github.com/CetTek/rchub-plugins/releases/download/catalog/plugins.json`
 
