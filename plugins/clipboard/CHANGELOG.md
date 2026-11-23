@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5
+
+- Added manifest description and localizedDescriptions (requires desktop app 0.1.2).
+
 ## 0.2.4
 
 - UI now uses the shared RCHub neutral background palette.

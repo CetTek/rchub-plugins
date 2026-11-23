@@ -20,7 +20,7 @@ def main():
     target = HERE / "target"
     subprocess.run(["cargo", "build", "--release", "--target", host, "--target-dir", str(target), "--manifest-path", str(HERE / "Cargo.toml")], check=True)
     exe = "rchub-media-plugin.exe"
-    manifest = {"id": "rchub.media", "name": "Media Controls", "localizedNames": {"tr": "Medya Kontrolleri", "en": "Media Controls"}, "version": "0.2.3", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {"windows-x86_64": "bin/" + exe}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
+    manifest = {"id": "rchub.media", "name": "Media Controls", "localizedNames": {"tr": "Medya Kontrolleri", "en": "Media Controls"}, "description": "Play, pause, track and volume controls.", "localizedDescriptions": {"tr": "Oynat, duraklat, parça ve ses kontrolü.", "en": "Play, pause, track and volume controls."}, "version": "0.2.4", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {"windows-x86_64": "bin/" + exe}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
     destination = HERE / "media-plugin-windows-x86_64.zip"
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))

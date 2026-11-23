@@ -20,7 +20,7 @@ def main():
     target = HERE / "target"
     subprocess.run(["cargo", "build", "--release", "--target", host, "--target-dir", str(target), "--manifest-path", str(HERE / "Cargo.toml")], check=True)
     entry = "bin/rchub-clipboard-plugin.exe"
-    manifest = {"id": "rchub.clipboard", "name": "Clipboard", "localizedNames": {"tr": "Pano", "en": "Clipboard"}, "version": "0.2.4", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {"windows-x86_64": entry}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
+    manifest = {"id": "rchub.clipboard", "name": "Clipboard", "localizedNames": {"tr": "Pano", "en": "Clipboard"}, "description": "Read or change the computer's clipboard.", "localizedDescriptions": {"tr": "Bilgisayarın panosunu oku veya değiştir.", "en": "Read or change the computer's clipboard."}, "version": "0.2.5", "icon": "ui/icon.svg", "protocol": 2, "entrypoints": {"windows-x86_64": entry}, "ui": {"desktop": "ui/desktop/index.html", "android": "ui/android/index.html"}}
     destination = HERE / "clipboard-plugin-windows-x86_64.zip"
     with zipfile.ZipFile(destination, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False))

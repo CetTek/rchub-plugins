@@ -28,6 +28,10 @@ The optional manifest field `"icon": "ui/icon.svg"` refers to an SVG included in
 
 Use UTF-8 SVG of at most 4096 bytes with one root `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`. Allowed elements: `svg`, `g`, `path`, `circle`, `ellipse`, `rect`, `line`, `polyline`, `polygon`. Allowed attributes: `xmlns`, `viewBox`, `d`, `cx`, `cy`, `r`, `rx`, `ry`, `x`, `y`, `x1`, `y1`, `x2`, `y2`, `width`, `height`, `points`, `fill`, `stroke`, `stroke-width`, `stroke-linecap`, `stroke-linejoin`, `fill-rule`, `clip-rule`, `opacity`. Fill and stroke values must be `none` or `currentColor`. Close all tags. Comments, DOCTYPE, XML declarations, styles, scripts, `use`, `image`, `href`, color codes and `url(` are forbidden.
 
+## Plugin description
+
+`"description"` (one line, at most 100 characters) and `"localizedDescriptions": {"tr": …, "en": …}` are shown under the plugin name in the mobile and web apps. Like the icon, they need a desktop app version that recognizes the fields; release these packages only after a compatible app is available. Guide for writing your own plugins: [docs/plugin-development.md](docs/plugin-development.md).
+
 ## How a release works
 
 1. Bump `version` in the plugin's `package.py` (and its CHANGELOG) and merge to `main`.

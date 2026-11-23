@@ -37,3 +37,14 @@ export function signCatalog(body, privateKey) {
   const signature = sign(null, Buffer.from(canonicalize(body), 'utf8'), privateKey);
   return { ...body, keyId: keyIdFor(createPublicKey(privateKey)), signature: signature.toString('base64') };
 }
+
+export const MIN_APP_VERSION = '0.1.0';
+export const ICON_MIN_APP_VERSION = '0.1.1'; // first app version that accepts the manifest "icon" field
+export const DESCRIPTION_MIN_APP_VERSION = '0.1.2'; // first app version that accepts "description" and "localizedDescriptions"
+
+/** Lowest app version that understands every manifest field the plugin uses; the highest applicable minimum wins. */
+export function minAppVersionFor(manifest) {
+  if (manifest.description !== undefined) return DESCRIPTION_MIN_APP_VERSION;
+  if (manifest.icon) return ICON_MIN_APP_VERSION;
+  return MIN_APP_VERSION;
+}

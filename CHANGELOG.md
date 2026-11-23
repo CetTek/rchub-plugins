@@ -3,6 +3,7 @@
 Repository-level changes. Each plugin keeps its own CHANGELOG in `plugins/<name>/`.
 
 ## [Unreleased]
+- **Added:** Manifests of all six plugins carry `description` and `localizedDescriptions` (tr/en). They need a desktop app that accepts these fields and a version bump to be released.
 - **Changed:** CI builds only plugin versions that are not yet published (id/version read from `package.py`; released zips are downloaded for the catalog) and caches Rust builds with `Swatinem/rust-cache`.
 - **Changed:** Plugin UIs share one neutral background palette (web-browser no longer bluish).
 - **Added:** Packaged SVG icons for all six plugins; installation requires desktop app icon support.
