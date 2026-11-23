@@ -63,6 +63,36 @@ Use `"v":1` and skip requests if you only need lifecycle. Unexpected exits are r
 
 A v2 surface calls `window.RCHub.request(method, params)`, which returns a Promise bound to your plugin. `window.RCHub.locale` is `tr` or `en`; pick your own strings from it, and tolerate its absence on older hosts. Desktop surfaces run in a restricted child window; Android and web receive your assets through the server and run in a restricted view. Keep one self-contained HTML file per surface, and design for a phone-width screen first.
 
+## What you can build, and the limits
+
+The data path is **client → desktop plugin**: a phone or browser surface sends a request, the plugin process answers. Design around that.
+
+| Idea | Fit | How |
+| --- | --- | --- |
+| Remote control (power, media, clipboard, open a link) | Good | One request per action |
+| Show computer state (system info, a screenshot) | Good | Request on open or on a timer |
+| Read text aloud on the computer (text-to-speech) | Good | The surface sends `speak` with the text; the plugin calls the operating system's speech API |
+| Chat between phone and computer | Possible, not instant | Phone → computer is a normal request. Computer → phone cannot be pushed: the plugin has no way to send an unsolicited event to a client, so the phone surface has to poll (for example a `messages.since` request every second or two) |
+| Voice messages / file transfer | Only very small data | Every relayed message is limited to 64 KiB including base64 and metadata, and there is no bulk or direct transfer. A few seconds of low-bitrate audio fits; anything larger does not |
+
+Limits to design for:
+
+- **No events to clients.** `window.RCHub.onEvent(callback)` exists in the Android bridge, but the desktop host does not forward unsolicited plugin messages, so it will not fire for plugin-originated events yet. Poll instead.
+- **Size.** 64 KiB per relayed request or response. Chunk or reduce data, or return only what the screen needs.
+- **Concurrency.** The host allows 16 outstanding remote requests in total; excess requests get an error. Keep handlers quick and answer within a few seconds.
+- **Storage.** The host gives you no managed data folder, and updating a plugin does not migrate data. Keep state in memory, or store files yourself under a path you choose (for example the user's application-data directory) and treat it as something an update may leave behind.
+- **Surfaces.** Android and web surfaces run in a restricted view: JavaScript only, no file access, no navigation away from the page. Microphone and camera access from that view is **not verified**; do not rely on it without testing on a real device. Desktop surfaces run in a separate restricted window.
+- **Availability.** A client sees only running protocol-v2 plugins that have the matching UI for that client. A plugin can stop right after the list is produced, so a later request may still fail; handle errors.
+- **Trust.** Any signed-in device on the same account can call your plugin. Validate every parameter, and never expose an action you would not let any of the user's devices trigger.
+
+## `window.RCHub` (v2 surfaces)
+
+| Member | Meaning |
+| --- | --- |
+| `RCHub.request(method, params)` | Returns a Promise with your plugin's `result`, or rejects with the error `code`/`message` you returned. Bound to your plugin; you cannot address another plugin |
+| `RCHub.locale` | `"tr"` or `"en"`, frozen. May be missing on older hosts |
+| `RCHub.onEvent(callback)` | Android bridge only; currently not triggered by plugin messages (see above) |
+
 ## Icon
 
 `"icon": "ui/icon.svg"` names an SVG inside the package: UTF-8, at most 4096 bytes, one root `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`. Allowed elements: `svg`, `g`, `path`, `circle`, `ellipse`, `rect`, `line`, `polyline`, `polygon`. `fill` and `stroke` must be `none` or `currentColor`. Scripts, styles, links, `use`, `image`, comments, XML declarations, colour codes and `url(` are rejected.
