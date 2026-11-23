@@ -10,6 +10,7 @@ Official plugins for RCHub, the remote PC control app. The desktop app downloads
 | Screenshot | `rchub.screenshot` | Capture the screen and view it full-screen |
 | System Info | `rchub.system-info` | CPU, memory, disk and uptime |
 | Web Browser | `rchub.web-browser` | Open a link in the computer's default browser |
+| Message Box | `rchub.messagebox` | Show a message on the computer and/or read it aloud (system voice or Google online voice) |
 
 All plugins target Windows x86-64 for now.
 

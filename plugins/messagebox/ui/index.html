@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Message Box</title>
+<style>
+:root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#ececef;background:#171719;color-scheme:dark}*{box-sizing:border-box}body{margin:0;padding:clamp(20px,5vw,48px)}main{max-width:680px;margin:auto;animation:enter .25s ease-out}header{border-bottom:1px solid #3b3b40;padding-bottom:18px}h1{font-size:28px;margin:0 0 6px}h2{font-size:15px;margin:0}p{color:#b6b6bf;line-height:1.5;margin:0}
+.panel{margin-top:16px;background:#1f1f23;border:1px solid #33333b;border-radius:12px;padding:18px;overflow-wrap:anywhere}
+label,legend{display:block;font-weight:600;font-size:14px;margin:0 0 8px;padding:0}.field{margin-top:18px}.field:first-child{margin-top:0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+input[type=text],textarea,select,input[type=number]{width:100%;font:inherit;color:inherit;background:#171719;border:1px solid #55555d;border-radius:8px;padding:10px 12px;min-height:40px;transition:border-color .16s}
+input:hover,textarea:hover,select:hover{border-color:#6c6c76}textarea{min-height:130px;resize:vertical;line-height:1.5;padding:12px 14px}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid #80bdff;outline-offset:1px}
+input[aria-invalid=true],textarea[aria-invalid=true]{border-color:#ffaaaa}
+.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:#9c9ca6;margin-top:6px}
+.seg{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#171719;border:1px solid #33333b;border-radius:10px;padding:4px}
+.seg label{margin:0;font-weight:500;position:relative}.seg input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.seg label span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:40px;padding:6px 8px;border-radius:7px;color:#d4d4dc;line-height:1.25;transition:color 120ms}
+.seg label{z-index:1}.seg label:hover input:not(:checked)+span{background:#2a2a30}.seg input:checked+span{color:#fff}.seg .ind{position:absolute;box-sizing:border-box;display:block;padding:0;min-height:0;z-index:0;left:4px;top:4px;bottom:4px;width:calc((100% - 16px) / 3);border-radius:7px;background:#1683f8;pointer-events:none;will-change:transform;transform:translateX(0)}.seg[data-i="1"] .ind{transform:translateX(calc(100% + 4px))}.seg[data-i="2"] .ind{transform:translateX(calc(200% + 8px))}.seg.ready .ind{transition:transform 180ms ease-out}.seg input:focus-visible+span{outline:2px solid #80bdff;outline-offset:2px}
+.group{margin-top:18px;border-top:1px solid #33333b;padding-top:16px;animation:enter .2s ease-out}.group[hidden]{display:none}
+.group h3{font-size:13px;color:#9c9ca6;font-weight:600;margin:0 0 12px;text-transform:uppercase;letter-spacing:.04em}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}.row .field{margin-top:0}.row+.row{margin-top:14px}
+.range{display:flex;align-items:center;gap:10px}.range input{flex:1;min-width:0;accent-color:#1683f8;height:24px;margin:0}.range span{font-size:12px;color:#9c9ca6;white-space:nowrap}.val{font-weight:400;color:#9c9ca6}
+.hint{font-size:13px;color:#9c9ca6;margin-top:6px;line-height:1.4}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+button{font:inherit;color:#fff;background:#1683f8;border:0;border-radius:8px;min-height:44px;height:auto;padding:10px 18px;line-height:1.3;cursor:pointer;overflow-wrap:anywhere;transition:background 120ms,transform 120ms}
+button:hover{background:#419aff}button:active{transform:scale(.97)}button:focus-visible{outline:2px solid #80bdff;outline-offset:3px}button:disabled{opacity:.6;cursor:not-allowed}
+.secondary{background:#45454d}.secondary:hover{background:#5a5a63}
+.status{margin-top:16px;min-height:1.5em;font-size:14px;color:#d4d4dc;overflow-wrap:anywhere}.error{color:#ffaaaa}
+.head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.head p{font-size:13px;color:#9c9ca6;margin-top:4px}
+#history{padding:0;margin:12px 0 0;list-style:none}#history li{border-top:1px solid #33333b;padding:12px 0;overflow-wrap:anywhere;white-space:pre-wrap;font-size:14px;line-height:1.5}#history li:first-child{border-top:0;padding-top:0}#history li:last-child{padding-bottom:0}
+#history .empty{color:#9c9ca6;white-space:normal}.badge{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;background:#33333b;color:#b6b6bf;font-size:12px;white-space:nowrap}#history .body{display:block;color:#d4d4dc;margin-top:2px}
+@keyframes enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(max-width:520px){.row{grid-template-columns:1fr}}@media(max-width:600px){.actions button,.head button{width:100%}.head{align-items:stretch;flex-direction:column}.seg label span{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.seg.ready .ind{transition:none}*,*::before,*::after{animation:none!important;transition:none!important}}
+@media(forced-colors:active){button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid Highlight}button:disabled{opacity:1}.seg input:checked+span{outline:2px solid Highlight}.ind{display:none}}
+</style>
+</head>
+<body><main>
+<header><h1 data-i18n="heading">Message Box</h1><p data-i18n="intro">Show a message on the computer, read it aloud, or both. Nothing happens until you press Send.</p></header>
+<section class="panel">
+<div class="field"><label for="title" data-i18n="titleLabel">Title (optional)</label><input type="text" id="title" maxlength="100" autocomplete="off"></div>
+<div class="field"><label for="text" data-i18n="textLabel">Message</label><textarea id="text" maxlength="2000" aria-describedby="limit count"></textarea>
+<div class="meta"><span id="limit"></span><span id="count"></span></div></div>
+<fieldset class="field"><legend id="whatLegend" data-i18n="what">What to do</legend>
+<div class="seg" id="mode" role="radiogroup" aria-labelledby="whatLegend"><span class="ind" id="ind" aria-hidden="true"></span>
+<label><input type="radio" name="mode" value="show" checked><span data-i18n="show">Show on screen</span></label>
+<label><input type="radio" name="mode" value="speak"><span data-i18n="speak">Read aloud</span></label>
+<label><input type="radio" name="mode" value="both"><span data-i18n="both">Both</span></label>
+</div></fieldset>
+<div class="group" id="screenGroup">
+<div class="field"><label for="seconds" data-i18n="seconds">Show for (seconds)</label><input type="number" id="seconds" min="0" max="300" step="1" value="0" inputmode="numeric" aria-describedby="secondsHint" style="max-width:160px"><p class="hint" id="secondsHint" data-i18n="secondsHint">0 = stays until closed (max 300).</p></div>
+</div>
+<div class="group" id="speechGroup" hidden>
+<h3 data-i18n="speech">Speech</h3>
+<div class="row">
+<div class="field"><label for="engine" data-i18n="engine">Voice</label><select id="engine"><option value="system" data-i18n="engineSystem">This computer (offline)</option><option value="google" data-i18n="engineGoogle">Google (online)</option></select>
+<p class="hint" id="engineHint"></p></div>
+<div class="field"><label for="language" data-i18n="language">Language</label><select id="language"><option value="tr">Türkçe</option><option value="en">English</option></select></div>
+</div>
+<div class="row">
+<div class="field"><label for="rate" data-i18n="speed">Speed</label><div class="range"><span data-i18n="slow">Slow</span><input type="range" id="rate" min="-10" max="10" step="1" value="0"><span data-i18n="fast">Fast</span></div></div>
+<div class="field"><label for="volume"><span data-i18n="volume">Volume</span> <span class="val" id="volVal"></span></label><div class="range"><input type="range" id="volume" min="0" max="100" step="5" value="100"></div></div>
+</div>
+</div>
+<div class="actions"><button type="button" id="send" data-i18n="send">Send</button></div>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+</section>
+<section class="panel">
+<div class="head"><div><h2 data-i18n="history">Recent messages</h2><p data-i18n="historyNote">Last 10 messages, cleared when the plugin stops.</p></div><button type="button" id="refresh" class="secondary" data-i18n="refresh">Refresh</button></div>
+<ul id="history"></ul>
+</section>
+</main><script>
+const locale = window.RCHub && window.RCHub.locale === 'tr' ? 'tr' : 'en';
+document.documentElement.lang = locale;
+const COPY = {
+  en: {
+    title: 'Message Box', heading: 'Message Box',
+    intro: 'Show a message on the computer, read it aloud, or both. Nothing happens until you press Send.',
+    titleLabel: 'Title (optional)', textLabel: 'Message', limit: 'Up to {max} characters.', count: '{n} / {max}',
+    what: 'What to do', show: 'Show on screen', speak: 'Read aloud', both: 'Both', send: 'Send',
+    seconds: 'Show for (seconds)', secondsHint: '0 = stays until closed (max 300).', speech: 'Speech', engine: 'Voice',
+    engineSystem: 'This computer (offline)', engineGoogle: 'Google (online)',
+    hintSystem: 'Uses voices installed on the computer. Nothing leaves it.',
+    hintGoogle: 'Better Turkish. The text is sent to Google. Falls back to the computer voice if it fails.',
+    language: 'Language', speed: 'Speed', slow: 'Slow', fast: 'Fast', volume: 'Volume',
+    history: 'Recent messages', historyNote: 'Last 10 messages, cleared when the plugin stops.', refresh: 'Refresh',
+    modeShow: 'Screen', modeSpeak: 'Spoken', modeBoth: 'Both', empty: 'No recent messages.', working: 'Working…',
+    sent: 'Request accepted. Display or speech may still fail on the computer.',
+    missing: 'Enter a message.', badNumbers: 'Seconds must be between 0 and 300.',
+    bridgeUnavailable: 'Plugin bridge is unavailable.', failed: 'Request failed: {detail}', historyFailed: 'Could not load history: {detail}',
+    'error.invalid_params': 'The request was not valid.', 'error.launch_failed': 'The computer could not start the action.',
+    'error.method_not_found': 'This operation is not supported.', 'error.generic': 'Unknown error.'
+  },
+  tr: {
+    title: 'Mesaj Kutusu', heading: 'Mesaj Kutusu',
+    intro: 'Bilgisayarda mesaj gösterin, seslendirin veya ikisini birden yapın. Gönder’e basana kadar hiçbir şey olmaz.',
+    titleLabel: 'Başlık (isteğe bağlı)', textLabel: 'Mesaj', limit: 'En fazla {max} karakter.', count: '{n} / {max}',
+    what: 'Ne yapılsın?', show: 'Ekranda göster', speak: 'Seslendir', both: 'İkisi de', send: 'Gönder',
+    seconds: 'Ekranda kalma (saniye)', secondsHint: '0 = kapatılana kadar kalır (en fazla 300).', speech: 'Konuşma', engine: 'Ses',
+    engineSystem: 'Bu bilgisayar (çevrimdışı)', engineGoogle: 'Google (çevrimiçi)',
+    hintSystem: 'Bilgisayarda kurulu sesleri kullanır. Metin dışarı çıkmaz.',
+    hintGoogle: 'Daha iyi Türkçe. Metin Google’a gönderilir. Başarısız olursa bilgisayar sesine geçer.',
+    language: 'Dil', speed: 'Hız', slow: 'Yavaş', fast: 'Hızlı', volume: 'Ses düzeyi',
+    history: 'Son mesajlar', historyNote: 'Son 10 mesaj; eklenti durunca silinir.', refresh: 'Yenile',
+    modeShow: 'Ekran', modeSpeak: 'Sesli', modeBoth: 'İkisi', empty: 'Henüz mesaj yok.', working: 'Çalışıyor…',
+    sent: 'İstek alındı. Görüntüleme veya seslendirme bilgisayarda yine de başarısız olabilir.',
+    missing: 'Bir mesaj yazın.', badNumbers: 'Saniye 0 ile 300 arasında olmalı.',
+    bridgeUnavailable: 'Eklenti köprüsü kullanılamıyor.', failed: 'İstek başarısız: {detail}', historyFailed: 'Geçmiş yüklenemedi: {detail}',
+    'error.invalid_params': 'İstek geçersiz.', 'error.launch_failed': 'Bilgisayar işlemi başlatamadı.',
+    'error.method_not_found': 'İstenen işlem desteklenmiyor.', 'error.generic': 'İşlem tamamlanamadı.'
+  }
+};
+const MAX_TEXT = 2000;
+const t = (key, vars) => {
+  let value = COPY[locale][key] || COPY.en[key] || key;
+  if (vars) value = value.replace(/\{(\w+)\}/g, (m, name) => name in vars ? String(vars[name]) : m);
+  return value;
+};
+const nf = new Intl.NumberFormat(locale);
+const n = v => nf.format(v);
+document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+document.title = t('title');
+document.getElementById('limit').textContent = t('limit', {max: n(MAX_TEXT)});
+const $ = id => document.getElementById(id);
+const text = $('text'), status = $('status'), list = $('history'), refresh = $('refresh'), send = $('send');
+const buttons = [send, refresh];
+$('language').value = locale;
+$('engine').value = locale === 'tr' ? 'google' : 'system';
+const mode = () => document.querySelector('input[name=mode]:checked').value;
+function syncForm() {
+  const m = mode();
+  $('screenGroup').hidden = m === 'speak';
+  $('speechGroup').hidden = m === 'show';
+  $('engineHint').textContent = t($('engine').value === 'google' ? 'hintGoogle' : 'hintSystem');
+  $('volVal').textContent = $('volume').value + '%';
+}
+function placeInd() {
+  const checked = document.querySelector('input[name=mode]:checked');
+  $('mode').dataset.i = String(['show', 'speak', 'both'].indexOf(checked.value));
+}
+document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', () => { syncForm(); placeInd(); }));
+$('engine').addEventListener('change', syncForm);
+$('volume').addEventListener('input', syncForm);
+function describe(error) {
+  const raw = error && typeof error.message === 'string' ? error.message : String(error || '');
+  const m = /^([a-z][a-z0-9_]*)(?::\s*[\s\S]*)?$/.exec(raw);
+  const key = m ? 'error.' + m[1] : '';
+  if (key && COPY.en[key]) return t(key);
+  if (error && error.localized) return raw;
+  return locale === 'tr' ? t('error.generic') : (raw || t('error.generic'));
+}
+function setStatus(message, isError) { status.classList.toggle('error', Boolean(isError)); status.textContent = message; }
+function setBusy(busy) { buttons.forEach(b => { b.disabled = busy; }); }
+function updateCount() { text.removeAttribute('aria-invalid'); $('count').textContent = t('count', {n: n([...text.value].length), max: n(MAX_TEXT)}); }
+async function call(method, params) {
+  if (!window.RCHub || typeof window.RCHub.request !== 'function') { const e = new Error(t('bridgeUnavailable')); e.localized = true; throw e; }
+  return window.RCHub.request(method, params);
+}
+function render(messages) {
+  list.replaceChildren();
+  if (!Array.isArray(messages) || !messages.length) {
+    const li = document.createElement('li'); li.className = 'empty'; li.textContent = t('empty'); list.append(li); return;
+  }
+  for (const m of messages) {
+    const li = document.createElement('li');
+    const strong = document.createElement('strong'); strong.textContent = (m && m.title) || t('heading');
+    const badge = document.createElement('span'); badge.className = 'badge';
+    badge.textContent = t(m && m.mode === 'speak' ? 'modeSpeak' : m && m.mode === 'show' ? 'modeShow' : 'modeBoth');
+    const body = document.createElement('span'); body.className = 'body'; body.textContent = (m && m.text) || '';
+    li.append(strong, badge, body); list.append(li);
+  }
+}
+async function loadHistory() {
+  const r = await call('history', {});
+  render(r && r.messages);
+}
+text.addEventListener('input', updateCount);
+refresh.addEventListener('click', async () => {
+  setBusy(true); setStatus(t('working'));
+  try { await loadHistory(); setStatus(''); }
+  catch (e) { setStatus(t('historyFailed', {detail: describe(e)}), true); }
+  finally { setBusy(false); }
+});
+send.addEventListener('click', async () => {
+  if (!text.value.trim()) { text.setAttribute('aria-invalid', 'true'); setStatus(t('missing'), true); text.focus(); return; }
+  const m = mode();
+  let seconds = 0;
+  if (m !== 'speak') {
+    const v = $('seconds').value.trim();
+    seconds = /^\d+$/.test(v) ? Number(v) : -1;
+    if (seconds < 0 || seconds > 300) { setStatus(t('badNumbers'), true); $('seconds').focus(); return; }
+  }
+  const params = {text: text.value, title: $('title').value, mode: m, seconds, rate: Number($('rate').value), volume: Number($('volume').value), language: $('language').value};
+  if (m !== 'show') params.engine = $('engine').value;
+  setBusy(true); setStatus(t('working'));
+  try {
+    await call('send', params);
+    setStatus(t('sent'));
+    try { await loadHistory(); } catch (e) { setStatus(t('sent') + ' ' + t('historyFailed', {detail: describe(e)}), true); }
+  } catch (e) { setStatus(t('failed', {detail: describe(e)}), true); }
+  finally { setBusy(false); }
+});
+syncForm();
+placeInd();
+requestAnimationFrame(() => requestAnimationFrame(() => $('mode').classList.add('ready')));
+updateCount();
+loadHistory().catch(e => { render([]); setStatus(t('historyFailed', {detail: describe(e)}), true); });
+</script></body></html>

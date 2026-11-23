@@ -24,6 +24,7 @@ jobs:
             plugins/screenshot
             plugins/system-info
             plugins/web-browser
+            plugins/messagebox
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - uses: actions/setup-python@v5
